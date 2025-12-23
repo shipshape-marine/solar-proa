@@ -114,8 +114,8 @@ view = FreeCAD.Gui.ActiveDocument.ActiveView
 view.viewIsometric()  # or viewFront(), viewTop(), etc.
 view.fitAll()
 
-set_interior_view()
+#set_interior_view()
 #set_mast_view()
 #set_cockpit_view()
 #set_below_view()
-#set_sail_view()
+set_sail_view()

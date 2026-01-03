@@ -44,15 +44,14 @@ jobs:
           sudo apt-get install -y xvfb
           
           # Create wrapper script that executes Python scripts
-          cat > freecadcmd << 'EOF'
-#!/bin/bash
-# Wrapper to run FreeCAD Python scripts in console mode
-SCRIPT="$1"
-shift  # Remove script from arguments, rest are for the script
-
-# Read the Python script and execute it
-xvfb-run -a ./squashfs-root/usr/bin/freecad --console -c "exec(open('$SCRIPT').read())"
-EOF
+          cat > freecadcmd << 'WRAPPER_EOF'
+          #!/bin/bash
+          # Wrapper to run FreeCAD Python scripts in console mode
+          SCRIPT="$1"
+          shift
+          xvfb-run -a ./squashfs-root/usr/bin/freecad --console -c "exec(open('$SCRIPT').read())"
+          WRAPPER_EOF
+          
           chmod +x freecadcmd
           
           # Add to PATH

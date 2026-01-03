@@ -50,10 +50,12 @@ jobs:
           WRAPPER_EOF
           chmod +x freecadcmd
           
-          # Create wrapper for running Python scripts (for renders)
+          # Create wrapper for running Python scripts with FreeCAD modules (for renders)
           cat > freecad-python << 'WRAPPER_EOF'
           #!/bin/bash
           export FREECAD_USER_HOME=/tmp/freecad
+          export LD_LIBRARY_PATH=./squashfs-root/usr/lib:$LD_LIBRARY_PATH
+          export PYTHONPATH=./squashfs-root/usr/lib:./squashfs-root/usr/Mod:$PYTHONPATH
           mkdir -p $FREECAD_USER_HOME
           xvfb-run -a ./squashfs-root/usr/bin/python "$@"
           WRAPPER_EOF

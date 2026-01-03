@@ -18,11 +18,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Install FreeCAD
+      - name: Install FreeCAD AppImage
         run: |
-          sudo add-apt-repository ppa:freecad-maintainers/freecad-stable -y
+          # Download latest FreeCAD AppImage
+          wget -O FreeCAD.AppImage https://github.com/FreeCAD/FreeCAD-Bundle/releases/download/1.0.0/FreeCAD_1.0.0-conda-Linux-x86_64-py311.AppImage
+          chmod +x FreeCAD.AppImage
+          
+          # Extract AppImage for easier use
+          ./FreeCAD.AppImage --appimage-extract
+          
+          # Install xvfb for headless rendering
           sudo apt-get update
-          sudo apt-get install -y freecad xvfb
+          sudo apt-get install -y xvfb
+          
+          # Create wrapper script
+          echo '#!/bin/bash' > freecadcmd
+          echo 'xvfb-run -a ./squashfs-root/AppRun "$@"' >> freecadcmd
+          chmod +x freecadcmd
+          
+          # Add to PATH
+          echo "$PWD" >> $GITHUB_PATH
+      
+      - name: Verify FreeCAD installation
+        run: |
+          ./freecadcmd --version
       
       - name: Build all FreeCAD models
         run: |

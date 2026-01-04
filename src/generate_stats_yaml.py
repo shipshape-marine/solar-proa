@@ -17,7 +17,6 @@ try:
     import FreeCAD as App
     import stats
     from material import material
-    from parameters import *
 except ImportError as e:
     print(f"ERROR: {e}")
     print("This script must be run with FreeCAD's Python")
@@ -112,8 +111,6 @@ def generate_yaml(fcstd_path, output_path):
         f"total_mass_kg: {total_mass:.2f}",
         f"total_volume_liters: {total_volume:.2f}",
         f"displacement_saltwater_kg: {total_volume * 1.025:.2f}",
-        f"beam_m: {beam / 1000:.1f}",
-        f"LOA_m: {vaka_length / 1000:.1f}",
         "",
         "materials:"
     ]
@@ -151,12 +148,19 @@ def generate_yaml(fcstd_path, output_path):
     App.closeDocument(doc.Name)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: generate_stats_yaml.py <fcstd_file> <output_yaml>")
-        sys.exit(1)
+    # Try environment variables first (Linux CI/CD), then command line args (Mac)
+    fcstd = os.environ.get('FCSTD_FILE')
+    output = os.environ.get('OUTPUT_YAML')
     
-    fcstd = sys.argv[1]
-    output = sys.argv[2]
+    if not fcstd and len(sys.argv) >= 3:
+        # Mac fallback - command line args
+        fcstd = sys.argv[1]
+        output = sys.argv[2]
+    
+    if not fcstd or not output:
+        print("Usage: generate_stats_yaml.py <fcstd_file> <output_yaml>")
+        print("Or set FCSTD_FILE and OUTPUT_YAML environment variables")
+        sys.exit(1)
     
     if not os.path.exists(fcstd):
         print(f"ERROR: {fcstd} not found")

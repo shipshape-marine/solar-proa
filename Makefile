@@ -111,7 +111,7 @@ stats-yaml: $(OUTPUT_DIR)
 				DYLD_LIBRARY_PATH=/Applications/FreeCAD.app/Contents/Frameworks:/Applications/FreeCAD.app/Contents/Resources/lib \
 				/Applications/FreeCAD.app/Contents/Resources/bin/python $(SRC_DIR)/generate_stats_yaml.py "$$fcstd" "docs/_data/$${yaml_name}.yml" || true; \
 			else \
-				freecadcmd --run-python $(SRC_DIR)/generate_stats_yaml.py -- "$$fcstd" "docs/_data/$${yaml_name}.yml" || true; \
+				FCSTD_FILE="$$fcstd" OUTPUT_YAML="docs/_data/$${yaml_name}.yml" freecad-python $(SRC_DIR)/generate_stats_yaml.py || true; \
 			fi \
 		fi \
 	done

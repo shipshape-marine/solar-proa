@@ -3,16 +3,16 @@ layout: default
 title: Solar Proa - Wind-solar-powered Outrigger Boats
 ---
 
-## Executive Summary
+## At a glance
 
 Project _Solar Proa_ is developing wind-solar-powered hybrid vessels for carbon-neutral small-scale tropical maritime transport, exploration, and tourism.
 Completion of our 9-meter minimal viable product _Roti Proa II_ is targeted for mid-2026 and strategic partnerships are available for commercial validation.
 
 ---
 
-## The Vision
+## The vision
 
-Electric vehicle adoption across Asia has created new expectations for quiet, clean transportation - expectations that extend to recreational maritime experiences. We're bringing carbon-neutral propulsion to island-hopping, snorkeling, and diving tourism through vessels that combine:
+Electric vehicle adoption across Asia has created new expectations for quiet, clean transportation - expectations that extend to maritime sector. We're bringing carbon-neutral propulsion to water transport, island-hopping, snorkeling, and diving tourism through vessels that combine:
 
 - **Traditional Design** - Inspired by Austronesian outrigger proas and Indonesian sailing traditions
 - **Modern Engineering** - Parametric CAD design, aluminum construction, efficient electric propulsion
@@ -58,14 +58,15 @@ Electric vehicle adoption across Asia has created new expectations for quiet, cl
 
 The shunting, single-outrigger layout provides:
 - Ample space for solar arrays between hull and outrigger
-- Crew positioning that avoids casting shadows on panels
-- Superior stability and efficiency for electric propulsion
+- Sail positioning that avoids casting shadows on panels
+- Superior stability and efficiency for safe hybrid propulsion
 
 ---
 
-## Commercial Opportunity
+## Commercial Opportunities
 
 **Eco-Tourism Applications:**
+- Short-distance passenger transport
 - Island-hopping and coastal exploration
 - Snorkeling and diving expeditions  
 - Educational sailing experiences
@@ -86,9 +87,9 @@ At 10 knots under motor power, Roti Proa II targets the contemplative pace of ec
 
 All vessel designs are created using **parametric CAD modeling in FreeCAD and Python**, enabling:
 
-- Rapid design iteration and optimization
-- Automated generation of construction documentation
-- Version control and design transparency
+- Novel boat designs optimized for solar-wind-hybrid propulsion
+- Continuous power and weather monitoring for accurate arrival time prediction
+- Rapid design iteration and optimization, version control and design transparency
 - Open-source accessibility for educational purposes
 
 **[Explore the CAD Models →]({{ '/technical.html' | relative_url }})**

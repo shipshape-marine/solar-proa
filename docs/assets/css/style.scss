@@ -52,3 +52,7 @@ a {
 a:hover {
   color: var(--ocean-deep);
 }
+
+.btn[href*="github.com"] {
+  display: none;
+}

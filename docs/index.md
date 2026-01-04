@@ -1,18 +1,19 @@
 ---
 layout: default
-title: Solar Proa - Solar-Electric Proa Designs
+title: Solar Proa - Wind-solar-powered Outrigger Boats
 ---
 
 <div style="text-align: center; padding: 2em 0;">
   <h1 style="font-size: 2.5em; margin-bottom: 0.2em;">Prahu Surya Layar</h1>
-  <p style="font-size: 1.3em; color: #666; margin-top: 0;">Solar-Electric Hybrid Vessels for Tropical Eco-Tourism</p>
+  <p style="font-size: 1.3em; color: #666; margin-top: 0;">Wind-solar-powered Hybrid Vessels for the Tropics</p>
 </div>
 
 ---
 
 ## Executive Summary
 
-Project Prahu Surya Layar is developing solar-electric hybrid vessels for carbon-neutral eco-tourism in tropical Southeast Asia, with a 9-meter MVP _Roti Proa II_ completing mid-2026 and strategic partnerships available for commercial validation.
+Project _Solar Proa_ is developing wind-solar-powered hybrid vessels for carbon-neutral small-scale tropical maritime transport, exploration, and tourism.
+Completion of our 9-meter minimal viable product _Roti Proa II_ is targeted for mid-2026 and strategic partnerships are available for commercial validation.
 
 ---
 

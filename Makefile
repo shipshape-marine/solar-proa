@@ -96,6 +96,27 @@ render: build $(RENDER_DIR)
 	@echo "Render complete!"
 
 # Render all generated FCStd files
+# Generate YAML stats files for Jekyll
+.PHONY: stats-yaml
+stats-yaml: $(OUTPUT_DIR)
+	@echo "Generating YAML statistics for Jekyll..."
+	@mkdir -p docs/_data
+	@for fcstd in $(OUTPUT_DIR)/*.FCStd; do \
+		if [ -f "$$fcstd" ]; then \
+			base=$$(basename "$$fcstd" .FCStd); \
+			yaml_name=$$(echo "$$base" | tr '[:upper:]' '[:lower:]' | sed 's/rotiproa_//'); \
+			echo "Generating stats for $$base..."; \
+			if [ "$(UNAME)" = "Darwin" ]; then \
+				PYTHONPATH=/Applications/FreeCAD.app/Contents/Resources/lib:/Applications/FreeCAD.app/Contents/Resources/Mod \
+				DYLD_LIBRARY_PATH=/Applications/FreeCAD.app/Contents/Frameworks:/Applications/FreeCAD.app/Contents/Resources/lib \
+				/Applications/FreeCAD.app/Contents/Resources/bin/python $(SRC_DIR)/generate_stats_yaml.py "$$fcstd" "docs/_data/$${yaml_name}.yml" || true; \
+			else \
+				freecadcmd --run-python $(SRC_DIR)/generate_stats_yaml.py -- "$$fcstd" "docs/_data/$${yaml_name}.yml" || true; \
+			fi \
+		fi \
+	done
+	@echo "Stats YAML generation complete!"
+
 .PHONY: render-all
 render-all: $(RENDER_DIR)
 	@echo "Rendering images from all FCStd files..."

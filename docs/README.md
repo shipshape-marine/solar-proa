@@ -6,3 +6,4 @@ bundle exec jekyll serve
 
 # Open in browser
 open http://localhost:4000/CAD/
+

@@ -9,13 +9,8 @@ for i, arg in enumerate(sys.argv):
         macro_args = sys.argv[i+1:]
         break
 
-print(f"DEBUG: sys.argv = {sys.argv}")
-print(f"DEBUG: macro_args = {macro_args}")
-
 # Get parameter file from command line, default to RP2
 param_file = macro_args[0] if macro_args else 'boats.RP2'
-
-print(f"DEBUG: param_file = {param_file}")
 
 # Import the specified parameters
 if param_file in sys.modules:

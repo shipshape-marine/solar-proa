@@ -203,7 +203,7 @@ $(MASS_ARTIFACT): $(DESIGN_ARTIFACT) $(MASS_DIR)/mass.py | $(ARTIFACTS_DIR)
 		DYLD_LIBRARY_PATH=$(FREECAD_BUNDLE)/Contents/Frameworks:$(FREECAD_BUNDLE)/Contents/Resources/lib \
 		$(FREECAD_PYTHON) $(MASS_DIR)/mass.py --design $(DESIGN_ARTIFACT) --output $@; \
 	else \
-		PYTHONPATH=$(PWD) $(FREECAD_PYTHON) $(MASS_DIR)/mass.py --design $(DESIGN_ARTIFACT) --output $@; \
+		PYTHONPATH=$(PWD):$(PWD)/src/design $(FREECAD_PYTHON) $(MASS_DIR)/mass.py --design $(DESIGN_ARTIFACT) --output $@; \
 	fi
 
 # Buoyancy analysis (depends on mass)

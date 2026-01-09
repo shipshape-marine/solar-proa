@@ -142,10 +142,6 @@ python_vars_to_remove = [
 for var in python_vars_to_remove:
     make_env.pop(var, None)
 
-if platform.system() == 'Darwin':
-    # Set an environment variable to skip visibility fix in make
-    make_env['SKIP_VISIBILITY_FIX'] = '1'
-
 print(f"Running: {make_cmd} design BOAT={boat} CONFIGURATION={configuration}")
 
 try:
@@ -177,39 +173,6 @@ if result.returncode == 0:
     if os.path.exists(design_file):
         print(f"\n✓ Design complete!")
         print(f"  File: {design_file}")
-        
-        # On macOS, fix visibility now (in this FreeCAD instance, not a new one)
-        if FreeCAD.GuiUp and platform.system() == 'Darwin':
-            print("Fixing visibility in current FreeCAD session...")
-            try:
-                # Open the document
-                doc = FreeCAD.openDocument(design_file)
-                
-                # Import FreeCADGui for ViewObject access
-                import FreeCADGui
-                
-                # Set visibility for all objects
-                def make_visible(obj_list):
-                    for obj in obj_list:
-                        try:
-                            if hasattr(obj, 'ViewObject') and obj.ViewObject:
-                                if 'Origin' in obj.Name or obj.TypeId == 'App::Origin':
-                                    obj.ViewObject.Visibility = False
-                                else:
-                                    obj.ViewObject.Visibility = True
-                        except:
-                            pass
-                        if hasattr(obj, 'Group') and obj.Group:
-                            make_visible(obj.Group)
-                
-                make_visible(doc.Objects)
-                
-                # Save and close
-                doc.save()
-                FreeCAD.closeDocument(doc.Name)
-                print("✓ Visibility fixed")
-            except Exception as e:
-                print(f"Warning: Could not fix visibility: {e}")
         
         if FreeCAD.GuiUp:
             # Close all existing documents

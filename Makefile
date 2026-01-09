@@ -169,7 +169,6 @@ $(DESIGN_ARTIFACT): $(PARAMETERS_ARTIFACT) $(DESIGN_DIR)/design.FCMacro | $(DESI
 			echo "Fixing visibility on macOS..."; \
 			bash $(DESIGN_DIR)/fix_visibility.sh "$(DESIGN_ARTIFACT)" "$(FREECAD_APP)"; \
 		fi; \
-		echo "✓ Design ready: $(DESIGN_ARTIFACT)"; \
 	else \
 		echo "ERROR: Design failed - no design file created"; \
 		exit 1; \

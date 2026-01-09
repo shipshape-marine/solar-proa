@@ -210,18 +210,52 @@ central(vessel, params)
 # recompute before stats and rendering
 doc.recompute()
 
+# Initialize GUI in headless mode for ViewObject support (Linux only)
+# On macOS this causes issues, so we use post-processing instead
+import platform
+if not FreeCAD.GuiUp and platform.system() != 'Darwin':
+    print("Initializing GUI in headless mode (Linux) for ViewObject support...")
+    try:
+        from PySide import QtGui
+        try:
+            QtGui.QApplication()
+        except RuntimeError:
+            pass  # QApplication already exists
+        
+        import FreeCADGui as Gui
+        Gui.showMainWindow()
+        Gui.getMainWindow().destroy()
+        print("✓ GUI initialized (Linux)")
+        
+        # Set visibility for all objects
+        print("Setting object visibility...")
+        def make_all_visible(obj_list):
+            """Recursively make all objects visible"""
+            for obj in obj_list:
+                try:
+                    if hasattr(obj, 'ViewObject') and obj.ViewObject:
+                        # Hide Origin objects (coordinate helpers)
+                        if 'Origin' in obj.Name or obj.TypeId == 'App::Origin':
+                            obj.ViewObject.Visibility = False
+                        else:
+                            obj.ViewObject.Visibility = True
+                except Exception as e:
+                    pass
+                # Recurse into groups
+                if hasattr(obj, 'Group') and obj.Group:
+                    make_all_visible(obj.Group)
+        
+        make_all_visible(doc.Objects)
+        print(f"✓ Visibility set for {len(doc.Objects)} objects")
+    except Exception as e:
+        print(f"Warning: Could not initialize GUI/set visibility: {e}")
+
 # Save the document
-# Note: Visibility will be set in a post-processing step (see Makefile)
-# because ViewObject properties don't work reliably in console mode
 doc.saveAs(output_path)
 print(f"Saved document to {output_path}")
+if platform.system() == 'Darwin':
+    print("Note: Visibility will be fixed in post-processing on macOS")
 
-# Note: Headless GUI initialization is disabled because it causes segfaults
-# even on FreeCAD 1.0.0 when running in --console mode.
-# Object visibility is now set programmatically before saving (see above).
-
-print("Skipping headless GUI initialization (causes crashes in console mode)")
-print("Object visibility has been set before saving")
 
 # GUI-only code - skip in console mode
 if FreeCAD.GuiUp:
@@ -249,3 +283,4 @@ if not FreeCAD.GuiUp:
     # Use os._exit instead of sys.exit to avoid cleanup issues
     import os
     os._exit(0)
+

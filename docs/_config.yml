@@ -8,7 +8,7 @@ repository: solar-proa/CAD
 # Build settings
 markdown: kramdown
 
-# Include the renders directory
+# Include additional directories for GitHub Pages
 include:
   - renders
   - downloads

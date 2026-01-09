@@ -68,7 +68,11 @@ jobs:
         run: |
           make design-all
 
-      - name: Validate all models and generate aggregate data
+      - name: Generate parameters for all configurations
+        run: |
+          make parameters-all
+
+      - name: Validate all configurations
         run: |
           make validate-all
 
@@ -97,12 +101,33 @@ jobs:
       - name: Copy renders to docs folder
         run: |
           mkdir -p docs/renders
-          cp artifacts/*.png docs/renders/ 2>/dev/null || echo "No renders to copy"
+          if ls artifacts/*.png 1> /dev/null 2>&1; then
+            cp artifacts/*.png docs/renders/
+            echo "Copied $(ls artifacts/*.png | wc -l) render files"
+          else
+            echo "WARNING: No render PNG files found in artifacts/"
+          fi
       
       - name: Copy FCStd models to downloads folder
         run: |
           mkdir -p docs/downloads
-          cp artifacts/*.design.FCStd docs/downloads/ 2>/dev/null || echo "No FCStd files to copy"
+          if ls artifacts/*.design.FCStd 1> /dev/null 2>&1; then
+            cp artifacts/*.design.FCStd docs/downloads/
+            echo "Copied $(ls artifacts/*.design.FCStd | wc -l) FCStd files"
+          else
+            echo "WARNING: No FCStd files found in artifacts/"
+          fi
+      
+      - name: Verify files before Jekyll build
+        run: |
+          echo "=== Files in docs/renders/ ==="
+          ls -lh docs/renders/ || echo "No renders directory"
+          echo ""
+          echo "=== Files in docs/downloads/ ==="
+          ls -lh docs/downloads/ || echo "No downloads directory"
+          echo ""
+          echo "=== Files in docs/_data/ ==="
+          ls -lh docs/_data/ || echo "No _data directory"
       
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -119,7 +144,7 @@ jobs:
       - name: Build Jekyll site manually
         run: |
           cd docs
-          bundle exec jekyll build --destination ../_site
+          bundle exec jekyll build
         env:
           JEKYLL_ENV: production
           PAGES_REPO_NWO: ${{ github.repository }}
@@ -127,20 +152,33 @@ jobs:
       
       - name: Verify Jekyll site build
         run: |
-          echo "=== Jekyll site structure ==="
-          ls -la _site/
-          echo "=== Checking for data directory in source ==="
+          echo "=== Jekyll _site structure ==="
+          ls -la docs/_site/
+          echo ""
+          echo "=== Check for renders in _site ==="
+          ls -lh docs/_site/renders/ || echo "No renders in _site"
+          echo ""
+          echo "=== Check for downloads in _site ==="
+          ls -lh docs/_site/downloads/ || echo "No downloads in _site"
+          echo ""
+          echo "=== Checking source directories ==="
           ls -la docs/_data/ || echo "No _data directory"
+          ls -la docs/renders/ || echo "No renders directory"
+          ls -la docs/downloads/ || echo "No downloads directory"
+          echo ""
           echo "=== Sample JSON file content ==="
           cat docs/_data/rp2_closehaul.json 2>/dev/null || echo "File not found"
+          echo ""
           echo "=== Sample page content (should show data values, not liquid tags) ==="
-          grep -A5 "Overall Length" _site/rp2.html || echo "Page not found"
+          grep -A5 "Overall Length" docs/_site/rp2.html || echo "Page not found"
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/_site'
       
       - name: Deploy to GitHub Pages
         id: deployment

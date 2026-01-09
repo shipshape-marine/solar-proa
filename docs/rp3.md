@@ -3,8 +3,15 @@ layout: default
 title: Roti Proa III - 13m Multi-Day Vessel
 ---
 
-# Roti Proa III
-## 13-Meter Solar-Electric Multi-Day Cruiser
+<div style="display: flex; align-items: center; gap: 2em; margin-bottom: 2em; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px;">
+    <h1 style="margin: 0;">Roti Proa III</h1>
+    <h2 style="margin-top: 0.5em; font-weight: 300;">13-Meter Solar-Electric Multi-Day Cruiser</h2>
+  </div>
+  <div style="flex: 1; min-width: 300px; max-width: 500px;">
+    <img src="{{ '/renders/rp3.closehaul.render.view3.png' | relative_url }}" alt="Roti Proa III" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  </div>
+</div>
 
 [← Back to Home]({{ '/' | relative_url }})
 

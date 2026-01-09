@@ -3,8 +3,15 @@ layout: default
 title: Roti Proa II - 9m Day Tourism Vessel
 ---
 
-# Roti Proa II
-## 9-Meter Solar-Electric Day Tourism Vessel
+<div style="display: flex; align-items: center; gap: 2em; margin-bottom: 2em; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px;">
+    <h1 style="margin: 0;">Roti Proa II</h1>
+    <h2 style="margin-top: 0.5em; font-weight: 300;">9-Meter Solar-Electric Day Tourism Vessel</h2>
+  </div>
+  <div style="flex: 1; min-width: 300px; max-width: 500px;">
+    <img src="{{ '/renders/rp2.closehaul.render.view3.png' | relative_url }}" alt="Roti Proa II" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  </div>
+</div>
 
 [← Back to Home]({{ '/' | relative_url }})
 
@@ -12,7 +19,7 @@ title: Roti Proa II - 9m Day Tourism Vessel
 
 ## Specifications
 
-**Overall Length:** {{ site.data.rp2_closehaul.parameters.vaka_length }}mm  
+**Overall Length:** {{ site.data.rp2_closehaul.parameters.vaka_length }}mm
 **Beam:** {{ site.data.rp2_closehaul.parameters.beam }}mm (with outrigger)  
 **Capacity:** 4 passengers + 2 crew  
 **Solar Power:** 4kW peak (8 panels)  

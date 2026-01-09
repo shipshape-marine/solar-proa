@@ -3,8 +3,15 @@ layout: default
 title: Roti Proa I - 4.2m Prototype
 ---
 
-# Roti Proa I
-## 4.2-Meter Proof-of-Concept Prototype
+<div style="display: flex; align-items: center; gap: 2em; margin-bottom: 2em; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 300px;">
+    <h1 style="margin: 0;">Roti Proa I</h1>
+    <h2 style="margin-top: 0.5em; font-weight: 300;">4.2-Meter Proof-of-Concept Prototype</h2>
+  </div>
+  <div style="flex: 1; min-width: 300px; max-width: 500px;">
+    <img src="{{ '/renders/rp1.closehaul.render.view3.png' | relative_url }}" alt="Roti Proa I" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  </div>
+</div>
 
 [← Back to Home]({{ '/' | relative_url }})
 

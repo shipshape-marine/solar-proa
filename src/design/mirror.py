@@ -5,9 +5,7 @@ import Part
 from FreeCAD import Base
 import math
 
-from colors import *
 from shapes import *
-from material import *
 
 def mirror(side, params):
     # akas (cross-beams) and pillars under each transversal row of panels
@@ -29,7 +27,6 @@ def mirror(side, params):
                         - params['aka_width'] / 2,
                         params['aka_base_level']),
             FreeCAD.Rotation(Base.Vector(0, -1, 0), 90))
-        set_color(aka, color_aluminum)
 
         stanchion = side.newObject("Part::Feature",
                                    f"Stanchion_{i} (steel)")
@@ -45,7 +42,6 @@ def mirror(side, params):
                         + params['panel_width'] / 2,
                         params['aka_base_level']),
             FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-        set_color(stanchion, color_aluminum)
         
         pillar = side.newObject("Part::Feature", f"Pillar_{i} (aluminum)")
         pillar.Shape = shs(params['pillar_width'],
@@ -59,7 +55,6 @@ def mirror(side, params):
                         - params['aka_width'] / 2,
                         params['ama_thickness']),
             FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-        set_color(pillar, color_aluminum)
         
         # Pillar-to-aka diagonal braces (one on each side) at 45 degrees
 
@@ -92,7 +87,6 @@ def mirror(side, params):
         brace_kuning.Placement = FreeCAD.Placement(
             point_lower_kuning,
             FreeCAD.Rotation(Base.Vector(0, 1, 0), 45))
-        set_color(brace_kuning, color_aluminum)
 
         # Biru brace
         point_lower_biru = Base.Vector(pillar_x,
@@ -108,7 +102,6 @@ def mirror(side, params):
         brace_biru.Placement = FreeCAD.Placement(
             point_lower_biru,
             FreeCAD.Rotation(Base.Vector(0, 1, 0), 45))
-        set_color(brace_biru, color_aluminum)
 
     # Cross-bracing between neighboring pillars (X-shaped)
     # Add bracing between each pair of adjacent pillars
@@ -149,7 +142,6 @@ def mirror(side, params):
         brace_1.Placement = FreeCAD.Placement(
             point1,
             FreeCAD.Rotation(rotation_axis, rotation_angle))
-        set_color(brace_1, color_aluminum)
         
         # Second diagonal of X: from (y1, lower) to (y2, upper)
         brace_2 = side.newObject("Part::Feature",
@@ -168,7 +160,6 @@ def mirror(side, params):
         brace_2.Placement = FreeCAD.Placement(
             point3,
             FreeCAD.Rotation(rotation_axis2, rotation_angle2))
-        set_color(brace_2, color_aluminum)
 
     # aka_end supports the deck at the ends of the boat
     
@@ -184,7 +175,6 @@ def mirror(side, params):
                     params['vaka_length'] / 2 - params['aka_width'],
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, -1, 0), 90))
-    set_color(aka_end, color_aluminum)
 
     outer_stanchion = side.newObject("Part::Feature",
                                      "Outer Stanchion (aluminum)")
@@ -197,7 +187,6 @@ def mirror(side, params):
                     params['vaka_length'] / 2 - params['aka_width'] / 2,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(outer_stanchion, color_aluminum)
 
     center_stanchion = side.newObject("Part::Feature",
                                       "Center Stanchion (aluminum)")
@@ -209,7 +198,6 @@ def mirror(side, params):
                     params['vaka_length'] / 2 - params['aka_width'] / 2,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(center_stanchion, color_aluminum)
 
     inner_stanchion = side.newObject("Part::Feature",
                                       "Inner Stanchion (aluminum)")
@@ -222,7 +210,6 @@ def mirror(side, params):
                     params['vaka_length'] / 2 - params['gunwale_width'] / 2,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(inner_stanchion, color_aluminum)
 
     # stringers
 
@@ -239,7 +226,6 @@ def mirror(side, params):
                         params['panel_stringer_length'] / 2,
                         params['stringer_base_level']),
             FreeCAD.Rotation(Base.Vector(1, 0, 0), 90))
-        set_color(stringer_a, color_aluminum)
     
         stringer_b = side.newObject("Part::Feature", f"Stringer_b_{i} (aluminum)")
         stringer_b.Shape = shs(params['stringer_width'],
@@ -253,7 +239,6 @@ def mirror(side, params):
                         params['panel_stringer_length'] / 2,
                         params['stringer_base_level']),
             FreeCAD.Rotation(Base.Vector(1, 0, 0), 90))
-        set_color(stringer_b, color_aluminum)
 
     # solar panels
 
@@ -270,7 +255,6 @@ def mirror(side, params):
                             + i * params['panel_width'],
                             params['panel_base_level']),
                 FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-            set_color(panel, color_solar_panel)
 
     # deck stringers
 
@@ -288,7 +272,6 @@ def mirror(side, params):
                         params['vaka_length'] / 2,
                         params['stringer_base_level']),
             FreeCAD.Rotation(Base.Vector(1, 0, 0), 90))
-        set_color(deck_stringer, color_aluminum)
 
     # cylinder to cut rudder cap hole into deck
     deck_cutter = Part.makeCylinder(
@@ -316,7 +299,6 @@ def mirror(side, params):
                     params['deck_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
     deck.Shape = deck.Shape.cut(deck_cutter)
-    set_color(deck, color_deck)
 
     # mast partner: reinforced deck collar supporting mast laterally 
     # this must be here, not in rig.py (it will rotate otherwise)
@@ -332,7 +314,6 @@ def mirror(side, params):
                     - params['mast_partner_width'] / 2,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(mast_partner, color_wood)
 
     # mast step: reinforced sole collar supporting mast laterally 
     # this must be here, not in rig.py (it will rotate otherwise)
@@ -347,7 +328,6 @@ def mirror(side, params):
                     params['mast_distance_from_center'],
                     params['mast_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(mast_step, color_aluminum)
 
     # hull cylinder for cutting rudder vaka mounts
     
@@ -395,7 +375,6 @@ def mirror(side, params):
         params['rudder_vaka_mount_base_level']))
     rudder_vaka_mount_a_shape = rudder_vaka_mount_a_shape.cut(hull_cylinder)
     rudder_vaka_mount_a.Shape = rudder_vaka_mount_a_shape
-    set_color(rudder_vaka_mount_a, color_aluminum)
 
     hull_cylinder_bigger = elliptical_cylinder(
         params['vaka_length']
@@ -474,7 +453,6 @@ def mirror(side, params):
                     params['rudder_vaka_mount_base_level']))
     rudder_vaka_mount_b_shape = rudder_vaka_mount_b_shape.cut(hull_cylinder)
     rudder_vaka_mount_b.Shape = rudder_vaka_mount_b_shape
-    set_color(rudder_vaka_mount_b, color_aluminum)
 
     # hackish way to make vaka mount backing plates:
     # intersect the mount with an enlarged hull, extrude it outwards,
@@ -518,7 +496,6 @@ def mirror(side, params):
                     0,
                     params['deck_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(crossdeck, color_deck)
 
     # trap cover
 
@@ -535,7 +512,6 @@ def mirror(side, params):
                     params['crossdeck_width'] / 2,
                     params['deck_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(trap_cover, color_deck)
 
     # ama: upper and lower for color effect
     
@@ -554,7 +530,6 @@ def mirror(side, params):
                     params['ama_length'] / 2 - params['ama_cone_length'],
                     params['ama_diameter'] / 2),
         FreeCAD.Rotation(Base.Vector(1, 0, 0), 90))
-    set_color(ama_body_upper, color_ama)
 
     ama_body_lower = side.newObject("Part::Feature", "Ama pipe lower (pvc)")
     ama_body_lower.Shape = pipe(params['ama_diameter'],
@@ -566,7 +541,6 @@ def mirror(side, params):
                     params['ama_length'] / 2 - params['ama_cone_length'],
                     params['ama_diameter'] / 2),
         FreeCAD.Rotation(Base.Vector(1, 0, 0), 90))
-    set_color(ama_body_lower, color_bottom)
 
     ama_body_foam = side.newObject("Part::Feature", "Ama_Body_Foam (foam)")
     ama_body_foam.Shape = Part.makeCylinder(
@@ -588,7 +562,6 @@ def mirror(side, params):
                     params['ama_length'] / 2 - params['ama_cone_length'],
                     params['ama_diameter'] / 2),
         FreeCAD.Rotation(Base.Vector(1, 0, 0), 270))
-    set_color(ama_cone_upper, color_ama)
 
     ama_cone_lower = side.newObject("Part::Feature", "Ama_Cone_Lower (pvc)")
     ama_cone_lower.Shape = hollow_cone(params['ama_diameter'],
@@ -600,7 +573,6 @@ def mirror(side, params):
                     params['ama_length'] / 2 - params['ama_cone_length'],
                     params['ama_diameter'] / 2),
         FreeCAD.Rotation(Base.Vector(1, 0, 0), 270))
-    set_color(ama_cone_lower, color_bottom)
 
     ama_cone_foam = side.newObject("Part::Feature", "Ama_Cone_Foam (foam)")
     ama_cone_foam.Shape = Part.makeCone(params['ama_diameter'] / 2 - params['ama_thickness'],

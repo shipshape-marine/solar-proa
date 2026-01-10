@@ -35,13 +35,15 @@ endif
 CONST_DIR := constants
 BOATS_DIR := $(CONST_DIR)/boats
 CONFIGURATIONS_DIR := $(CONST_DIR)/configurations
+MATERIALS_DIR := $(CONST_DIR)/materials
 SRC_DIR := src
 ARTIFACTS_DIR := artifacts
 DOCS_DATA_DIR := docs/_data
 
-# Validator source directories
+# Source directories
 PARAMETERS_DIR := $(SRC_DIR)/parameters
 DESIGN_DIR := $(SRC_DIR)/design
+COLOR_DIR := $(SRC_DIR)/color
 MASS_DIR := $(SRC_DIR)/mass
 BUOYANCY_DIR := $(SRC_DIR)/buoyancy
 STABILITY_DIR := $(SRC_DIR)/stability
@@ -65,14 +67,17 @@ CONFIGURATIONS := $(filter-out %~,$(CONFIGURATIONS))
 # Default boat and configuration (can be overridden: make design BOAT=rp2 CONFIGURATION=closehaul)
 BOAT ?= rp2
 CONFIGURATION ?= closehaul
+MATERIALS ?= proa
 
 # Computed file paths using dot-separated naming convention
 BOAT_FILE := $(BOATS_DIR)/$(BOAT).json
 CONFIGURATION_FILE := $(CONFIGURATIONS_DIR)/$(CONFIGURATION).json
+MATERIALS_FILE := $(MATERIALS_DIR)/$(MATERIALS).json
 
 # Artifact paths
 PARAMETERS_ARTIFACT := $(ARTIFACTS_DIR)/$(BOAT).$(CONFIGURATION).parameters.json
 DESIGN_ARTIFACT := $(ARTIFACTS_DIR)/$(BOAT).$(CONFIGURATION).design.FCStd
+COLOR_ARTIFACT := $(ARTIFACTS_DIR)/$(BOAT).$(CONFIGURATION).color.FCStd
 MASS_ARTIFACT := $(ARTIFACTS_DIR)/$(BOAT).$(CONFIGURATION).mass.json
 BUOYANCY_ARTIFACT := $(ARTIFACTS_DIR)/$(BOAT).$(CONFIGURATION).buoyancy.json
 STABILITY_ARTIFACT := $(ARTIFACTS_DIR)/$(BOAT).$(CONFIGURATION).stability.json
@@ -84,7 +89,7 @@ JEKYLL_DATA := $(DOCS_DATA_DIR)/$(BOAT).$(CONFIGURATION).json
 # ==============================================================================
 
 .PHONY: all help clean check
-.PHONY: jekyll validate design-all validate-all parameters-all
+.PHONY: jekyll validate design-all validate-all parameters-all color-all render-only
 
 # ==============================================================================
 # MAIN TARGETS
@@ -103,6 +108,10 @@ help:
 	@echo "  make all                    - Build and validate all boats with all configurations"
 	@echo "  make design                 - Generate single design (BOAT=$(BOAT) CONFIGURATION=$(CONFIGURATION))"
 	@echo "  make design-all             - Generate all boat+configuration combinations"
+	@echo "  make color                  - Apply color scheme to design (MATERIALS=$(MATERIALS))"
+	@echo "  make color-all              - Apply colors to all existing designs"
+	@echo "  make render                 - Render images (applies colors then renders)"
+	@echo "  make render-all             - Render all existing colored designs"
 	@echo "  make validate               - Run validators for single design (BOAT=$(BOAT) CONFIGURATION=$(CONFIGURATION))"
 	@echo "  make validate-all           - Run validators for all existing designs"
 	@echo ""
@@ -117,6 +126,9 @@ help:
 	@echo ""
 	@echo "Examples:"
 	@echo "  make design BOAT=rp2 CONFIGURATION=closehaul"
+	@echo "  make color BOAT=rp2 CONFIGURATION=closehaul MATERIALS=proa"
+	@echo "  make color BOAT=rp2 CONFIGURATION=closehaul MATERIALS=wiring"
+	@echo "  make render BOAT=rp2 CONFIGURATION=closehaul"
 	@echo "  make validate BOAT=rp2 CONFIGURATION=closehaul"
 	@echo "  make parameters BOAT=rp2"
 	@echo ""
@@ -188,11 +200,50 @@ design-all:
 	@echo ""
 	@echo "✓ All designs complete!"
 
-# ==============================================================================
-# VALIDATION PIPELINE (DAG-based dependency resolution)
-# ==============================================================================
+# Apply color scheme to design
+$(COLOR_ARTIFACT): $(DESIGN_ARTIFACT) $(MATERIALS_FILE) | $(COLOR_DIR)
+	@echo "Applying color scheme '$(MATERIALS)' to $(BOAT).$(CONFIGURATION)..."
+	@if [ ! -f "$(MATERIALS_FILE)" ]; then \
+		echo "ERROR: Color scheme not found: $(MATERIALS_FILE)"; \
+		echo "Available schemes: $(notdir $(wildcard $(MATERIALS_DIR)/*.json))"; \
+		exit 1; \
+	fi
+	@if [ "$(UNAME)" = "Darwin" ]; then \
+		bash $(COLOR_DIR)/color_mac.sh \
+			"$(DESIGN_ARTIFACT)" \
+			"$(MATERIALS_FILE)" \
+			"$(COLOR_ARTIFACT)" \
+			"$(FREECAD_APP)"; \
+	else \
+		freecad-python $(COLOR_DIR)/color.py \
+			--design "$(DESIGN_ARTIFACT)" \
+			--colors "$(MATERIALS_FILE)" \
+			--output-design "$(COLOR_ARTIFACT)"; \
+	fi
+	@echo "✓ Colored design: $(COLOR_ARTIFACT)"
 
-# Mass analysis (depends on design)
+# Convenience target: apply colors to a single design
+.PHONY: color
+color: $(COLOR_ARTIFACT)
+	@echo "✓ Color scheme '$(MATERIALS)' applied to $(BOAT).$(CONFIGURATION)"
+
+# Apply colors to all designs
+.PHONY: color-all
+color-all:
+	@echo "Applying colors to all existing designs..."
+	@for design in $(ARTIFACTS_DIR)/*.design.FCStd; do \
+		if [ -f "$$design" ]; then \
+			base=$$(basename "$$design" .design.FCStd); \
+			boat=$$(echo "$$base" | cut -d'.' -f1); \
+			configuration=$$(echo "$$base" | cut -d'.' -f2); \
+			echo ""; \
+			$(MAKE) color BOAT=$$boat CONFIGURATION=$$configuration MATERIALS=$(MATERIALS) || true; \
+		fi \
+	done
+	@echo ""
+	@echo "✓ All designs colored!"
+
+# Mass analysis (depends on design, not colors - mass is geometry-based)
 $(MASS_ARTIFACT): $(DESIGN_ARTIFACT) $(MASS_DIR)/mass.py | $(ARTIFACTS_DIR)
 	@echo "Running mass analysis: $(BOAT).$(CONFIGURATION)"
 	@if [ "$(UNAME)" = "Darwin" ]; then \
@@ -202,6 +253,27 @@ $(MASS_ARTIFACT): $(DESIGN_ARTIFACT) $(MASS_DIR)/mass.py | $(ARTIFACTS_DIR)
 	else \
 		PYTHONPATH=$(PWD):$(PWD)/src/design $(FREECAD_PYTHON) $(MASS_DIR)/mass.py --design $(DESIGN_ARTIFACT) --output $@; \
 	fi
+
+# Convenience target: apply mass to a single design
+.PHONY: color
+mass: $(MASS_ARTIFACT)
+	@echo "✓ mass calculation applied to $(BOAT).$(CONFIGURATION)"
+
+# Apply colors to all designs
+.PHONY: mass-all
+mass-all:
+	@echo "Applying mass calculation to all existing designs..."
+	@for design in $(ARTIFACTS_DIR)/*.design.FCStd; do \
+		if [ -f "$$design" ]; then \
+			base=$$(basename "$$design" .design.FCStd); \
+			boat=$$(echo "$$base" | cut -d'.' -f1); \
+			configuration=$$(echo "$$base" | cut -d'.' -f2); \
+			echo ""; \
+			$(MAKE) mass BOAT=$$boat CONFIGURATION=$$configuration MATERIALS=$(MATERIALS) || true; \
+		fi \
+	done
+	@echo ""
+	@echo "✓ All designs colored!"
 
 # Buoyancy analysis (depends on mass)
 $(BUOYANCY_ARTIFACT): $(MASS_ARTIFACT) $(PARAMETERS_ARTIFACT) $(BUOYANCY_DIR)/buoyancy.py | $(ARTIFACTS_DIR)
@@ -277,18 +349,18 @@ validate-existing:
 	@echo ""
 	@echo "✓ All existing designs validated!"
 
-# Render images from single FCStd file (assumes FCSTD exists)
+# Render images from colored FCStd file
 .PHONY: render-only
-render-only: $(RENDER_DIR)
-	@echo "Rendering images from $(DESIGN_ARTIFACT)..."
-	@if [ ! -f "$(DESIGN_ARTIFACT)" ]; then \
-		echo "ERROR: $(DESIGN_ARTIFACT) not found. Run 'make design' first."; \
+render-only: $(COLOR_ARTIFACT) $(RENDER_DIR)
+	@echo "Rendering images from $(COLOR_ARTIFACT)..."
+	@if [ ! -f "$(COLOR_ARTIFACT)" ]; then \
+		echo "ERROR: $(COLOR_ARTIFACT) not found. Run 'make color' first."; \
 		exit 1; \
 	fi
 	@if [ "$(UNAME)" = "Darwin" ]; then \
-		$(RENDER_DIR)/render_mac.sh "$(DESIGN_ARTIFACT)" "$(ARTIFACTS_DIR)" "$(FREECAD_APP)"; \
+		$(RENDER_DIR)/render_mac.sh "$(COLOR_ARTIFACT)" "$(ARTIFACTS_DIR)" "$(FREECAD_APP)"; \
 	else \
-		FCSTD_FILE="$(DESIGN_ARTIFACT)" IMAGE_DIR="$(ARTIFACTS_DIR)" freecad-python $(RENDER_DIR)/render_linux.py; \
+		FCSTD_FILE="$(COLOR_ARTIFACT)" IMAGE_DIR="$(ARTIFACTS_DIR)" freecad-python $(RENDER_DIR)/render_linux.py; \
 	fi
 	@echo "Cropping images with ImageMagick..."
 	@if command -v convert >/dev/null 2>&1; then \

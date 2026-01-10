@@ -1,0 +1,61 @@
+{
+  "scheme_name": "Wiring View",
+  "description": "Transparent hull view for showing electrical wiring and power systems",
+  "version": "1.0",
+  "materials": {
+    "aluminum": {
+      "color": [0.75, 0.75, 0.78],
+      "transparency": 80,
+      "display_mode": "Shaded",
+      "description": "Structural aluminum (transparent to show wiring)"
+    },
+    "steel": {
+      "color": [0.65, 0.65, 0.68],
+      "transparency": 80,
+      "display_mode": "Shaded",
+      "description": "Steel components (transparent)"
+    },
+    "plywood": {
+      "color": [0.76, 0.60, 0.42],
+      "transparency": 80,
+      "display_mode": "Shaded",
+      "description": "Plywood (transparent to show interior)"
+    },
+    "marine_plywood": {
+      "color": [0.76, 0.60, 0.42],
+      "transparency": 80,
+      "display_mode": "Shaded",
+      "description": "Marine plywood (transparent)"
+    },
+    "hull_exterior": {
+      "color": [1.0, 1.0, 1.0],
+      "transparency": 90,
+      "display_mode": "Shaded",
+      "description": "Hull exterior (highly transparent)"
+    },
+    "wire": {
+      "color": [0.8, 0.2, 0.2],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "description": "Electrical wiring (visible)"
+    },
+    "solar_panel": {
+      "color": [0.3, 0.3, 0.3],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "description": "Solar panels (visible)"
+    },
+    "battery": {
+      "color": [0.2, 0.4, 0.8],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "description": "Battery banks (visible)"
+    },
+    "inverter": {
+      "color": [0.6, 0.3, 0.8],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "description": "Inverter/power electronics (visible)"
+    }
+  }
+}

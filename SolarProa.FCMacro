@@ -154,10 +154,45 @@ try:
         env=make_env
     )
 except FileNotFoundError as e:
-    error_msg = f"Make command not found: {make_cmd}\n\nPlease install Xcode Command Line Tools:\nxcode-select --install"
+    # Construct platform-specific installation instructions
+    if platform.system() == 'Darwin':
+        install_instructions = "Please install Xcode Command Line Tools:\n  xcode-select --install"
+    elif platform.system() == 'Linux':
+        install_instructions = "Please install make using your package manager:\n  sudo apt-get install build-essential  # Debian/Ubuntu\n  sudo yum groupinstall 'Development Tools'  # RHEL/CentOS"
+    else:
+        install_instructions = "Please install GNU Make for your platform"
+    
+    readme_url = "https://github.com/solar-proa/CAD"
+    
+    error_msg = (
+        f"Make command not found: {make_cmd}\n\n"
+        f"{install_instructions}\n\n"
+        f"For detailed installation instructions, see:\n{readme_url}"
+    )
+    
     print(f"\n✗ ERROR: {error_msg}")
+    
     if FreeCAD.GuiUp:
-        QtGui.QMessageBox.critical(None, "Make Not Found", error_msg)
+        # Create a custom message box with a clickable link
+        msg_box = QtGui.QMessageBox()
+        msg_box.setIcon(QtGui.QMessageBox.Critical)
+        msg_box.setWindowTitle("Make Not Found")
+        msg_box.setText(f"Make command not found: {make_cmd}")
+        msg_box.setInformativeText(install_instructions)
+        
+        # Add clickable link to README
+        msg_box.setDetailedText(f"For detailed instructions, visit:\n{readme_url}")
+        
+        # Create a clickable label for the README link
+        link_label = QtGui.QLabel(f'<a href="{readme_url}">View installation guide (README)</a>')
+        link_label.setOpenExternalLinks(True)
+        link_label.setTextFormat(QtCore.Qt.RichText)
+        link_label.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        
+        # Add the link to the message box
+        msg_box.layout().addWidget(link_label, 2, 1)
+        
+        msg_box.exec_()
     sys.exit(1)
 
 print("\n" + "="*60)

@@ -15,57 +15,6 @@ except ImportError:
     print("ERROR: This script must be run with freecadcmd or FreeCAD")
     sys.exit(1)
 
-# Material color mapping (RGB 0-1 scale)
-MATERIAL_COLORS = {
-    'aluminum': (0.75, 0.75, 0.75),          # Light gray
-    'plywood': (0.82, 0.71, 0.55),           # Wood tan
-    'marine_plywood': (0.82, 0.71, 0.55),    # Wood tan
-    'foam': (1.0, 0.85, 0.0),                # Safety yellow
-    'solar_panels': (0.1, 0.1, 0.35),        # Dark blue
-    'stainless_steel': (0.85, 0.85, 0.87),   # Bright metallic
-    'steel': (0.6, 0.6, 0.62),               # Dark metallic
-    'pvc': (0.95, 0.95, 0.95),               # Off-white
-    'rope': (0.9, 0.8, 0.5),                 # Tan/beige
-    'canvas': (0.95, 0.92, 0.85),            # Off-white/cream
-}
-
-def get_material_from_label(label):
-    """Extract material name from object label like 'Deck__plywood_001'"""
-    label_lower = label.lower()
-    if '__' in label_lower:
-        parts = label_lower.split('__')
-        if len(parts) >= 2:
-            # Handle cases like "Deck__plywood_001" - extract just "plywood"
-            mat_key = parts[1].rstrip('_0123456789').strip()
-            return mat_key
-    return None
-
-def apply_colors_to_objects(doc):
-    """Apply material-based colors to all objects"""
-    
-    def process_objects(obj_list):
-        for obj in obj_list:
-            # Color this object
-            if hasattr(obj, 'ViewObject') and obj.ViewObject:
-                mat_key = get_material_from_label(obj.Label)
-                if mat_key and mat_key in MATERIAL_COLORS:
-                    try:
-                        obj.ViewObject.ShapeColor = MATERIAL_COLORS[mat_key]
-                        obj.ViewObject.Transparency = 0
-                        # Use Shaded mode for better rendering
-                        if hasattr(obj.ViewObject, 'DisplayMode'):
-                            obj.ViewObject.DisplayMode = "Shaded"
-                        print(f"  Colored {obj.Label} as {mat_key}")
-                    except Exception as e:
-                        print(f"  Warning: Could not color {obj.Label}: {e}")
-            
-            # Recurse into groups
-            if hasattr(obj, 'Group'):
-                process_objects(obj.Group)
-    
-    process_objects(doc.Objects)
-
-
 def export_renders(fcstd_path, output_render):
     """Export multiple views from an FCStd file as PNG images"""
     
@@ -95,9 +44,8 @@ def export_renders(fcstd_path, output_render):
     print(f"Opening {fcstd_path}...")
     doc = App.openDocument(fcstd_path)
     
-    # Apply material-based colors
-    print("Applying material colors...")
-    apply_colors_to_objects(doc)
+    # Note: Colors should already be applied by the color module
+    # The input FCStd file is expected to be a *.color.FCStd file
     doc.recompute()
     
     # Create GUI document - this is essential for rendering

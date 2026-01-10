@@ -6,7 +6,6 @@ import Part
 from FreeCAD import Base
 import math
 
-from colors import *
 from shapes import *
 from material import *
 
@@ -24,7 +23,6 @@ def central(vessel, params):
     spine.Placement = FreeCAD.Placement(
         Base.Vector(- params['spine_width'] / 2, params['spine_length'] / 2, params['spine_base_level']),
         FreeCAD.Rotation(Base.Vector(1, 0, 0), 90))
-    set_color(spine, color_aluminum)
 
     # make a box for the cockpit to cut
     
@@ -50,7 +48,6 @@ def central(vessel, params):
         Base.Vector(params['vaka_x_offset'], 0, params['overhead_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
     overhead.Shape = overhead.Shape.cut(cockpit_cutter_transformed)
-    set_color(overhead, color_plywood)
 
     # bottom: part of the hull below the sole
     bottom = vessel.newObject("Part::Feature", "Bottom (fiberglass)")
@@ -73,7 +70,6 @@ def central(vessel, params):
     bottom.Placement = FreeCAD.Placement(
         Base.Vector(params['vaka_x_offset'], 0, params['bottom_height']),
         FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
-    set_color(bottom, color_bottom)
 
     # foam_below_sole 
     foam_below_sole = vessel.newObject("Part::Feature", "Foam_Below_Sole (foam)")
@@ -91,7 +87,6 @@ def central(vessel, params):
     sole.Placement = FreeCAD.Placement(
         Base.Vector(params['vaka_x_offset'], 0, params['bottom_height']),
         FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
-    set_color(sole, color_sole)
     
     # hull: exterior from sole base level (bottom height) upwards
     #       to gunwale base level
@@ -103,7 +98,6 @@ def central(vessel, params):
     hull.Placement = FreeCAD.Placement(
         Base.Vector(params['vaka_x_offset'], 0, params['bottom_height']),
         FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
-    set_color(hull, color_hull_exterior)
 
     gunwale = vessel.newObject("Part::Feature", "Gunwale (wood)")
     gunwale.Shape = elliptical_pipe(params['vaka_length'],
@@ -115,7 +109,6 @@ def central(vessel, params):
                     0,
                     params['gunwale_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
-    set_color(gunwale, color_hull_exterior)
 
     outer_crossdeck_stanchion = vessel.newObject("Part::Feature",
                                               "Outer_Crossdeck_Stanchion (steel)")
@@ -127,7 +120,6 @@ def central(vessel, params):
                     0,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(outer_crossdeck_stanchion, color_aluminum)
 
     center_crossdeck_stanchion = (
         vessel.newObject("Part::Feature",
@@ -140,7 +132,6 @@ def central(vessel, params):
                     0,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(center_crossdeck_stanchion, color_aluminum)
 
     motor_backing_plate = (
         vessel.newObject("Part::Feature",
@@ -157,7 +148,6 @@ def central(vessel, params):
                     - params['motor_backing_plate_length'] / 2,
                     params['motor_backing_plate_above_sole']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(motor_backing_plate, color_aluminum)
 
     side_board_plate = (
         vessel.newObject("Part::Feature",
@@ -174,5 +164,4 @@ def central(vessel, params):
                     - params['side_board_plate_length'] / 2,
                     params['side_board_plate_above_sole']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-    set_color(side_board_plate, color_aluminum)
 

@@ -60,10 +60,6 @@ except ImportError as e:
 
 # Import the shape-building modules
 
-print("Importing colors...")
-if 'colors' in sys.modules: del sys.modules['colors']
-from colors import *
-
 print("Importing shapes...")
 if 'shapes' in sys.modules: del sys.modules['shapes']
 from shapes import *
@@ -163,10 +159,6 @@ for obj in biru.Group:
     mirrored_obj.Shape = shape
     mirrored_obj.Placement = obj.Placement  # Copy the placement too
     
-    # Copy the color
-    if hasattr(obj, 'ViewObject') and obj.ViewObject:    
-        mirrored_obj.ViewObject.ShapeColor = obj.ViewObject.ShapeColor
-
 # rig: each rig (biru and kuning) is
 # constructed at origin in rotating.py,
 # then rotated, then translated in x and y-direction

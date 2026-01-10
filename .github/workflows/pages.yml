@@ -95,7 +95,7 @@ jobs:
       
       - name: Generate downloads YAML files
         run: |
-          python3 src/design/generate_downloads_yaml.py
+          python3 docs/generate_downloads_yaml.py
       
       - name: Copy validate files to docs folder
         run: |

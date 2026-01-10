@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..', 'src'))
 
 try:
     import FreeCAD as App
-    from design.material import material
+    import material
 except ImportError as e:
     print(f"ERROR: {e}", file=sys.stderr)
     print("This script must be run with FreeCAD's Python", file=sys.stderr)

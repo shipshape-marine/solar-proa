@@ -114,7 +114,7 @@ def main():
                        help='Input FCStd design file')
     parser.add_argument('--colors', required=True,
                        help='Color scheme JSON file')
-    parser.add_argument('--output-design', required=True,
+    parser.add_argument('--outputdesign', required=True,
                        help='Output colored FCStd file')
     
     args = parser.parse_args()
@@ -166,8 +166,8 @@ def main():
     make_all_visible(doc.Objects)
     
     # Save colored design
-    print(f"Saving colored design: {args.output_design}")
-    doc.saveAs(args.output_design)
+    print(f"Saving colored design: {args.outputdesign}")
+    doc.saveAs(args.outputdesign)
     
     print(f"✓ Color application complete")
     print(f"  Total objects: {stats['total_objects']}")

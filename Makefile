@@ -218,7 +218,7 @@ $(COLOR_ARTIFACT): $(DESIGN_ARTIFACT) $(MATERIALS_FILE) $(COLOR_DIR)/color.py | 
 		freecad-python $(COLOR_DIR)/color.py \
 			--design "$(DESIGN_ARTIFACT)" \
 			--color "$(MATERIALS_FILE)" \
-			--output-design "$(COLOR_ARTIFACT)"; \
+			--outputdesign "$(COLOR_ARTIFACT)"; \
 	fi
 	@echo "✓ Colored design: $(COLOR_ARTIFACT)"
 

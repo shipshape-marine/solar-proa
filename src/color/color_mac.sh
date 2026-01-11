@@ -126,6 +126,26 @@ print("Applying colors...")
 stats = apply_colors(doc, color_scheme)
 doc.recompute()
 
+# Ensure visibility is preserved/set correctly
+print("Setting visibility...")
+def make_all_visible(obj_list):
+    """Recursively make all objects visible (except Origin helpers)"""
+    for obj in obj_list:
+        try:
+            if hasattr(obj, 'ViewObject') and obj.ViewObject:
+                # Hide Origin objects (coordinate helpers)
+                if 'Origin' in obj.Name or obj.TypeId == 'App::Origin':
+                    obj.ViewObject.Visibility = False
+                else:
+                    obj.ViewObject.Visibility = True
+        except:
+            pass
+        # Recurse into groups
+        if hasattr(obj, 'Group'):
+            make_all_visible(obj.Group)
+
+make_all_visible(doc.Objects)
+
 # Save colored design
 print(f"Saving colored design: {output_fcstd}")
 doc.saveAs(output_fcstd)

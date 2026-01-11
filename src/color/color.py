@@ -2,7 +2,7 @@
 """
 Apply color scheme to FreeCAD design (Linux - headless mode)
 
-This script loads a color scheme from JSON and applies color, transparency,
+This script loads a color scheme from JSON and applies colors, transparency,
 and display modes to all objects in a FreeCAD design based on their material.
 """
 
@@ -50,7 +50,7 @@ def get_material_from_label(label):
     return None
 
 
-def apply_color(doc, color_scheme):
+def apply_colors(doc, color_scheme):
     """
     Apply color scheme to all objects in document based on material.
     
@@ -112,7 +112,7 @@ def main():
     )
     parser.add_argument('--design', required=True, 
                        help='Input FCStd design file')
-    parser.add_argument('--color', required=True,
+    parser.add_argument('--colors', required=True,
                        help='Color scheme JSON file')
     parser.add_argument('--output-design', required=True,
                        help='Output colored FCStd file')
@@ -123,13 +123,13 @@ def main():
         print(f"ERROR: Design file not found: {args.design}", file=sys.stderr)
         sys.exit(1)
     
-    if not os.path.exists(args.color):
-        print(f"ERROR: Color scheme file not found: {args.color}", file=sys.stderr)
+    if not os.path.exists(args.colors):
+        print(f"ERROR: Color scheme file not found: {args.colors}", file=sys.stderr)
         sys.exit(1)
     
     # Load color scheme
-    print(f"Loading color scheme: {args.color}")
-    with open(args.color, 'r') as f:
+    print(f"Loading color scheme: {args.colors}")
+    with open(args.colors, 'r') as f:
         color_scheme = json.load(f)
     
     scheme_name = color_scheme.get('scheme_name', 'Unknown')
@@ -140,10 +140,30 @@ def main():
     print(f"Opening design: {args.design}")
     doc = App.openDocument(args.design)
     
-    # Apply color
-    print("Applying color...")
-    stats = apply_color(doc, color_scheme)
+    # Apply colors
+    print("Applying colors...")
+    stats = apply_colors(doc, color_scheme)
     doc.recompute()
+    
+    # Ensure visibility is preserved/set correctly
+    print("Setting visibility...")
+    def make_all_visible(obj_list):
+        """Recursively make all objects visible (except Origin helpers)"""
+        for obj in obj_list:
+            try:
+                if hasattr(obj, 'ViewObject') and obj.ViewObject:
+                    # Hide Origin objects (coordinate helpers)
+                    if 'Origin' in obj.Name or obj.TypeId == 'App::Origin':
+                        obj.ViewObject.Visibility = False
+                    else:
+                        obj.ViewObject.Visibility = True
+            except Exception as e:
+                pass
+            # Recurse into groups
+            if hasattr(obj, 'Group') and obj.Group:
+                make_all_visible(obj.Group)
+    
+    make_all_visible(doc.Objects)
     
     # Save colored design
     print(f"Saving colored design: {args.output_design}")

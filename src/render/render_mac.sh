@@ -21,6 +21,8 @@ mkdir -p "$OUTPUT_DIR"
 
 # Get base name for output files
 BASENAME=$(basename "$FCSTD_FILE" .FCStd)
+# Strip .color suffix if present to match the output filenames
+BASENAME=${BASENAME%.color}
 
 # Create a temporary Python script
 TEMP_SCRIPT=$(mktemp /tmp/freecad_render_XXXXXX.py)

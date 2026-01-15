@@ -71,6 +71,8 @@ This comprehensive article covers:
 
 {% assign render_files = site.static_files | where_exp: "file", "file.path contains 'renders'" | where_exp: "file", "file.path contains 'rp1'" | where_exp: "file", "file.extname == '.png'" %}
 
+{% assign rp1_configs = "beaching,beamreach,broadreach,closehaul,closehaulreefed,goosewing" | split: "," %}
+
 {% for config in rp1_configs %}
   <h3>{{ config | capitalize | replace: "beamreach", "Beam Reach" | replace: "broadreach", "Broad Reach" | replace: "closehaul", "Close Haul" | replace: "closehaulreefed", "Close Haul Reefed" | replace: "goosewing", "Goose Wing" }}</h3>
   

@@ -130,6 +130,8 @@ This isn't just about technology transfer; it's about **cultural continuity** - 
 
 {% assign render_files = site.static_files | where_exp: "file", "file.path contains 'renders'" | where_exp: "file", "file.path contains 'rp3'" | where_exp: "file", "file.extname == '.png'" %}
 
+{% assign rp3_configs = "beaching,beamreach,broadreach,closehaul,closehaulreefed,goosewing" | split: "," %}
+
 {% for config in rp3_configs %}
   <h3>{{ config | capitalize | replace: "beamreach", "Beam Reach" | replace: "broadreach", "Broad Reach" | replace: "closehaul", "Close Haul" | replace: "closehaulreefed", "Close Haul Reefed" | replace: "goosewing", "Goose Wing" }}</h3>
   

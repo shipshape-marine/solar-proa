@@ -196,7 +196,7 @@ PARAMETER_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).parameter.json
 $(PARAMETER_ARTIFACT): $(BOAT_FILE) $(CONFIGURATION_FILE) $(PARAMETER_SOURCE)
 	@echo "Computing parameters for $(BOAT) and $(CONFIGURATION)..."
 	@mkdir -p $(ARTIFACT_DIR)
-	@python3 $(PARAMETER_DIR)/parameter.py \
+	@python3 -m src.parameter \
 		--boat $(BOAT_FILE) \
 		--configuration $(CONFIGURATION_FILE) \
 		--output $@
@@ -216,7 +216,7 @@ DESIGN_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).design.FCStd
 $(DESIGN_ARTIFACT): $(PARAMETER_ARTIFACT) $(DESIGN_SOURCE) | $(DESIGN_DIR)
 	@echo "Generating design: $(BOAT).$(CONFIGURATION)"
 	@echo "  Parameters: $(PARAMETER_ARTIFACT)"
-	@$(FREECAD_CMD) $(DESIGN_DIR)/design.py $(PARAMETER_ARTIFACT) $(DESIGN_ARTIFACT) || true
+	@$(FREECAD_CMD) $(DESIGN_DIR)/__main__.py $(PARAMETER_ARTIFACT) $(DESIGN_ARTIFACT) || true
 	@if [ -f "$(DESIGN_ARTIFACT)" ]; then \
 		echo "✓ Design complete: $(DESIGN_ARTIFACT)"; \
 		if [ "$(UNAME)" = "Darwin" ]; then \
@@ -253,7 +253,7 @@ $(COLOR_ARTIFACT): $(DESIGN_ARTIFACT) $(MATERIAL_FILE) $(COLOR_SOURCE) | $(COLOR
 			"$(COLOR_ARTIFACT)" \
 			"$(FREECAD_APP)"; \
 	else \
-		freecad-python $(COLOR_DIR)/color.py \
+		freecad-python -m src.color \
 			--design "$(DESIGN_ARTIFACT)" \
 			--color "$(MATERIAL_FILE)" \
 			--outputdesign "$(COLOR_ARTIFACT)"; \
@@ -277,9 +277,9 @@ $(MASS_ARTIFACT): $(DESIGN_ARTIFACT) $(MATERIAL_FILE) $(MASS_SOURCE) | $(ARTIFAC
 	@if [ "$(UNAME)" = "Darwin" ]; then \
 		PYTHONPATH=$(FREECAD_BUNDLE)/Contents/Resources/lib:$(FREECAD_BUNDLE)/Contents/Resources/Mod:$(PWD) \
 		DYLD_LIBRARY_PATH=$(FREECAD_BUNDLE)/Contents/Frameworks:$(FREECAD_BUNDLE)/Contents/Resources/lib \
-		$(FREECAD_PYTHON) $(MASS_DIR)/mass.py --design $(DESIGN_ARTIFACT) --materials $(MATERIAL_FILE) --output $@; \
+		$(FREECAD_PYTHON) -m src.mass --design $(DESIGN_ARTIFACT) --materials $(MATERIAL_FILE) --output $@; \
 	else \
-		PYTHONPATH=$(PWD):$(PWD)/src/design $(FREECAD_PYTHON) $(MASS_DIR)/mass.py --design $(DESIGN_ARTIFACT) --materials $(MATERIAL_FILE) --output $@; \
+		PYTHONPATH=$(PWD):$(PWD)/src/design $(FREECAD_PYTHON) -m src.mass --design $(DESIGN_ARTIFACT) --materials $(MATERIAL_FILE) --output $@; \
 	fi
 
 .PHONY: mass
@@ -299,7 +299,7 @@ render: $(COLOR_ARTIFACT) $(RENDER_SOURCE)
 	@if [ "$(UNAME)" = "Darwin" ]; then \
 		$(RENDER_DIR)/render_mac.sh "$(COLOR_ARTIFACT)" "$(ARTIFACT_DIR)" "$(FREECAD_APP)"; \
 	else \
-		FCSTD_FILE="$(COLOR_ARTIFACT)" IMAGE_DIR="$(ARTIFACT_DIR)" freecad-python $(RENDER_DIR)/render_linux.py; \
+		FCSTD_FILE="$(COLOR_ARTIFACT)" IMAGE_DIR="$(ARTIFACT_DIR)" freecad-python -m src.render; \
 	fi
 	@echo "Cropping images with ImageMagick..."
 	@if command -v convert >/dev/null 2>&1; then \
@@ -330,7 +330,7 @@ $(STEP_ARTIFACT): $(DESIGN_ARTIFACT) $(STEP_SOURCE) | $(ARTIFACT_DIR)
 			"$(STEP_ARTIFACT)" \
 			"$(FREECAD_APP)"; \
 	else \
-		$(FREECAD_PYTHON) $(STEP_DIR)/step.py \
+		$(FREECAD_PYTHON) -m src.step \
 			--input "$(DESIGN_ARTIFACT)" \
 			--output "$(STEP_ARTIFACT)"; \
 	fi

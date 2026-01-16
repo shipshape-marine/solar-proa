@@ -90,8 +90,9 @@
   "side_board_plate_height": 300,
   "side_board_plate_thickness": 10,
   "side_board_plate_above_sole": 600,
-  "configuration_description": "Close haul sailing configuration",
   "configuration_name": "closehaul",
+  "display_name": "Close Haul",
+  "configuration_description": "Upwind sailing",
   "required": [
     "render",
     "step"

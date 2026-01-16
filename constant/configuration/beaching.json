@@ -1,7 +1,11 @@
 {
   "configuration_name": "beaching",
   "display_name": "Beaching",
+<<<<<<< HEAD
   "configuration_description": "Beaching configuration - boat on shore with sails down and rudders lifted",
+=======
+  "configuration_description": "Beaching configuration - boat on shore with sails down",
+>>>>>>> 5ec7cc0 (Add technical page and systematic configuration display names)
   
   "required": [
       "mass",

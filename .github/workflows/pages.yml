@@ -80,7 +80,11 @@ jobs:
         run: |
           python3 docs/generate_dependency_graph.py
 
+<<<<<<< HEAD
       - name: Copy constant files to docs/_data
+=======
+      - name: Copy data files to docs folder
+>>>>>>> 5ec7cc0 (Add technical page and systematic configuration display names)
         run: |
           mkdir -p docs/_data
           cp constant/view.json docs/_data/

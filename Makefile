@@ -118,6 +118,8 @@ help:
 	@echo "  make render                 - Render images (applies colors then renders)"
 	@echo "  make buoyancy               - Run buoyancy equilibrium analysis"
 	@echo "  make gz                     - Compute GZ righting arm curve (JSON + PNG)"
+	@echo "  make buoyancy-design        - Position boat at equilibrium with water surface"
+	@echo "  make buoyancy-render        - Render images of boat at equilibrium"
 	@echo ""
 	@echo "Parameter Targets:"
 	@echo "  make parameter              - Compute and save parameter to artifacts/"
@@ -378,10 +380,10 @@ buoyancy: $(BUOYANCY_ARTIFACT)
 
 GZ_DIR := $(SRC_DIR)/gz
 GZ_SOURCE := $(wildcard $(GZ_DIR)/*.py) $(wildcard $(SRC_DIR)/physics/*.py)
-GZ_JSON_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).gz.json
-GZ_PNG_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).gz.png
+GZ_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).gz.json
+GZ_PNG := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).gz.png
 
-$(GZ_JSON_ARTIFACT): $(BUOYANCY_ARTIFACT) $(DESIGN_ARTIFACT) $(GZ_SOURCE) | $(ARTIFACT_DIR)
+$(GZ_ARTIFACT): $(BUOYANCY_ARTIFACT) $(DESIGN_ARTIFACT) $(GZ_SOURCE) | $(ARTIFACT_DIR)
 	@echo "Computing GZ curve: $(BOAT).$(CONFIGURATION)"
 	@if [ "$(UNAME)" = "Darwin" ]; then \
 		PYTHONPATH=$(FREECAD_BUNDLE)/Contents/Resources/lib:$(FREECAD_BUNDLE)/Contents/Resources/Mod:$(PWD) \
@@ -390,15 +392,69 @@ $(GZ_JSON_ARTIFACT): $(BUOYANCY_ARTIFACT) $(DESIGN_ARTIFACT) $(GZ_SOURCE) | $(AR
 			--design $(DESIGN_ARTIFACT) \
 			--buoyancy $(BUOYANCY_ARTIFACT) \
 			--output $@ \
-			--output-png $(GZ_PNG_ARTIFACT); \
+			--output-png $(GZ_PNG); \
 	else \
 		PYTHONPATH=$(PWD) $(FREECAD_PYTHON) -m src.gz \
 			--design $(DESIGN_ARTIFACT) \
 			--buoyancy $(BUOYANCY_ARTIFACT) \
 			--output $@ \
-			--output-png $(GZ_PNG_ARTIFACT); \
+			--output-png $(GZ_PNG); \
 	fi
 
 .PHONY: gz
-gz: $(GZ_JSON_ARTIFACT)
+gz: $(GZ_ARTIFACT)
 	@echo "✓ GZ curve analysis complete for $(BOAT).$(CONFIGURATION)"
+
+# ==============================================================================
+# BUOYANCY DESIGN - POSITION BOAT AT EQUILIBRIUM WITH WATER SURFACE
+# ==============================================================================
+
+BUOYANCY_DESIGN_DIR := $(SRC_DIR)/buoyancy_design
+BUOYANCY_DESIGN_SOURCE := $(wildcard $(BUOYANCY_DESIGN_DIR)/*.py)
+BUOYANCY_DESIGN_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).buoyancy_design.FCStd
+
+$(BUOYANCY_DESIGN_ARTIFACT): $(DESIGN_ARTIFACT) $(BUOYANCY_ARTIFACT) $(MATERIAL_FILE) $(BUOYANCY_DESIGN_SOURCE) | $(ARTIFACT_DIR)
+	@echo "Creating buoyancy design: $(BOAT).$(CONFIGURATION)"
+	@if [ "$(UNAME)" = "Darwin" ]; then \
+		bash $(BUOYANCY_DESIGN_DIR)/buoyancy_design_mac.sh \
+			"$(DESIGN_ARTIFACT)" \
+			"$(BUOYANCY_ARTIFACT)" \
+			"$(MATERIAL_FILE)" \
+			"$@" \
+			"$(FREECAD_APP)"; \
+	else \
+		PYTHONPATH=$(PWD) $(FREECAD_PYTHON) -m src.buoyancy_design \
+			--design $(DESIGN_ARTIFACT) \
+			--buoyancy $(BUOYANCY_ARTIFACT) \
+			--materials $(MATERIAL_FILE) \
+			--output $@; \
+	fi
+
+.PHONY: buoyancy-design
+buoyancy-design: $(BUOYANCY_DESIGN_ARTIFACT)
+	@echo "✓ Buoyancy design complete for $(BOAT).$(CONFIGURATION)"
+
+# ==============================================================================
+# BUOYANCY RENDER - RENDER IMAGES OF BOAT AT EQUILIBRIUM
+# ==============================================================================
+
+.PHONY: buoyancy-render
+buoyancy-render: $(BUOYANCY_DESIGN_ARTIFACT) $(RENDER_SOURCE)
+	@echo "Rendering buoyancy images from $(BUOYANCY_DESIGN_ARTIFACT)..."
+	@if [ "$(UNAME)" = "Darwin" ]; then \
+		$(RENDER_DIR)/render_mac.sh "$(BUOYANCY_DESIGN_ARTIFACT)" "$(ARTIFACT_DIR)" "$(FREECAD_APP)"; \
+	else \
+		FCSTD_FILE="$(BUOYANCY_DESIGN_ARTIFACT)" IMAGE_DIR="$(ARTIFACT_DIR)" freecad-python -m src.render; \
+	fi
+	@echo "Cropping images with ImageMagick..."
+	@if command -v convert >/dev/null 2>&1; then \
+		for img in $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).buoyancy_design.render.*.png; do \
+			if [ -f "$$img" ]; then \
+				convert "$$img" -fuzz 1% -trim +repage -bordercolor \#C6D2FF -border 25 "$$img" || true; \
+			fi \
+		done; \
+		echo "Cropping complete!"; \
+	else \
+		echo "ImageMagick not found, skipping crop"; \
+	fi
+	@echo "✓ Buoyancy render complete for $(BOAT).$(CONFIGURATION)"

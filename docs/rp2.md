@@ -63,9 +63,14 @@ title: Roti Proa II - 9m Day Tourism Vessel
 
 ## Buoyancy analysis
 
+<div style="max-width: 600px; margin: 1em auto;">
+  <img src="{{ '/renders/rp2.beaching.buoyancy_design.render.front.png' | relative_url }}" alt="Buoyancy equilibrium - front view" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+  <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">Boat at equilibrium waterline (front view)</p>
+</div>
+
 We derive the following buoyancy characteristics from
 our automated analysis using Newton's method, iteratively adjusting the
-roll/pitch/z-offset of the boat according to the difference between the center/amount of buoyancy and the center/amount of mass. The numbers indicate the equilibrium achieved after 
+roll/pitch/z-offset of the boat according to the difference between the center/amount of buoyancy and the center/amount of mass. The numbers indicate the equilibrium achieved after
 {{ site.data.rp2_beaching_buoyancy.iterations }} iterations using
 the beaching configuration (no sails and rudders lifted),
 see [implementation](https://github.com/solar-proa/CAD/blob/main/src/buoyancy/__main__.py).

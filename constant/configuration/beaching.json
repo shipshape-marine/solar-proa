@@ -7,7 +7,9 @@
       "render",
       "step",
       "buoyancy",
-      "gz"
+      "gz",
+      "buoyancy-design",
+      "buoyancy-render"
   ],
   
   "sail_camber_biru": 10000,

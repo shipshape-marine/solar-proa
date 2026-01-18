@@ -25,10 +25,10 @@ def parse_makefile(makefile_path):
 
     # Find all *_ARTIFACT definitions to identify stages
     stages = {}
-    artifact_pattern = re.compile(r'^([A-Z]+)_ARTIFACT\s*:=\s*(.+)$', re.MULTILINE)
+    artifact_pattern = re.compile(r'^([A-Z][A-Z_]*)_ARTIFACT\s*:=\s*(.+)$', re.MULTILINE)
 
     for match in artifact_pattern.finditer(content):
-        stage_name = match.group(1).lower()
+        stage_name = match.group(1).lower().replace('_', '-')
         artifact_pattern_str = match.group(2).strip()
         stages[stage_name] = {
             'name': stage_name,
@@ -39,12 +39,12 @@ def parse_makefile(makefile_path):
     # Find dependency rules for each artifact
     # Pattern: $(STAGE_ARTIFACT): dep1 dep2 dep3
     rule_pattern = re.compile(
-        r'^\$\(([A-Z]+)_ARTIFACT\)\s*:\s*(.+?)(?:\s*\||\s*$)',
+        r'^\$\(([A-Z][A-Z_]*)_ARTIFACT\)\s*:\s*(.+?)(?:\s*\||\s*$)',
         re.MULTILINE
     )
 
     for match in rule_pattern.finditer(content):
-        stage_name = match.group(1).lower()
+        stage_name = match.group(1).lower().replace('_', '-')
         deps_str = match.group(2).strip()
 
         if stage_name not in stages:
@@ -58,9 +58,9 @@ def parse_makefile(makefile_path):
                 continue
 
             # Check if it's another stage artifact
-            artifact_match = re.match(r'\$\(([A-Z]+)_ARTIFACT\)', dep)
+            artifact_match = re.match(r'\$\(([A-Z][A-Z_]*)_ARTIFACT\)', dep)
             if artifact_match:
-                dep_stage = artifact_match.group(1).lower()
+                dep_stage = artifact_match.group(1).lower().replace('_', '-')
                 deps.append(dep_stage)
             # Check if it's a file reference
             elif re.match(r'\$\(([A-Z]+)_FILE\)', dep):
@@ -94,6 +94,15 @@ def parse_makefile(makefile_path):
             'name': 'render',
             'artifact': '{boat}.{config}.render.*.png',
             'depends_on': ['color']
+        }
+
+    # Special case: buoyancy-render is a phony target without *_ARTIFACT
+    # It depends on buoyancy-design and produces multiple PNGs
+    if 'buoyancy-render' not in stages:
+        stages['buoyancy-render'] = {
+            'name': 'buoyancy-render',
+            'artifact': '{boat}.{config}.buoyancy_design.render.*.png',
+            'depends_on': ['buoyancy-design']
         }
 
     return stages, inputs
@@ -144,7 +153,8 @@ def generate_dot(stages, inputs):
         artifact = artifact.replace('$(BOAT)', '{boat}')
         artifact = artifact.replace('$(CONFIGURATION)', '{config}')
         label = f"{stage_name}\\n{artifact}"
-        lines.append(f'        {stage_name} [label="{label}", fillcolor="{color}"];')
+        node_id = stage_name.replace('-', '_')
+        lines.append(f'        {node_id} [label="{label}", fillcolor="{color}"];')
 
     lines.extend([
         '    }',
@@ -154,9 +164,10 @@ def generate_dot(stages, inputs):
 
     # Add edges
     for stage_name, stage_info in stages.items():
+        stage_node = stage_name.replace('-', '_')
         for dep in stage_info['depends_on']:
-            dep_node = dep.replace('.', '_')
-            lines.append(f'    {dep_node} -> {stage_name};')
+            dep_node = dep.replace('.', '_').replace('-', '_')
+            lines.append(f'    {dep_node} -> {stage_node};')
 
     lines.append('}')
 

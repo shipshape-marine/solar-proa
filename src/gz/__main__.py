@@ -181,7 +181,7 @@ def compute_gz_curve(fcstd_path: str, buoyancy_result: dict,
         heel_angles = (
             list(range(-60, -5, 5)) +       # -60, -55, ... -10
             list(range(-5, 6, 1)) +         # -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 (fine steps)
-            list(range(10, 65, 5))          # 10, 15, 20, ... 60
+            list(range(10, 70, 5))          # 10, 15, 20, ... 65
         )
 
     # Extract equilibrium data
@@ -492,8 +492,8 @@ def main():
                         help='Path to output PNG plot (optional, defaults to same name as output with .png)')
     parser.add_argument('--min-heel', type=float, default=-60.0,
                         help='Minimum heel angle in degrees (default: -60)')
-    parser.add_argument('--max-heel', type=float, default=60.0,
-                        help='Maximum heel angle in degrees (default: 60)')
+    parser.add_argument('--max-heel', type=float, default=65.0,
+                        help='Maximum heel angle in degrees (default: 65)')
     parser.add_argument('--heel-step', type=float, default=5.0,
                         help='Heel angle step in degrees (default: 5)')
     parser.add_argument('--quiet', action='store_true',

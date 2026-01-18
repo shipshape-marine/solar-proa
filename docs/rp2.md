@@ -109,7 +109,7 @@ As a proa with an outrigger (ama), this vessel has asymmetric stability characte
 - Capsize angle: {{ site.data.rp2_beaching_gz.summary.capsize_angle_deg }}° (boat rolls over, ama ends up on top)
 - Ama engagement: {{ site.data.rp2_beaching_gz.summary.ama_engagement_angle_deg }}° (ama touches water)
 
-Proas are sailed with the ama to windward. Wind force heels the boat away from the ama, lifting it to reduce drag ("flying the ama"). The operating envelope is typically -5° to -20° heel, well within the stable region. See [implementation](https://github.com/solar-proa/CAD/blob/main/src/gz/__main__.py).
+Traditionally, proas are sailed with the ama to windward. Wind force heels the boat away from the ama, lifting it to reduce drag ("flying the ama"). The operating envelope is typically -5° to -20° heel in that case, well within the stable region. A solar proa should be able to sail with the ama to leeward when needed, to keep the sails from casting a shadow on the solar panels. At a heeling angle of 5°, the ama will be fully submerged and cause much drag but induce a righting moment until the turtle angle is reached. See [implementation](https://github.com/solar-proa/CAD/blob/main/src/gz/__main__.py).
 
 ---
 

@@ -263,34 +263,12 @@ if platform.system() == 'Linux':
 # Save the document
 doc.saveAs(output_path)
 print(f"Saved document to {output_path}")
-if platform.system() == 'Darwin':
-    print("Note: Visibility will be fixed by post-processing on macOS")
-elif platform.system() == 'Linux':
-    print("✓ Objects should be visible when opening")
+print("✓ Design generation complete")
 
-
-# GUI-only code - skip in console mode
-if FreeCAD.GuiUp:
-    if 'view' in sys.modules:
-        del sys.modules['view']
-    from view import * 
-
-    # set preferred view
-    view = FreeCAD.Gui.ActiveDocument.ActiveView
-    view.viewIsometric()
-    view.fitAll()
-
-    set_sail_view()
-
-#set_interior_view()
-#set_mast_view()
-#set_cockpit_view()
-#set_below_view()
-
-# Exit cleanly - always exit when run as a script (not interactively)
-# Close the document before exiting
+# Flush output and exit immediately to prevent FreeCAD from entering interactive mode
+sys.stdout.flush()
+sys.stderr.flush()
 FreeCAD.closeDocument(doc.Name)
-# Use os._exit instead of sys.exit to avoid cleanup issues with FreeCAD
 import os as _os
 _os._exit(0)
 

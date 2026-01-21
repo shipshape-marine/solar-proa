@@ -64,6 +64,10 @@ jobs:
           # Add to PATH
           echo "$PWD" >> $GITHUB_PATH
       
+      - name: Install Python dependencies for validation
+        run: |
+          pip install matplotlib numpy
+
       - name: Build all required FreeCAD models and run all stages
         run: |
           make required-all
@@ -79,10 +83,6 @@ jobs:
       - name: Generate dependency graph
         run: |
           python3 docs/generate_dependency_graph.py
-
-      - name: Install Python dependencies for diagrams
-        run: |
-          pip install matplotlib
 
       - name: Generate diagrams
         run: |

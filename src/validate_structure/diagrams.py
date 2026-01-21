@@ -251,15 +251,22 @@ def diagram_aka_point_load(output_path: Path):
     beam_start, beam_end = 1.0, 5.0
     mid_x = (beam_start + beam_end) / 2
 
-    # Supports
-    draw_box(ax, beam_start - 0.3, beam_y, 0.5, 0.7, color=SUPPORT_COLOR, label='Vaka')
-    draw_pin_support(ax, beam_start, beam_y - 0.06, size=0.12)
+    # Vaka (below aka, left edge aligns with left edge of aka - aka spans across)
+    vaka_width = 0.6
+    vaka_height = 0.7
+    vaka_center_x = beam_start + vaka_width / 2  # left edge at beam_start
+    draw_box(ax, vaka_center_x, beam_y - 0.4, vaka_width, vaka_height, color=SUPPORT_COLOR, label='Vaka')
+    draw_pin_support(ax, vaka_center_x, beam_y - 0.06, size=0.12)
 
-    draw_box(ax, beam_end + 0.15, beam_y - 0.2, 0.2, 0.5, color='lightblue')
-    ax.text(beam_end + 0.4, beam_y - 0.2, 'Pillar', fontsize=SMALL_LABEL_SIZE, ha='left', va='center')
-    draw_roller_support(ax, beam_end, beam_y - 0.06, size=0.1)
+    # Pillar (below aka, right edge aligns with right edge of aka - aka spans across)
+    pillar_width = 0.2
+    pillar_height = 0.5
+    pillar_center_x = beam_end - pillar_width / 2  # right edge at beam_end
+    draw_box(ax, pillar_center_x, beam_y - 0.35, pillar_width, pillar_height, color='lightblue')
+    ax.text(pillar_center_x + 0.25, beam_y - 0.35, 'Pillar', fontsize=SMALL_LABEL_SIZE, ha='left', va='center')
+    draw_roller_support(ax, pillar_center_x, beam_y - 0.06, size=0.1)
 
-    # Aka beam
+    # Aka beam (sitting on top of vaka and pillar)
     draw_beam(ax, beam_start, beam_y, beam_end, height=0.1, label='Aka')
 
     # Crew (stick figure)
@@ -269,15 +276,15 @@ def diagram_aka_point_load(output_path: Path):
     ax.plot([mid_x - 0.1, mid_x, mid_x + 0.1], [beam_y + 0.12, beam_y + 0.22, beam_y + 0.12], 'darkblue', lw=2)
     ax.text(mid_x + 0.2, beam_y + 0.4, 'Crew', fontsize=SMALL_LABEL_SIZE, ha='left')
 
-    # Force arrow (pointing DOWN for weight)
-    draw_force_arrow(ax, mid_x, beam_y + 0.7, dy=-0.55, label='P', color=FORCE_COLOR, label_offset=(0.12, 0.1))
+    # Force arrow (pointing DOWN for weight, offset to left of person)
+    draw_force_arrow(ax, mid_x - 0.25, beam_y + 0.6, dy=-0.45, label='P', color=FORCE_COLOR, label_offset=(-0.2, 0.1))
 
     # Reactions (pointing UP)
     draw_force_arrow(ax, beam_start, beam_y - 0.55, dy=0.35, label='R', color=REACTION_COLOR, label_offset=(0.1, -0.15))
     draw_force_arrow(ax, beam_end, beam_y - 0.55, dy=0.35, label='R', color=REACTION_COLOR, label_offset=(0.1, -0.15))
 
-    # Dimension
-    draw_dimension(ax, beam_start, beam_end, beam_y, 'L (span)', offset=0.5)
+    # Dimension (above the person)
+    draw_dimension(ax, beam_start, beam_end, beam_y, 'L (span)', offset=0.85)
 
     ax.set_title('Aka Point Load: Simply Supported Beam', fontsize=TITLE_SIZE, fontweight='bold', pad=20)
 
@@ -397,31 +404,28 @@ def diagram_diagonal_braces(output_path: Path):
 
     # Layout - side view of outrigger structure tilted
     aka_y = 2.5
-    aka_start, aka_end = 1.5, 5.0
     pillar_bottom = 1.2
-
-    # Aka (horizontal beam)
-    draw_beam(ax, aka_start, aka_y, aka_end, height=0.1, label='Aka')
+    pillar_x = 4.9  # pillar at end of aka
+    aka_start, aka_end = 1.5, pillar_x  # aka ends at pillar (no overhang)
 
     # Vaka attachment
     draw_box(ax, aka_start - 0.3, aka_y, 0.5, 0.6, color=SUPPORT_COLOR, label='Vaka')
 
+    # Aka (horizontal beam, ends at pillar)
+    draw_beam(ax, aka_start, aka_y, aka_end, height=0.1, label='Aka')
+
     # Pillar (vertical)
-    pillar_x = aka_end - 0.5
     ax.plot([pillar_x, pillar_x], [aka_y - 0.05, pillar_bottom], 'k-', lw=3)
     ax.text(pillar_x + 0.15, (aka_y + pillar_bottom)/2 + 0.2, 'Pillar', fontsize=SMALL_LABEL_SIZE, ha='left', va='center')
 
     # Ama at bottom
     draw_ellipse(ax, pillar_x, pillar_bottom - 0.2, 0.8, 0.3, color='lightyellow', label='Ama')
 
-    # Diagonal braces (two, forming V)
-    brace_top = aka_y - 0.05
+    # Diagonal brace (single, from aka toward vaka down to pillar bottom)
+    brace_attach = aka_start + 2.3  # attachment point on aka (toward vaka)
     brace_bottom = pillar_bottom + 0.3
-    brace_dx = 0.6
-
-    ax.plot([pillar_x - brace_dx, pillar_x], [brace_top, brace_bottom], 'b-', lw=3)
-    ax.plot([pillar_x + brace_dx, pillar_x], [brace_top, brace_bottom], 'b-', lw=3)
-    ax.text(pillar_x - brace_dx - 0.15, brace_top + 0.1, 'Brace',
+    ax.plot([brace_attach, pillar_x], [aka_y - 0.05, brace_bottom], 'b-', lw=3)
+    ax.text(brace_attach - 0.15, aka_y + 0.1, 'Brace',
             fontsize=SMALL_LABEL_SIZE, ha='right', va='bottom', color='blue')
 
     # Lateral force (outrigger weight when tilted)
@@ -429,8 +433,8 @@ def diagram_diagonal_braces(output_path: Path):
                     label='Flateral', color=FORCE_COLOR, label_offset=(0.05, 0.12))
 
     # Compression annotation (clearer)
-    mid_brace_x = pillar_x - brace_dx/2
-    mid_brace_y = (brace_top + brace_bottom)/2
+    mid_brace_x = (brace_attach + pillar_x) / 2
+    mid_brace_y = (aka_y - 0.05 + brace_bottom) / 2
     ax.annotate('', xy=(mid_brace_x + 0.12, mid_brace_y + 0.12),
                xytext=(mid_brace_x - 0.12, mid_brace_y - 0.12),
                arrowprops=dict(arrowstyle='->', color=MOMENT_COLOR, lw=2))
@@ -816,18 +820,18 @@ def diagram_ama_lift_wind(output_path: Path):
     """Ama lift wind speed: heeling moment vs righting moment."""
     fig, ax = setup_diagram(figsize=(10, 5.5))
 
-    # Layout - side view of boat heeling
+    # Layout - front view of boat heeling to the left (ama on right, lifted)
     water_y = 1.2
 
     # Water surface
     ax.fill_between([0, 6], [0, 0], [water_y, water_y], color='lightblue', alpha=0.3)
     ax.plot([0, 6], [water_y, water_y], 'b-', lw=1)
 
-    # Heel angle
-    heel_angle = 12  # degrees
+    # Heel angle (negative = tilting left)
+    heel_angle = -12  # degrees
 
     # Vaka - draw as a boat shape (better representation)
-    vaka_center_x, vaka_center_y = 2.3, water_y + 0.15
+    vaka_center_x, vaka_center_y = 2.0, water_y + 0.15
     # Create a simple hull cross-section shape
     hull_pts = [
         (vaka_center_x - 0.4, vaka_center_y + 0.25),  # deck left
@@ -836,7 +840,7 @@ def diagram_ama_lift_wind(output_path: Path):
         (vaka_center_x, vaka_center_y - 0.3),         # keel
         (vaka_center_x - 0.25, vaka_center_y - 0.2),  # bottom left
     ]
-    # Rotate hull points
+    # Rotate hull points (negate angle so hull tilts left with deck aligned to aka)
     cos_a, sin_a = np.cos(np.radians(-heel_angle)), np.sin(np.radians(-heel_angle))
     rotated_pts = []
     for px, py in hull_pts:
@@ -846,55 +850,76 @@ def diagram_ama_lift_wind(output_path: Path):
         rotated_pts.append((rx, ry))
     hull = Polygon(rotated_pts, closed=True, linewidth=2, edgecolor='black', facecolor=SUPPORT_COLOR)
     ax.add_patch(hull)
-    ax.text(vaka_center_x - 0.1, vaka_center_y - 0.6, 'Vaka', fontsize=SMALL_LABEL_SIZE, ha='center')
+    ax.text(vaka_center_x, vaka_center_y - 0.6, 'Vaka', fontsize=SMALL_LABEL_SIZE, ha='center')
 
-    # Mast (tilted with heel)
-    mast_base_x = vaka_center_x + 0.1 * cos_a
+    # Mast (tilted with heel, perpendicular to deck)
+    mast_base_x = vaka_center_x
     mast_base_y = vaka_center_y + 0.25
     mast_height = 2.2
+    # Mast tilts left with the boat
     mast_top_x = mast_base_x + mast_height * np.sin(np.radians(heel_angle))
     mast_top_y = mast_base_y + mast_height * np.cos(np.radians(heel_angle))
     ax.plot([mast_base_x, mast_top_x], [mast_base_y, mast_top_y], color=BEAM_COLOR, lw=4)
+    ax.text(mast_top_x - 0.3, mast_top_y, 'Mast', fontsize=SMALL_LABEL_SIZE, ha='right')
 
-    # Sail
-    sail_pts = [(mast_base_x + 0.1, mast_base_y + 0.4),
-                (mast_top_x - 0.05, mast_top_y - 0.15),
-                (mast_base_x + 1.4, (mast_base_y + mast_top_y)/2 + 0.1)]
+    # Sail (rectangular, on lee side - left of mast, away from wind)
+    sail_height = 1.6
+    sail_width = 0.7
+    sail_bottom = mast_base_y + 0.5
+    # Calculate sail corners rotated with mast
+    sail_base_x = mast_base_x + (sail_bottom - mast_base_y) * np.sin(np.radians(heel_angle))
+    sail_base_y = mast_base_y + (sail_bottom - mast_base_y) * np.cos(np.radians(heel_angle))
+    sail_top_x = sail_base_x + sail_height * np.sin(np.radians(heel_angle))
+    sail_top_y = sail_base_y + sail_height * np.cos(np.radians(heel_angle))
+    # Offset to lee side (left, perpendicular to mast)
+    lee_offset_x = -sail_width * np.cos(np.radians(heel_angle))
+    lee_offset_y = -sail_width * np.sin(np.radians(heel_angle))
+    sail_pts = [
+        (sail_base_x, sail_base_y),
+        (sail_top_x, sail_top_y),
+        (sail_top_x + lee_offset_x, sail_top_y + lee_offset_y),
+        (sail_base_x + lee_offset_x, sail_base_y + lee_offset_y),
+    ]
     sail = Polygon(sail_pts, closed=True, linewidth=1, edgecolor='darkgray',
                    facecolor='lightyellow', alpha=0.7)
     ax.add_patch(sail)
-    ax.text(mast_base_x + 0.7, (mast_base_y + mast_top_y)/2 + 0.1, 'Sail', fontsize=SMALL_LABEL_SIZE, ha='center')
+    sail_center_x = (sail_base_x + sail_top_x) / 2 + lee_offset_x / 2
+    sail_center_y = (sail_base_y + sail_top_y) / 2 + lee_offset_y / 2
+    ax.text(sail_center_x - 0.2, sail_center_y, 'Sail', fontsize=SMALL_LABEL_SIZE, ha='right')
 
-    # Aka and ama (lifted above water)
+    # Aka (perpendicular to mast, extending to ama on right)
+    # Aka attaches at deck level, goes horizontally to ama
     aka_start_x = vaka_center_x + 0.3
     aka_start_y = vaka_center_y + 0.2
     ama_x = 4.8
-    ama_y = water_y + 0.7  # lifted above water
-    ax.plot([aka_start_x, ama_x], [aka_start_y, ama_y], 'k-', lw=2.5)  # aka
-    ax.text((aka_start_x + ama_x)/2 + 0.2, (aka_start_y + ama_y)/2 + 0.15, 'Aka',
-            fontsize=SMALL_LABEL_SIZE, ha='left')
+    # Ama is lifted (right side up when tilting left)
+    ama_y = water_y + 0.9
+    # Draw aka as horizontal beam (perpendicular to tilted mast)
+    ax.plot([aka_start_x, ama_x], [aka_start_y, ama_y], 'k-', lw=2.5)
+    ax.text((aka_start_x + ama_x) / 2, (aka_start_y + ama_y) / 2 + 0.2, 'Aka',
+            fontsize=SMALL_LABEL_SIZE, ha='center')
     draw_ellipse(ax, ama_x, ama_y, 0.55, 0.28, color='lightyellow')
     ax.text(ama_x, ama_y + 0.4, 'Ama', fontsize=SMALL_LABEL_SIZE, ha='center')
 
-    # Wind force at center of effort
-    ce_x = (mast_base_x + mast_top_x) / 2 + 0.6
-    ce_y = (mast_base_y + mast_top_y) / 2 + 0.1
-    draw_force_arrow(ax, ce_x + 1.0, ce_y, dx=-0.7, label='Fwind', color=FORCE_COLOR, label_offset=(0.1, 0.1))
+    # Wind force at center of effort (from the right/ama side)
+    ce_x = (sail_base_x + sail_top_x) / 2
+    ce_y = (sail_base_y + sail_top_y) / 2
+    draw_force_arrow(ax, ce_x + 1.2, ce_y, dx=-0.7, label='Fwind', color=FORCE_COLOR, label_offset=(0.1, 0.1))
 
-    # Heeling moment arc
-    ax.annotate('', xy=(3.3, water_y + 1.7), xytext=(3.0, water_y + 0.7),
+    # Heeling moment arc (counter-clockwise, pushing boat to tilt left)
+    ax.annotate('', xy=(1.3, water_y + 1.0), xytext=(1.6, water_y + 1.8),
                arrowprops=dict(arrowstyle='->', color=MOMENT_COLOR, lw=2.5,
                              connectionstyle='arc3,rad=0.35'))
-    ax.text(3.55, water_y + 1.2, 'Mheel', fontsize=LABEL_SIZE, color=MOMENT_COLOR)
+    ax.text(1.0, water_y + 1.4, 'Mheel', fontsize=LABEL_SIZE, color=MOMENT_COLOR)
 
-    # Righting moment (from ama weight as counterweight)
-    ax.annotate('', xy=(4.3, ama_y - 0.4), xytext=(4.6, ama_y + 0.4),
+    # Righting moment (from ama weight as counterweight, clockwise)
+    ax.annotate('', xy=(4.5, ama_y + 0.5), xytext=(4.2, ama_y - 0.3),
                arrowprops=dict(arrowstyle='->', color=REACTION_COLOR, lw=2.5,
-                             connectionstyle='arc3,rad=-0.35'))
-    ax.text(4.0, ama_y - 0.25, 'Mright', fontsize=LABEL_SIZE, color=REACTION_COLOR)
+                             connectionstyle='arc3,rad=0.35'))
+    ax.text(4.7, ama_y + 0.1, 'Mright', fontsize=LABEL_SIZE, color=REACTION_COLOR)
 
     # Weight arrow on ama (pointing DOWN)
-    draw_force_arrow(ax, ama_x + 0.35, ama_y + 0.1, dy=-0.5, label='Wama', color='darkblue', label_offset=(0.1, 0))
+    draw_force_arrow(ax, ama_x, ama_y - 0.15, dy=-0.5, label='Wama', color='darkblue', label_offset=(0.15, 0.1))
 
     # Explanatory note
     ax.text(0.3, 0.4, 'At ama lift wind speed:\nMheel = Mright',

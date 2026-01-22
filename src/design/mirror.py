@@ -58,12 +58,22 @@ def mirror(side, params):
                                    params['stanchion_length'])
             stanchion.Placement = FreeCAD.Placement(
                 Base.Vector(params['aka_length']
-                            - params['pillar_width'] / 2
+                            - params['pillar_width'] * 2
                             - params['aka_width'] / 2,
                             aka_y,
                             params['aka_base_level']),
                 FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
 
+            cleat = side.newObject("Part::Feature", "Cleat (steel)")
+            cleat.Shape = horn_cleat(200, 40, 50)  # 150mm long, 40mm wide, 50mm high
+            cleat.Placement = FreeCAD.Placement(
+                Base.Vector(params['aka_length']
+                            - params['pillar_width'] / 2
+                            - params['aka_width'] / 2,
+                            aka_y,
+                            params['deck_level']),
+                FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))  # rotate to align fore-aft
+            
             pillar = side.newObject("Part::Feature", f"Pillar_{aka_counter} (aluminum)")
             pillar.Shape = shs(params['pillar_width'],
                                params['pillar_thickness'],
@@ -181,10 +191,21 @@ def mirror(side, params):
             point3,
             FreeCAD.Rotation(rotation_axis2, rotation_angle2))
 
+    spine_cleat = side.newObject("Part::Feature", "Spine_Cleat (steel)")
+    spine_cleat.Shape = horn_cleat(200, 40, 50)
+    spine_cleat.Placement = FreeCAD.Placement(
+        Base.Vector(0,
+                    params['spine_length'] / 2 - params['aka_width'] / 2,
+                    params['aka_base_level']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))  # rotate to align fore-aft
+
+        
     # aka_end supports the deck at the ends of the boat
     
     aka_end = side.newObject("Part::Feature", f"Aka End (aluminum)")
-    aka_end.Shape = shs_capped(params['aka_width'],
+    aka_end.Shape = rectangular_tube_capped(
+                               params['aka_height'],
+                               params['aka_width'],
                                params['aka_thickness'],
                                params['deck_width'],
                                params['aka_cap_diameter'],
@@ -203,11 +224,21 @@ def mirror(side, params):
                                   params['stanchion_length'])
     outer_stanchion.Placement = FreeCAD.Placement(
         Base.Vector(params['vaka_x_offset']
-                    + params['deck_width'] / 2 - params['aka_width'] / 2,
+                    + params['deck_width'] / 2 - params['aka_width'] * 2,
                     params['vaka_length'] / 2 - params['aka_width'] / 2,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
 
+    outer_cleat = side.newObject("Part::Feature", "Outer_Cleat (steel)")
+    outer_cleat.Shape = horn_cleat(200, 40, 50)  # 150mm long, 40mm wide, 50mm high
+    outer_cleat.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset']
+                    + params['deck_width'] / 2 - params['aka_width'] / 2,
+                    params['vaka_length'] / 2 - params['aka_width'] / 2,
+                    params['deck_level']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))  # rotate to align fore-aft
+  
+    """
     center_stanchion = side.newObject("Part::Feature",
                                       "Center Stanchion (aluminum)")
     center_stanchion.Shape = pipe(params['stanchion_diameter'],
@@ -218,7 +249,8 @@ def mirror(side, params):
                     params['vaka_length'] / 2 - params['aka_width'] / 2,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
-
+    """
+    
     inner_stanchion = side.newObject("Part::Feature",
                                       "Inner Stanchion (aluminum)")
     inner_stanchion.Shape = pipe(params['stanchion_diameter'],
@@ -226,11 +258,20 @@ def mirror(side, params):
                                  params['stanchion_length'])
     inner_stanchion.Placement = FreeCAD.Placement(
         Base.Vector(params['vaka_x_offset']
-                    - params['deck_width'] / 2 + params['aka_width'] / 2,
+                    - params['deck_width'] / 2 + params['aka_width'] * 2,
                     params['vaka_length'] / 2 - params['gunwale_width'] / 2,
                     params['aka_base_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
 
+    inner_cleat = side.newObject("Part::Feature", "Inner_Cleat (steel)")
+    inner_cleat.Shape = horn_cleat(200, 40, 50)  # 150mm long, 40mm wide, 50mm high
+    inner_cleat.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset']
+                    - params['deck_width'] / 2 + params['aka_width'] / 2,
+                    params['vaka_length'] / 2 - params['gunwale_width'] / 2,
+                    params['deck_level']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))  # rotate to align fore-aft
+    
     # stringers
 
     for i in range(0, params['panels_transversal']):
@@ -323,12 +364,11 @@ def mirror(side, params):
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
     deck.Shape = deck.Shape.cut(deck_cutter)
 
-    # Test cleat on deck (for visualization)
-    test_cleat = side.newObject("Part::Feature", "Test_Cleat (steel)")
-    test_cleat.Shape = horn_cleat(150, 40, 50)  # 150mm long, 40mm wide, 50mm high
-    test_cleat.Placement = FreeCAD.Placement(
+    center_cleat = side.newObject("Part::Feature", "Center_Cleat (steel)")
+    center_cleat.Shape = horn_cleat(200, 40, 50)  # 150mm long, 40mm wide, 50mm high
+    center_cleat.Placement = FreeCAD.Placement(
         Base.Vector(params['vaka_x_offset'],
-                    params['vaka_length'] / 2 - 500,
+                    params['vaka_length'] / 2 - params['aka_width'] / 2,
                     params['deck_level']),
         FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))  # rotate to align fore-aft
 

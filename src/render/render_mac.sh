@@ -24,22 +24,44 @@ BASENAME=$(basename "$FCSTD_FILE" .FCStd)
 # Strip .color suffix if present to match the output filenames
 BASENAME=${BASENAME%.color}
 
-# Create a temporary Python script
-TEMP_SCRIPT=$(mktemp /tmp/freecad_render_XXXXXX.py)
+# Create temp files for script and config
+TEMP_SCRIPT=$(mktemp /tmp/freecad_render.XXXXXX)
+mv "$TEMP_SCRIPT" "${TEMP_SCRIPT}.py"
+TEMP_SCRIPT="${TEMP_SCRIPT}.py"
+
+TEMP_CONFIG=$(mktemp /tmp/freecad_render_config.XXXXXX)
+mv "$TEMP_CONFIG" "${TEMP_CONFIG}.txt"
+TEMP_CONFIG="${TEMP_CONFIG}.txt"
+
+# Write config to temp file (avoid passing as FreeCAD args)
+echo "$OUTPUT_DIR" > "$TEMP_CONFIG"
+echo "$BASENAME" >> "$TEMP_CONFIG"
 
 cat > "$TEMP_SCRIPT" << 'EOF'
 import FreeCAD
 import FreeCADGui
 import sys
 import os
-import json
 
-# Get arguments
-filepath = sys.argv[-4]
-output_dir = sys.argv[-3]
-base_name = sys.argv[-2]
-views_path = sys.argv[-1]
+# Get arguments from command line
+filepath = sys.argv[-2]
+config_path = sys.argv[-1]
+
+# Read config from temp file
+with open(config_path) as f:
+    lines = f.read().strip().split('\n')
+    output_dir = lines[0]
+    base_name = lines[1]
+
 background = '#C6D2FF'
+
+# Views are embedded to avoid FreeCAD trying to open JSON file
+views = [
+    ('front', 'viewFront'),
+    ('isometric', 'viewIsometric'),
+    ('right', 'viewRight'),
+    ('top', 'viewTop'),
+]
 
 print(f"Opening {filepath}...")
 doc = FreeCAD.openDocument(filepath)
@@ -48,16 +70,6 @@ doc = FreeCAD.openDocument(filepath)
 # The input FCStd file is expected to be a *.color.FCStd file
 doc.recompute()
 
-# Load views from configuration
-def load_views_config(views_path):
-    if not os.path.exists(views_path):
-        print(f"ERROR: Views config not found at {views_path}")
-        sys.exit(1)
-    with open(views_path) as f:
-        views_data = json.load(f)
-    return [(name, config['freecad_method']) for name, config in views_data.items()]
-
-views = load_views_config(views_path)
 print(f"Rendering {len(views)} views: {[v[0] for v in views]}")
 
 # Get active view
@@ -88,9 +100,9 @@ for view_name, view_method in views:
 
 print(f"Exported {len(views)} views from {filepath}")
 
-# Close document and quit
+# Close document and exit
 FreeCAD.closeDocument(doc.Name)
-FreeCADGui.getMainWindow().close()
+os._exit(0)
 EOF
 
 # Get view.json path
@@ -106,7 +118,22 @@ fi
 
 # Run FreeCAD with the script
 echo "Rendering $FCSTD_FILE..."
-"$FREECAD" "$TEMP_SCRIPT" "$FCSTD_FILE" "$OUTPUT_DIR" "$BASENAME" "$VIEWS_JSON" 2>&1 | grep -v "Populating font" || true
+"$FREECAD" "$TEMP_SCRIPT" "$FCSTD_FILE" "$TEMP_CONFIG" &
+FREECAD_PID=$!
+
+# Wait up to 120 seconds for completion
+for i in {1..240}; do
+    if ! kill -0 $FREECAD_PID 2>/dev/null; then
+        break
+    fi
+    sleep 0.5
+done
+
+# Force kill if still running
+if kill -0 $FREECAD_PID 2>/dev/null; then
+    echo "Warning: FreeCAD did not exit cleanly, forcing..."
+    kill -9 $FREECAD_PID 2>/dev/null
+fi
 
 # Check if renders were created
 ACTUAL_RENDERS=$(ls "$OUTPUT_DIR"/${BASENAME}.render.*.png 2>/dev/null | wc -l | tr -d ' ')
@@ -114,12 +141,12 @@ ACTUAL_RENDERS=$(ls "$OUTPUT_DIR"/${BASENAME}.render.*.png 2>/dev/null | wc -l |
 if [ "$ACTUAL_RENDERS" -ge "$EXPECTED_RENDERS" ]; then
     echo "Render complete for $BASENAME ($ACTUAL_RENDERS images created)"
     # Clean up
-    rm -f "$TEMP_SCRIPT"
+    rm -f "$TEMP_SCRIPT" "$TEMP_CONFIG"
     exit 0
 else
     echo "WARNING: Only $ACTUAL_RENDERS of $EXPECTED_RENDERS images created"
     # Clean up
-    rm -f "$TEMP_SCRIPT"
+    rm -f "$TEMP_SCRIPT" "$TEMP_CONFIG"
     exit 0  # Don't fail the build
 fi
 

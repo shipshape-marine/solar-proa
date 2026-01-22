@@ -53,7 +53,7 @@
   "brace_upper_offset": 100,
   "brace_lower_offset": 350,
   "pillar_brace_vertical_offset": 400,
-  
+  "spine_length_extension": 100,
   "mast_diameter": 80,
   "mast_thickness": 5,
   "mast_height": 4000,

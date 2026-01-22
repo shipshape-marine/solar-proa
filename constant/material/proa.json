@@ -146,6 +146,14 @@
       "display_mode": "Shaded",
       "density_kg_m3": 1000,
       "description": "Fiberglass"
+    },
+    "indicator": {
+      "name": "Indicator",
+      "color": [0.0, 0.5, 1.0],
+      "transparency": 0,
+      "display_mode": "Shaded",
+      "density_kg_m3": 0,
+      "description": "Visual indicator (zero mass, not a physical component)"
     }
   }
 }

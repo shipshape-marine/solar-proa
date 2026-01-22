@@ -72,7 +72,7 @@ def compute_derived(base: Dict[str, Any]) -> Dict[str, Any]:
     params['spine_width'] = base['aka_width']
     params['spine_base_level'] = params['aka_base_level'] - params['spine_width']
     params['spine_length'] = (base['panel_width'] * base['panels_longitudinal'] + 
-                              base['crossdeck_width'])
+                              base['crossdeck_width'] + base['spine_length_extension'])
     
     # Beam calculation
     params['beam'] = (params['aka_length'] + base['aka_cap_thickness'] - 

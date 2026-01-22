@@ -232,6 +232,29 @@ rudder_kuning.Placement = FreeCAD.Placement(
 vessel = doc.addObject("App::Part", "Vessel Central")
 central(vessel, params)
 
+# Direction arrow indicating boat movement direction (positive Y)
+# Positioned outside the vaka hull on the outer side (negative X from vaka)
+arrow_length = params.get('direction_arrow_length', 3000)  # default 3m
+arrow_shaft_radius = 50  # 50mm radius shaft for visibility
+print("Creating direction arrow...")
+try:
+    arrow_shape = direction_arrow(arrow_length, shaft_radius=arrow_shaft_radius)
+    print(f"  Arrow shape created, volume: {arrow_shape.Volume}")
+    arrow = doc.addObject("Part::Feature", "Direction_Arrow__indicator")
+    arrow.Shape = arrow_shape
+    # Rotate from Z-axis to negative Y-axis (-90° around X)
+    # Position at beam + 1000mm, z = -400mm
+    arrow_x = params['beam'] + 1000
+    arrow_z = -400
+    arrow.Placement = FreeCAD.Placement(
+        Base.Vector(arrow_x, arrow_length/2, arrow_z),
+        FreeCAD.Rotation(Base.Vector(1, 0, 0), -90))  # -90° to point toward negative Y
+    print(f"  Arrow placed at X={arrow_x}, Z={arrow_z}")
+except Exception as e:
+    print(f"  ERROR creating arrow: {e}")
+    import traceback
+    traceback.print_exc()
+
 # recompute before stats and rendering
 doc.recompute()
 

@@ -13,11 +13,9 @@ def central(vessel, params):
     # spine (longitudinal beam to support the akas)
 
     spine = vessel.newObject("Part::Feature", "Spine (aluminum)")
-    spine.Shape = shs_capped(params['spine_width'],
+    spine.Shape = shs(params['spine_width'],
                              params['spine_thickness'],
-                             params['spine_length'],
-                             params['aka_cap_diameter'],
-                             params['aka_cap_thickness'])
+                             params['spine_length'])
                              
     spine.Placement = FreeCAD.Placement(
         Base.Vector(- params['spine_width'] / 2, params['spine_length'] / 2, params['spine_base_level']),

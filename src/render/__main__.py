@@ -123,7 +123,7 @@ def export_renders(fcstd_path, output_render, background='#C6D2FF'):
         view.setAnimationEnabled(False)
     except:
         pass
-    
+
     # Export each view
     for view_name, view_method in views:
         print(f"Exporting {view_name} view...")

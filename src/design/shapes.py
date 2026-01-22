@@ -27,8 +27,8 @@ def horn_cleat(length, width, height, horn_angle=15):
     horn_extent = (length - waist_length) / 2  # how far horns extend from center
 
     # Base plate - tapered, wider at ends
-    base = Part.makeBox(length * 0.9, width, base_height)
-    base.translate(Base.Vector(-length * 0.45, -width / 2, 0))
+    base = Part.makeBox(length * 0.38, width, base_height)
+    base.translate(Base.Vector(-length * 0.19, -width / 2, 0))
 
     # Center waist (narrow raised section connecting the horns)
     waist = Part.makeBox(waist_length, waist_width, height * 0.5)
@@ -257,6 +257,45 @@ def elliptical_pipe(major_diameter, minor_diameter, thickness, length):
     elliptical_pipe = profile.extrude(Base.Vector(0, 0, length))
     
     return elliptical_pipe
+
+# 3D arrow (cylinder + cone)
+
+def direction_arrow(length, shaft_radius=None, head_radius=None, head_length=None):
+    """Create a 3D arrow pointing along positive Z axis.
+
+    The arrow is centered at origin with the tail at Z=0 and tip at Z=length.
+
+    Args:
+        length: Total length of the arrow
+        shaft_radius: Radius of the cylindrical shaft (default: length/40)
+        head_radius: Radius of the cone head base (default: shaft_radius * 3)
+        head_length: Length of the cone head (default: length * 0.2)
+
+    Returns:
+        Arrow shape pointing along positive Z
+    """
+    # Default proportions if not specified
+    if shaft_radius is None:
+        shaft_radius = length / 40
+    if head_radius is None:
+        head_radius = shaft_radius * 3
+    if head_length is None:
+        head_length = length * 0.2
+
+    shaft_length = length - head_length
+
+    # Shaft (cylinder)
+    shaft = Part.makeCylinder(shaft_radius, shaft_length)
+
+    # Head (cone) - positioned at the end of the shaft
+    head = Part.makeCone(head_radius, 0, head_length)
+    head.translate(Base.Vector(0, 0, shaft_length))
+
+    # Combine
+    arrow = shaft.fuse(head)
+
+    return arrow
+
 
 # ellipsoid
 

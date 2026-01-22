@@ -31,8 +31,8 @@ title: Roti Proa II - 9m Day Tourism Vessel
 **Daily Range:** 50 nautical miles (solar-electric only)  
 **Battery Type:** LiFePO₄  
 **Motor Runtime:** 5 hours (battery only)  
-**Masts** Two unstayed rotatable masts, cylindrical aluminium pipes with diameter {{ site.data.rp2_broadreach_parameter.mast_diameter }} mm and wall thickness {{ site.data.rp2_broadreach_parameter.mast_thickness }} mm; mast height from vaka sole: {{ site.data.rp2_broadreach_parameter.mast_height }} mm  
-**Rig:** Each mast carries one tanja sail, each rectangular-shaped {{ site.data.rp2_broadreach_parameter.sail_width }} mm x {{ site.data.rp2_broadreach_parameter.sail_height }} (total sail area: {{ site.data.rp2_broadreach_parameter.sail_area_m2 }} square meters)  
+**Masts:** Two unstayed rotatable masts, cylindrical aluminium pipes with diameter {{ site.data.rp2_broadreach_parameter.mast_diameter }} mm and wall thickness {{ site.data.rp2_broadreach_parameter.mast_thickness }} mm; mast height from vaka sole: {{ site.data.rp2_broadreach_parameter.mast_height }} mm  
+**Rig:** Each mast carries one tanja sail, each rectangular-shaped {{ site.data.rp2_broadreach_parameter.sail_width }} mm x {{ site.data.rp2_broadreach_parameter.sail_height }} mm; total sail area: {{ site.data.rp2_broadreach_parameter.sail_area_m2 }} square meters
 
 ---
 

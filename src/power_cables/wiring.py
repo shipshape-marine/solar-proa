@@ -37,13 +37,14 @@ def create_sweep(group, profile, radius, vertices, name="SweepObject"):
 
     return sweep
 
-def wire_solar_panels(group, radius=5):
+def wire_solar_panels(group, radius=5, offset_factor=10):
     """
     Extracts all solar panels from the group and draws a wire sweep along their length.
     
     Args:
         group: The FreeCAD Document or Group object containing the panels.
         radius: Radius of the wire sweep.
+        offset_factor: Offset factor for colinear wires.
     """
     panels = []
     
@@ -60,26 +61,50 @@ def wire_solar_panels(group, radius=5):
             
     print(f"Found {len(panels)} solar panels to wire.")
 
+    # Group panels by their approximate Y-center to handle colinear placements
+    y_groups = {}
     for panel in panels:
-        # Get global bounding box of the panel
-        # panel.Shape returns the shape with Placement applied (global coords)
         bbox = panel.Shape.BoundBox
-        
-        # Calculate start and end points for the wire
-        # Running along the length (X-axis), centered on Width (Y-axis), on Top (Z-axis)
-        
         mid_y = (bbox.YMin + bbox.YMax) / 2
-        top_z = bbox.ZMax
-        
-        # Start at min X, End at max X
+        # Round to avoid floating point precision issues when grouping
+        key = round(mid_y, 4)
+        if key not in y_groups:
+            y_groups[key] = []
+        y_groups[key].append(panel)
+    
+    print(f"groups {y_groups.items()}")
 
-        # TODO: Draw until the central hull and offset the wires for transverse panels, currently draws along the length of panel
-        start_point = Base.Vector(bbox.XMin, mid_y, top_z)
-        end_point = Base.Vector(bbox.XMax, mid_y, top_z)
-        
-        wire_name = f"{panel.Name}_Wire"
-        
-        try:
-            create_sweep(group, "circle", radius, [start_point, end_point], name=wire_name)
-        except Exception as e:
-            print(f"Failed to wire panel {panel.Name}: {e}")
+    for group_y, group_panels in y_groups.items():
+        # Sort by X to ensure consistent ordering
+        group_panels.sort(key=lambda p: p.Shape.BoundBox.XMin)
+
+        # Get the x position of the end of the wire, should be the same for each transverse panel group
+        # TODO: Get the position of the actual central hull, currently draws until the end of the last panel
+        wire_end_x = max(p.Shape.BoundBox.XMax for p in group_panels)
+
+        for i, panel in enumerate(group_panels):
+            # Get global bounding box of the panel
+            # panel.Shape returns the shape with Placement applied (global coords)
+            bbox = panel.Shape.BoundBox
+            
+            # Calculate start and end points for the wire
+            # Running along the length (X-axis), centered on Width (Y-axis), on Top (Z-axis)
+            
+            mid_y = group_y
+            top_z = bbox.ZMax
+            
+            # Apply offset to prevent colinear wires within the group
+            offset = i * (radius * offset_factor)
+            wire_y = mid_y + offset
+            
+            # Start at min X, End at central hull
+            # TODO: Draw until the central hull
+            start_point = Base.Vector(bbox.XMin, wire_y, top_z)
+            end_point = Base.Vector(wire_end_x, wire_y, top_z)
+            
+            wire_name = f"{panel.Name}_Wire"
+            
+            try:
+                create_sweep(group, "circle", radius, [start_point, end_point], name=wire_name)
+            except Exception as e:
+                print(f"Failed to wire panel {panel.Name}: {e}")

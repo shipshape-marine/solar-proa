@@ -5,6 +5,7 @@
   
   "required": [
     "render",
+    "dxf",
     "step"
   ],
   

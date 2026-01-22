@@ -120,5 +120,8 @@
   "side_board_plate_length": 250,
   "side_board_plate_height": 250,
   "side_board_plate_thickness": 8,
-  "side_board_plate_above_sole": 500
+  "side_board_plate_above_sole": 500,
+
+  "towing_ring_major_diameter": 50,
+  "towing_ring_minor_diameter": 8
 }

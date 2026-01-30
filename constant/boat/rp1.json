@@ -126,6 +126,9 @@
   "navigation_light_height": 80,
   "navigation_light_diameter": 100,
     
-  "gusset_thickness": 7
+  "gusset_thickness": 7,
 
+  "tiller_rod_diameter": 8,
+  "tiller_rod_length": 1000
+    
 }

@@ -252,6 +252,25 @@ def rudder(the_rudder, params, raised):
     tiller_b.Shape = tiller_b.Shape.cut(tiller_cutter_cylinder_shape)
     tiller_b.Shape = tiller_b.Shape.cut(tiller_cutter_box_shape)
 
+    tiller_rod = the_rudder.newObject("Part::Feature", "Tiller_Rod (aluminum)")
+    tiller_rod.Shape = Part.makeCylinder(params['tiller_rod_diameter'] / 2,
+                         params['tiller_rod_length'])
+    tiller_rod_rot2 = FreeCAD.Rotation(Base.Vector(0, 1, 0), 0)
+    tiller_rod_rotation = tiller_rot1.multiply(tiller_rod_rot2)
+    tiller_rod.Placement = FreeCAD.Placement(
+        Base.Vector(params['tiller_length'] - params['tiller_width'] * 2,
+                    - params['tiller_width'],
+                    params['stringer_base_level'] + params['tiller_width'] / 2),
+        tiller_rod_rotation)
+
+    tiller_rod_knob = the_rudder.newObject("Part::Feature", "Tiller_Rod_Knob (aluminum)")
+    tiller_rod_knob.Shape = Part.makeSphere(params['tiller_rod_diameter'] * 2)
+    tiller_rod_knob.Placement = FreeCAD.Placement(
+        Base.Vector(params['tiller_length'] - params['tiller_width'] * 2,
+                    - params['tiller_width'] + params['tiller_rod_length'],
+                    params['stringer_base_level'] + params['tiller_width'] / 2),
+        tiller_rod_rotation)
+    
     # steel ribs (rods) for rudder
     rib_spacing = ((params['rudder_blade_height'] - 2 * params['rudder_rim'])
                    / (params['rudder_ribs'] - 1))

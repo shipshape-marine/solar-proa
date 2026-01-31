@@ -793,4 +793,29 @@ def mirror(side, params):
                     params['ama_length'] / 2 - params['ama_cone_length'],
                     params['ama_diameter'] / 2),
         FreeCAD.Rotation(Base.Vector(1, 0, 0), 270))
+
+    # loads on deck, sole, and ama
     
+    load = side.newObject("Part::Feature", "Deck Load (load)")
+    load.Shape = Part.makeBox(100, 100, params['deck_load_in_kg'])
+    load.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'] - 50,
+                    params['deck_load_y_offset'] - 50,
+                    params['deck_level']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+    load = side.newObject("Part::Feature", "Sole Load (load)")
+    load.Shape = Part.makeBox(100, 100, params['sole_load_in_kg'])
+    load.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'] - 50,
+                    params['sole_load_y_offset'] - 50,
+                    params['mast_base_level']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+    load = side.newObject("Part::Feature", "Ama Load (load)")
+    load.Shape = Part.makeBox(100, 100, params['ama_load_in_kg'])
+    load.Placement = FreeCAD.Placement(
+        Base.Vector(- 50,
+                    params['ama_load_y_offset'] - 50,
+                    params['deck_level']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))

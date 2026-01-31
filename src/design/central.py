@@ -178,13 +178,4 @@ def central(vessel, params):
                     params['side_board_plate_above_sole']),
         FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
 
-    load = (
-        vessel.newObject("Part::Feature",
-                         "Load (load)"))
-    load.Shape = Part.makeBox(100, 100, 100)
-    load.Placement = FreeCAD.Placement(
-        Base.Vector(params['vaka_x_offset'] - 50,
-                    -50,
-                    params['mast_base_level']),
-        FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
 

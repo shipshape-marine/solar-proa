@@ -180,22 +180,19 @@ for obj in biru.Group:
 rig_biru = doc.addObject("App::Part", "Rig Biru")
 rig(rig_biru, params, sail_angle=params['sail_angle_biru'],
     sail_camber=params['sail_camber_biru'],
-    reefing_percentage=params['reefing_percentage_biru'])
-rig_biru.Placement = FreeCAD.Placement(
-    Base.Vector(params['vaka_x_offset'],
-                params['mast_distance_from_center'],
-                params['sole_thickness']),
-    FreeCAD.Rotation(Base.Vector(0, 0, 1),
-                     params['rig_rotation_biru']))
+    reefing_percentage=params['reefing_percentage_biru'],
+    x_offset=params['vaka_x_offset'],
+    y_offset=params['mast_distance_from_center'],
+    z_rotation=params['rig_rotation_biru'])
 
 # rig_kuning with specified rotation and camber
 rig_kuning = doc.addObject("App::Part", "Rig Kuning")
 rig(rig_kuning, params, sail_angle=params['sail_angle_kuning'],
     sail_camber=params['sail_camber_kuning'],
-    reefing_percentage=params['reefing_percentage_kuning'])
-rig_kuning.Placement = FreeCAD.Placement(
-    Base.Vector(params['vaka_x_offset'], - params['mast_distance_from_center'], params['sole_thickness']),
-    FreeCAD.Rotation(Base.Vector(0, 0, 1), params['rig_rotation_kuning']))
+    reefing_percentage=params['reefing_percentage_kuning'],
+    x_offset=params['vaka_x_offset'],
+    y_offset=- params['mast_distance_from_center'],
+    z_rotation=params['rig_rotation_kuning'])
 
 # rudder: each rudder (biru and kuning) is
 # constructed at origin in rotating.py,
@@ -209,24 +206,20 @@ last_aka_index = params['akas_per_panel'] - 1
 last_aka_y = aka_y_position(params, last_panel_index, last_aka_index)
 
 rudder_biru = doc.addObject("App::Part", "Rudder Biru")
-rudder(rudder_biru, params, params['rudder_raised_biru'])
-rudder_biru.Placement = FreeCAD.Placement(
-    Base.Vector(params['vaka_x_offset'] - params['vaka_width'] / 2
+rudder(rudder_biru, params, params['rudder_raised_biru'],
+       x_offset=params['vaka_x_offset'] - params['vaka_width'] / 2
                 - params['rudder_distance_from_vaka'],
-                last_aka_y,
-                0),
-    FreeCAD.Rotation(Base.Vector(0, 0, 1), params['rudder_rotation_biru']))
+       y_offset=last_aka_y,
+       z_rotation=params['rudder_rotation_biru'])
 
 # rudder_kuning with rudder_rotation_kuning
 
 rudder_kuning = doc.addObject("App::Part", "Rudder Kuning")
-rudder(rudder_kuning, params, params['rudder_raised_kuning'])
-rudder_kuning.Placement = FreeCAD.Placement(
-    Base.Vector(params['vaka_x_offset'] - params['vaka_width'] / 2
+rudder(rudder_kuning, params, params['rudder_raised_kuning'],
+       x_offset=params['vaka_x_offset'] - params['vaka_width'] / 2
                 - params['rudder_distance_from_vaka'],
-                - last_aka_y,
-                0),
-    FreeCAD.Rotation(Base.Vector(0, 0, 1), params['rudder_rotation_kuning']))
+       y_offset=- last_aka_y,
+       z_rotation=params['rudder_rotation_kuning'])
 
 # boat: central unmirrored components: hull, sole, etc
 

@@ -160,8 +160,8 @@
       "color": [0.1, 0.0, 0.0],
       "transparency": 0,
       "display_mode": "Shaded",
-      "density_kg_m3": 2000000,
-      "description": "Load"
+      "density_kg_m3": 100000,
+      "description": "Density of 100 kg per liter for loads on deck and sole"
     },
     "boat_indicator": {
       "name": "Boat Indicator",

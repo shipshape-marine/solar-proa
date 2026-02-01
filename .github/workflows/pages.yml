@@ -68,7 +68,7 @@ jobs:
         run: |
           pip install matplotlib numpy
 
-      - name: Install TeX Live and Inkscape
+      - name: Install TeX Live
         run: |
           sudo apt-get update -y
           sudo apt-get install -y texlive texlive-fonts-extra latexmk

@@ -1338,7 +1338,7 @@ Pages 2--11 show the detailed lines plan
     of the {boat_name.upper()} solar-electric proa
     in the {config_name} configuration (front rudder raised).
 
-\\subsubsction{{Views}}
+\\subsubsection*{{Views}}
 \\begin{{itemize}}
     \\item \\textbf{{Profile (Sheer Plan)}} (pages 2--4): Side
     elevation showing the vessel's

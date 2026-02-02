@@ -112,14 +112,23 @@ Semua desain kapal dibuat menggunakan **pemodelan CAD parametrik di FreeCAD dan 
 
 ---
 
-## Peluang Kemitraan
+## Kemitraan
 
-Kami menyambut mitra strategis untuk:
+Kami bangga bekerja sama dengan [Dexmarine Pte Ltd](https://dexmarine.com/),
+mitra propulsi maritim listrik kami yang mensponsori sistem propulsi listrik
+untuk Roti Proa II.
+
+<div style="margin-bottom: 3em;">
+  <img src="{{ '/logos/dexmarine.png' | relative_url }}" alt="Dexmarine - Marine Supply Service" style="width: 20%; max-width: 1200px; height: auto; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); display: block; margin: 0 auto;">
+</div>
+
+Kami menyambut mitra strategis lebih lanjut untuk:
 
 - **Kolaborasi uji lapangan** dan umpan balik operasional
 - **Pengembangan bersama** protokol eko-wisata
 - **Peluang co-branding** untuk kepemimpinan keberlanjutan
 - **Keselarasan CSR** melalui dukungan inovasi maritim
+- **Sistem tenaga surya** untuk mengeksplorasi transportasi maritim berkelanjutan
 
 Struktur kemitraan dapat disesuaikan secara fleksibel dengan prioritas organisasi.
 

@@ -3,7 +3,9 @@ layout: default
 title: Roti Proa II - Design Specification and Renderings
 ---
 
-# Design Specification and Renderings: Roti Proa II
+[← Back to Roti Proa II Overview]({{ '/rp2.html' | relative_url }})
+
+---
 
 ## Specifications
 

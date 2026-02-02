@@ -4,7 +4,9 @@ title: Analisis Stabilitas & Daya Apung - Roti Proa II
 lang: id
 ---
 
-# Analisis Stabilitas & Daya Apung: Roti Proa II
+[← Kembali ke Ikhtisar Roti Proa II]({{ '/id/rp2.html' | relative_url }})
+
+---
 
 ## Analisis Daya Apung
 

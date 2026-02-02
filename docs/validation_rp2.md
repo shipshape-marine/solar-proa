@@ -3,15 +3,7 @@ layout: default
 title: Roti Proa II - Structural Safety Report
 ---
 
-# Structural Safety Report: Roti Proa II
-
-This report documents the structural validation analysis for the Roti Proa II (RP2), a 9-meter solar-electric day tourism vessel. All analyses use the **beaching configuration** (sails furled, rudders raised) which represents the boat in its most common at-rest state.
-
-**Validation Date:** Generated automatically from CAD models
-**Required Safety Factor:** {{ site.data.rp2_beaching_validate_structure.min_safety_factor_required }}
-**Overall Result:** {% if site.data.rp2_beaching_validate_structure.passed %}**PASS**{% else %}**FAIL**{% endif %}
-
-[← Back to RP2 Overview]({{ '/rp2.html' | relative_url }})
+[← Back to Roti Proa II Overview]({{ '/rp2.html' | relative_url }})
 
 ---
 

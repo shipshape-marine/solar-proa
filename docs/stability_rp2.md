@@ -3,7 +3,9 @@ layout: default
 title: Roti Proa II - Stability & Buoyancy Analysis
 ---
 
-# Stability & Buoyancy Analysis: Roti Proa II
+[← Back to Roti Proa II Overview]({{ '/rp2.html' | relative_url }})
+
+---
 
 ## Buoyancy Analysis
 

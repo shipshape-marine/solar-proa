@@ -76,7 +76,7 @@ artifacts/rp2.closehaul.step.step
 
 The issue: when we have an idea for an improvement of the design, we
 would need to redo all changes in all affected artifacts: the designs,
-renderings, validations, and websites. CICD takes care of that but
+renderings, validations, and websites. CICD takes care of that by
 automatically regenerating the artifacts. This is done locally, using
 the `make` facility and on the github server using a workflow. The
 workflow makes sure that the [solarproa.org](https://solarproa.org)

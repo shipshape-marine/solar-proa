@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Roti Proa I - Prototipe 4,2m
+description: Kapal Hibrida Bertenaga Angin-Surya untuk Daerah Tropis
 lang: id
 ---
 

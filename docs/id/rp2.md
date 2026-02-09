@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Roti Proa II - Kapal Wisata Harian 9m
+description: Kapal Hibrida Bertenaga Angin-Surya untuk Daerah Tropis
 lang: id
 ---
 

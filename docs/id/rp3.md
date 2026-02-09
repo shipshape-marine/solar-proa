@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Roti Proa III - Kapal Multi-Hari 13m
+description: Kapal Hibrida Bertenaga Angin-Surya untuk Daerah Tropis
 lang: id
 ---
 

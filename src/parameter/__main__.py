@@ -24,6 +24,8 @@ def compute_derived(base: Dict[str, Any]) -> Dict[str, Any]:
     params['stringer_width'] = base['stringer_width_inches'] * mm_in_one_inch
     params['clamp_width'] = base['clamp_width_inches'] * mm_in_one_inch
     params['clamp_height'] = base['clamp_height_inches'] * mm_in_one_inch
+    params['vaka_stringer_width'] = base['vaka_stringer_width_inches'] * mm_in_one_inch
+    params['vaka_stringer_height'] = base['vaka_stringer_height_inches'] * mm_in_one_inch
     params['frame_width'] = base['frame_width_inches'] * mm_in_one_inch
     params['frame_depth'] = base['frame_depth_inches'] * mm_in_one_inch
     params['bottom_height'] = base['bottom_height_inches'] * mm_in_one_inch
@@ -61,6 +63,7 @@ def compute_derived(base: Dict[str, Any]) -> Dict[str, Any]:
     # Vertical levels (build up from bottom)
     params['clamp_base_level'] = (params['bottom_height'] + base['freeboard'] - 
                                     params['clamp_height'])
+    params['vaka_stringer_base_level'] = params['clamp_base_level'] - params['freeboard'] / 2
     params['overhead_base_level'] = (params['clamp_base_level'] + 
                                      params['clamp_height'])
     params['aka_base_level'] = (params['overhead_base_level'] + 

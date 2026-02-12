@@ -114,7 +114,7 @@ Semua desain kapal dibuat menggunakan **pemodelan CAD parametrik di FreeCAD dan 
 
 ## Kemitraan
 
-Kami bangga bekerja sama dengan [Dexmarine Pte Ltd](https://dexmarine.com/),
+Kami bangga bekerja sama dengan [Dexteritas Pte Ltd](https://dexmarine.com/) yang juga dikenal sebagai Dexmarine,
 mitra propulsi maritim listrik kami yang mensponsori sistem propulsi listrik
 untuk Roti Proa II.
 
@@ -142,21 +142,25 @@ National University of Singapore).
 
 **Anggota Tim:**
 
-- Chong Yew Mun Luke, CS, MComp 2026
+- Chong Yew Mun Luke, Computer Science, MComp 2026
 
-- Vikram Goyal, CS, BComp 2027
+- Vikram Goyal, Computer Science, BComp 2027
 
 - Kor Qian Fu, Business AI Systems, BComp 2028
 
 - Lim Jia Yi (Julia), Business AI Systems, BComp 2028
 
+- Ong Miao Ying, Clara, Robotics & Machine Intelligence, Second Major in Innovation & Design, BEng 2029
+
+- Tan Jia Jun, Mechanical Engineering, BEng 2027
+
 **Penasihat Teknis:**
 
-- [Livio Deltin](https://www.linkedin.com/in/livio-deltin-37936629/), Senior Naval Architect, MEng CEng, Technical Advisor (Pro Bono)
+- [Livio Deltin](https://www.linkedin.com/in/livio-deltin-37936629/), Senior Naval Architect, MEng CEng (Pro Bono)
 
-- [Marcel Eckhardt](https://www.linkedin.com/in/marcel-eckhardt-2607448a/), Electrical Engineer, Technical Advisor (Pro Bono)
+- [Marcel Eckhardt](https://www.linkedin.com/in/marcel-eckhardt-2607448a/), Electrical Engineer (Pro Bono)
 
-- [Abdullah Farid](https://www.linkedin.com/in/abdullah-engineer/), Engineer, Wärtsilä Marine, Advisor (Pro Bono)
+- [Abdullah Farid](https://www.linkedin.com/in/abdullah-engineer/), Engineer, Wärtsilä Marine (Pro Bono)
 
 - Jason Wong, Computer Scientist, BSc (Hons) Computer Science (Pro Bono)
 
@@ -174,5 +178,4 @@ National University of Singapore).
 
 <div style="text-align: center; padding: 2em 0; color: #666; font-size: 0.9em;">
   <p><em>Menggabungkan tradisi maritim Asia Tenggara dengan teknologi berkelanjutan modern</em></p>
-  <p>Situs ini dan semua model CAD dibangun dan dideploy secara otomatis melalui GitHub Actions | <a href="{{ '/id/technical.html' | relative_url }}">Lihat cara kerjanya</a></p>
 </div>

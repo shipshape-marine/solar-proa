@@ -61,18 +61,22 @@ def get_section_positions(params):
     panels_front = params['panels_longitudinal'] // 2
     akas_per_panel = params['akas_per_panel']
 
-    for panel_idx in range(panels_front):
+    # The rudder is at the first aka beyond the front half (doesn't go to ama)
+    rudder_panel_idx = panels_front
+
+    for panel_idx in range(panels_front * 2):
         for aka_idx in range(akas_per_panel):
             y = aka_y_position(params, panel_idx, aka_idx)
             # Add small offset to avoid cutting exactly at aka edge
-            if panel_idx == panels_front - 1 and aka_idx == akas_per_panel - 1:
+            if panel_idx == rudder_panel_idx and aka_idx == 0:
                 name = "rudder---raised"
             else:
                 name = f"aka_{panel_idx}_{aka_idx}"
-            positions.append((name, y + 1.0))
+            if (panel_idx + 1) * params['panel_width'] < params['vaka_length'] / 2 - 200:
+                positions.append((name, y + 1.0))
 
     # draw the opposing rudder section too
-    y = aka_y_position(params, panels_front - 1, akas_per_panel - 1)
+    y = aka_y_position(params, rudder_panel_idx, 0)
     name = f"rudder---lowered"
     positions.append((name, - y - 1.0))
 
@@ -100,6 +104,69 @@ def init_gui():
         Gui.getMainWindow().destroy()
         App.ParamGet('User parameter:BaseApp/Preferences/Document').SetBool(
             'SaveThumbnail', False)
+
+
+def get_horizontal_positions(params):
+    """
+    Get Z positions for horizontal (plan view) section cuts.
+    Returns list of (name, z_position) tuples.
+    """
+    waterline_z = params.get('lines_plan_waterline_height', 0)
+    ama_diameter = params.get('ama_diameter', 370)
+    aka_base_level = params.get('aka_base_level', 1400)
+    stringer_base_level = params.get('stringer_base_level', 1500)
+    stringer_width = params.get('stringer_width', 25.4)
+    panel_base_level = params.get('panel_base_level', 1530)
+    overhead_base_level = params.get('overhead_base_level', 1403)
+    deck_level = params.get('deck_level', 1540)
+    gunwale_base_level = params.get('gunwale_base_level', 1350)
+    mast_base_level = params.get('mast_base_level', 200)
+    mast_step_height = params.get('mast_step_height', 100)
+    rudder_vaka_mount_base_level = params.get('rudder_vaka_mount_base_level', 700)
+
+    positions = [
+        ("waterline", waterline_z + 1),
+        ("ama_centerline", ama_diameter / 2),
+        ("mast_step", mast_base_level + mast_step_height / 2),
+        ("rudder_mount", rudder_vaka_mount_base_level + 1),
+        ("aka", aka_base_level + 51),
+        ("stringer", stringer_base_level + stringer_width / 2),
+        ("panel", panel_base_level + 3),
+        ("deck", deck_level - 2),
+        ("overhead", overhead_base_level + 10),
+    ]
+
+    # Add gunwale level only if the parameter exists
+    if gunwale_base_level:
+        positions.append(("gunwale", gunwale_base_level + 25))
+
+    # Sort by Z position
+    positions.sort(key=lambda x: x[1])
+    return positions
+
+
+def export_horizontal_section_svgs(shapes, horizontal_positions, output_dir, base_name):
+    """Export horizontal (plan view) section cuts as individual SVG files."""
+
+    for name, z_pos in horizontal_positions:
+        try:
+            print(f"  Slicing at Z={z_pos:.0f} for horizontal section '{name}'...", flush=True)
+
+            plane_normal = App.Vector(0, 0, 1)
+            wires = slice_shapes_safely(shapes, plane_normal, z_pos)
+
+            if wires:
+                print(f"    Got {len(wires)} wires", flush=True)
+                svg_path = os.path.join(output_dir, f"{base_name}.horizontal.{name}.svg")
+                export_wires_to_svg(wires, svg_path, view='YX')
+                print(f"    Exported: {svg_path}", flush=True)
+            else:
+                print(f"    Warning: No section found at Z={z_pos}", flush=True)
+
+        except Exception as e:
+            import traceback
+            print(f"  Error exporting horizontal section '{name}': {e}", flush=True)
+            traceback.print_exc()
 
 
 def slice_shapes_safely(shapes, normal, position):
@@ -662,32 +729,9 @@ def export_projection_svgs(shapes, solar_panel_shapes_even, solar_panel_shapes_o
         traceback.print_exc()
 
     # Full breadth plan: top-down view with slices at key structural levels
-    waterline_z = params.get('lines_plan_waterline_height', 0)
-    ama_diameter = params.get('ama_diameter', 370)
-    aka_base_level = params.get('aka_base_level', 1400)
-    stringer_base_level = params.get('stringer_base_level', 1500)
-    stringer_width = params.get('stringer_width', 25.4)
+    horizontal_positions = get_horizontal_positions(params)
+    z_levels = [z for _, z in horizontal_positions]
     panel_base_level = params.get('panel_base_level', 1530)
-    deck_base_level = params.get('deck_base_level', 1533)
-    overhead_base_level = params.get('overhead_base_level', 1403)
-    deck_level = params.get('deck_level', 1540)
-    gunwale_base_level = params.get('gunwale_base_level', 1350)
-    mast_base_level = params.get('mast_base_level', 200)
-    mast_step_height = params.get('mast_step_height', 100)
-
-    # Slice at structural levels to show all parts (with small offsets to avoid edges)
-    z_levels = [
-        waterline_z + 1,                          # Design waterline
-        ama_diameter / 2,                         # Through ama centerline
-        mast_base_level + mast_step_height / 2,   # Through mast step
-        gunwale_base_level + 25,                  # Through gunwales
-        aka_base_level + 51,                      # Through akas
-        stringer_base_level + stringer_width / 2, # Through stringers
-        panel_base_level + 3,                     # Through panels
-        deck_level - 2,                           # Just below deck surface
-        overhead_base_level + 10,                 # Through mast partner
-    ]
-    z_levels = sorted(set(z_levels))
 
     try:
         print(f"  Creating full breadth plan with {len(z_levels)} waterlines...", flush=True)
@@ -1082,6 +1126,16 @@ def create_lines_plan(design_path, params, output_dir, boat_name, config_name):
         print(f"Section SVG export failed: {e}", flush=True)
         traceback.print_exc()
 
+    # Export individual horizontal section SVGs
+    print("Exporting horizontal section SVGs...", flush=True)
+    try:
+        horizontal_positions = get_horizontal_positions(params)
+        export_horizontal_section_svgs(shapes, horizontal_positions, output_dir, base_name)
+    except Exception as e:
+        import traceback
+        print(f"Horizontal section SVG export failed: {e}", flush=True)
+        traceback.print_exc()
+
     # Export profile and half-breadth projections
     print("Exporting projection SVGs...", flush=True)
     try:
@@ -1113,7 +1167,7 @@ def create_lines_plan(design_path, params, output_dir, boat_name, config_name):
 
     latex_content = generate_latex(
         boat_name, config_name, params,
-        section_positions, common_scale,
+        section_positions, horizontal_positions, common_scale,
         base_name, output_dir
     )
 
@@ -1135,7 +1189,7 @@ def create_lines_plan(design_path, params, output_dir, boat_name, config_name):
     return True
 
 
-def generate_latex(boat_name, config_name, params, sections, scale, base_name, output_dir):
+def generate_latex(boat_name, config_name, params, sections, horizontal_sections, scale, base_name, output_dir):
     """Generate LaTeX document for lines plan."""
 
     # Get vessel dimensions from params - Principal Dimensions
@@ -1176,6 +1230,11 @@ def generate_latex(boat_name, config_name, params, sections, scale, base_name, o
         for name, y_pos in sections
     ])
 
+    horizontal_rows = "\n".join([
+        f"        {escape_latex(name)} & {z_pos:.0f} \\\\"
+        for name, z_pos in horizontal_sections
+    ])
+
     # Generate section pages for LaTeX - each section on its own page
     section_pages = [f"\\section*{{Body Plan}}"]
     for name, y_pos in sections:
@@ -1193,6 +1252,38 @@ def generate_latex(boat_name, config_name, params, sections, scale, base_name, o
             f"\\end{{figure}}"
         )
     section_figures = "\n\n".join(section_pages)
+
+    # Generate horizontal section pages for LaTeX
+    horizontal_pages = [f"\\section*{{Horizontal Sections (Plan View)}}"]
+    for name, z_pos in horizontal_sections:
+        svg_name = f"{base_name}.horizontal.{name}"
+        horizontal_pages.append(
+            f"%% ===== HORIZONTAL: {name} =====\n"
+            f"\\begin{{figure}}[H]\n"
+            f"\\centering\n"
+            f"\\IfFileExists{{{svg_name}.pdf}}{{%\n"
+            f"    \\includegraphics[width=0.95\\textwidth,height=0.85\\textheight,keepaspectratio]{{{svg_name}.pdf}}\n"
+            f"}}{{%\n"
+            f"    \\textit{{(Horizontal section {escape_latex(name)}: see {escape_latex(base_name)}.FCStd)}}\n"
+            f"}}\n"
+            f"\\caption{{Horizontal Section---{escape_latex(name)} (Z={z_pos:.0f}mm)}}\n"
+            f"\\end{{figure}}"
+        )
+    horizontal_figures = "\n\n".join(horizontal_pages)
+
+    # Compute page numbers dynamically
+    # Page 1: Summary
+    # Pages 2-4: Profile (vaka, vaka+rudder, ama)
+    # Body plan: one page per section, starting at page 5
+    # Full breadth: one page after body plan
+    # Horizontal sections: one page per section after full breadth
+    profile_start = 2
+    profile_end = 4
+    body_start = profile_end + 1
+    body_end = body_start + len(sections) - 1
+    breadth_page = body_end + 1
+    horiz_start = breadth_page + 1
+    horiz_end = horiz_start + len(horizontal_sections) - 1
 
     latex = f"""\\documentclass[a3paper,landscape]{{article}}
 \\usepackage[margin=20mm]{{geometry}}
@@ -1255,7 +1346,7 @@ def generate_latex(boat_name, config_name, params, sections, scale, base_name, o
 }}
 \\end{{minipage}}
 
-\\vspace{{3mm}}
+\\vspace{{0mm}}
 \\noindent
 \\begin{{minipage}}[t]{{0.18\\textwidth}}
 \\subsection*{{Proa Terminology}}
@@ -1273,13 +1364,24 @@ def generate_latex(boat_name, config_name, params, sections, scale, base_name, o
 Station & Y Position \\\\
 \\midrule
 {section_rows}
-%\\midrule
-%Station Spacing & {station_spacing:.0f} mm \\\\
 \\bottomrule
 \\end{{tabular}}
 \\end{{minipage}}
 %
 \\hfill
+%
+\\begin{{minipage}}[t]{{0.14\\textwidth}}
+\\subsection*{{Horizontal Stations}}
+\\begin{{tabular}}{{lr}}
+\\toprule
+Station & Z Position \\\\
+\\midrule
+{horizontal_rows}
+\\bottomrule
+\\end{{tabular}}
+\\end{{minipage}}
+%
+\hfill
 %
 \\begin{{minipage}}[t]{{0.14\\textwidth}}
 \\subsection*{{Principal Dimensions}}
@@ -1332,23 +1434,18 @@ Onboard battery capacity & 8 kWh \\\\
 %
 \\hspace{{8mm}}
 %
-\\begin{{minipage}}[t]{{0.45\\textwidth}}
+\\begin{{minipage}}[t]{{0.30\\textwidth}}
 \\subsection*{{Notes}}
-Pages 2--11 show the detailed lines plan
+Pages {profile_start}--{horiz_end} show the detailed lines plan
     of the {boat_name.upper()} solar-electric proa
     in the {config_name} configuration (front rudder raised).
 
 \\subsubsection*{{Views}}
 \\begin{{itemize}}
-    \\item \\textbf{{Profile (Sheer Plan)}} (pages 2--4): Side
-    elevation showing the vessel's
-          longitudinal shape and freeboard (center vaka, rudder, and
-    center ama sections)
-    \\item \\textbf{{Full Breadth Plan}} (page 5): Plan
-    view from above showing the
-          deck layout and hull waterlines at multiple heights
-    \\item \\textbf{{Body Plan}} (pages 6--11): Transverse sections at key stations showing
-          the hull cross-section, including vaka and amas.
+    \\item \\textbf{{Profile (Sheer Plan)}} (pages {profile_start}--{profile_end})
+    \\item \\textbf{{Body Plan}} (pages {body_start}--{body_end})
+    \\item \\textbf{{Full Breadth Plan}} (page {breadth_page})
+    \\item \\textbf{{Horizontal Sections}} (pages {horiz_start}--{horiz_end})
 \\end{{itemize}}
 
 \\textbf{{Section Locations:}}
@@ -1411,6 +1508,9 @@ than the traditional half-sections used for symmetric hulls.
 \\caption{{Profile---Ama centerline section (X=0)}}
 \\end{{figure}}
 
+%% ===== BODY PLAN SECTIONS =====
+{section_figures}
+
 %% ===== FULL BREADTH PLAN =====
 \\newpage
 
@@ -1425,9 +1525,10 @@ than the traditional half-sections used for symmetric hulls.
 }}
 \\caption{{Full breadth plan---View from above (solar panels hatched)}}
 \\end{{figure}}
-
-%% ===== BODY PLAN SECTIONS =====
-{section_figures}
+    
+%% ===== HORIZONTAL SECTIONS =====
+\\newpage
+{horizontal_figures}
 
 \\end{{document}}
 """

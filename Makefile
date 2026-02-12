@@ -6,6 +6,9 @@
 
 UNAME := $(shell uname)
 
+# Detect Python command (python3 on macOS/Linux, python on Windows)
+PYTHON := $(shell python3 --version >/dev/null 2>&1 && echo python3 || echo python)
+
 # Detect FreeCAD command (different on different systems)
 FREECAD_APP := /Applications/FreeCAD.app/Contents/MacOS/FreeCAD
 FREECAD_BUNDLE := /Applications/FreeCAD.app
@@ -85,7 +88,7 @@ all: required-all
 .PHONY: required
 required:
 	@echo "Running required stages for $(BOAT).$(CONFIGURATION)..."
-	@required_stages=$$(python3 -c "import json; config = json.load(open('$(CONFIGURATION_FILE)')); print(' '.join(config.get('required', [])))"); \
+	@required_stages=$$($(PYTHON) -c "import json; config = json.load(open('$(CONFIGURATION_FILE)')); print(' '.join(config.get('required', [])))"); \
 	for stage in $$required_stages; do \
 		echo "Running stage: $$stage"; \
 		$(MAKE) $$stage BOAT=$(BOAT) CONFIGURATION=$(CONFIGURATION) MATERIAL=$(MATERIAL) || true; \
@@ -128,6 +131,7 @@ help:
 	@echo "  make validate-structure     - Validate structural integrity (all load cases)"
 	@echo "  make lines                  - Generate lines plan (TechDraw with sections)"
 	@echo "  make lines-pdf              - Compile lines plan LaTeX to PDF"
+	@echo "  make electrical-simulation  - Run electrical simulation (SIMULATION_TYPE=voyage)"
 	@echo ""
 	@echo "Parameter Targets:"
 	@echo "  make parameter              - Compute and save parameter to artifacts/"
@@ -143,6 +147,8 @@ help:
 	@echo "  make design BOAT=rp2 CONFIGURATION=closehaul"
 	@echo "  make color BOAT=rp3 CONFIGURATION=closehaul MATERIAL=proa"
 	@echo "  make render BOAT=rp2 CONFIGURATION=closehaul"
+	@echo "  make electrical-simulation SIMULATION_TYPE=voyage"
+	@echo "  make electrical-simulation SIMULATION_TYPE=sweep_throttle"
 	@echo ""
 	@echo "FreeCAD: $(FREECAD)"
 
@@ -168,7 +174,7 @@ check:
 	@echo "✓ FreeCAD found: $(FREECAD)"
 	@echo ""
 	@echo "Checking Python..."
-	@python3 --version
+	@$(PYTHON) --version
 	@echo ""
 	@echo "Discovered boats: $(BOATS)"
 	@echo "Discovered configurations: $(CONFIGURATIONS)"
@@ -214,15 +220,15 @@ sync-docs:
 		echo "  Copied $$(ls artifact/*.step.step | wc -l | tr -d ' ') STEP files to docs/downloads/"; \
 	fi
 	@# Generate YAML files if scripts exist
-	@if [ -f docs/generate_downloads_yaml.py ]; then python3 docs/generate_downloads_yaml.py; fi
-	@if [ -f docs/generate_configurations_yaml.py ]; then python3 docs/generate_configurations_yaml.py; fi
+	@if [ -f docs/generate_downloads_yaml.py ]; then $(PYTHON) docs/generate_downloads_yaml.py; fi
+	@if [ -f docs/generate_configurations_yaml.py ]; then $(PYTHON) docs/generate_configurations_yaml.py; fi
 	@echo "✓ Docs sync complete"
 
 # make diagrams
 .PHONY: diagrams
 diagrams: 
 	@echo "making all diagrams..."
-	python3 -m src.validate_structure.diagrams
+	$(PYTHON) -m src.validate_structure.diagrams
 
 # serve website locally
 .PHONY: localhost
@@ -240,7 +246,7 @@ zip:	clean
 # generate dependency graph
 .PHONY: graph
 graph:
-	@python3 docs/generate_dependency_graph.py docs/dependency_graph.png
+	@$(PYTHON) docs/generate_dependency_graph.py docs/dependency_graph.png
 
 # ==============================================================================
 # STAGES
@@ -257,7 +263,7 @@ PARAMETER_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).parameter.json
 $(PARAMETER_ARTIFACT): $(BOAT_FILE) $(CONFIGURATION_FILE) $(PARAMETER_SOURCE)
 	@echo "Computing parameters for $(BOAT) and $(CONFIGURATION)..."
 	@mkdir -p $(ARTIFACT_DIR)
-	@python3 -m src.parameter \
+	@$(PYTHON) -m src.parameter \
 		--boat $(BOAT_FILE) \
 		--configuration $(CONFIGURATION_FILE) \
 		--output $@
@@ -528,7 +534,7 @@ VALIDATE_STRUCTURE_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).validate
 
 $(VALIDATE_STRUCTURE_ARTIFACT): $(PARAMETER_ARTIFACT) $(MASS_ARTIFACT) $(GZ_ARTIFACT) $(VALIDATE_STRUCTURE_SOURCE) | $(ARTIFACT_DIR)
 	@echo "Running structural validation: $(BOAT).$(CONFIGURATION)"
-	@python3 -m src.validate_structure \
+	@$(PYTHON) -m src.validate_structure \
 		--parameters $(PARAMETER_ARTIFACT) \
 		--mass $(MASS_ARTIFACT) \
 		--gz $(GZ_ARTIFACT) \
@@ -592,3 +598,65 @@ $(LINES_PDF): $(LINES_TEX)
 .PHONY: lines-pdf
 lines-pdf: $(LINES_PDF)
 	@echo "✓ Lines plan PDF complete for $(BOAT).$(CONFIGURATION)"
+
+# ==============================================================================
+# ELECTRICAL SIMULATION
+# ==============================================================================
+
+ELECTRICAL_DIR := $(SRC_DIR)/electrical_simulation
+ELECTRICAL_SOURCE := $(wildcard $(ELECTRICAL_DIR)/*.py) $(wildcard $(ELECTRICAL_DIR)/components/*.py)
+ELECTRICAL_CONST_DIR := $(CONST_DIR)/electrical
+ELECTRICAL_CIRCUIT_FILE := $(ELECTRICAL_CONST_DIR)/circuit_setup.json
+ELECTRICAL_VOYAGE_FILE := $(ELECTRICAL_CONST_DIR)/voyage_setup.json
+ELECTRICAL_CONSTANTS_FILE := $(ELECTRICAL_CONST_DIR)/constants.json
+SIMULATION_TYPE ?= voyage
+ELECTRICAL_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).electrical_simulation
+
+$(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(ELECTRICAL_SOURCE) | $(ARTIFACT_DIR)
+	@echo "Running electrical simulation ($(SIMULATION_TYPE)): $(BOAT).$(CONFIGURATION)"
+	@$(PYTHON) -m src.electrical_simulation \
+		--circuit $(ELECTRICAL_CIRCUIT_FILE) \
+		--constants $(ELECTRICAL_CONSTANTS_FILE) \
+		$(if $(filter voyage,$(SIMULATION_TYPE)),--voyage $(ELECTRICAL_VOYAGE_FILE)) \
+		--output $@/result.json \
+		--simulation-type $(SIMULATION_TYPE)
+	@echo "✓ Electrical simulation complete: $@"
+
+.PHONY: electrical-simulation
+electrical-simulation: $(ELECTRICAL_ARTIFACT)
+	@echo "✓ Electrical simulation ($(SIMULATION_TYPE)) complete for $(BOAT).$(CONFIGURATION)"
+
+# ==============================================================================
+# TEMPLATE FOR NEW STAGES (copy this block and replace TEMPLATE/template)
+# ==============================================================================
+#
+# 1. Replace TEMPLATE with your stage name in UPPER_CASE (e.g., WINDAGE)
+# 2. Replace template with your stage name in lower_case (e.g., windage)
+# 3. Set the correct dependencies in the file rule prerequisites
+# 4. Set the output file extension (.json, .FCStd, .png, etc.)
+# 5. Fill in the recipe commands (macOS and Linux branches if needed)
+# 6. Add a help line in the 'help' target above
+# 7. Add to configuration JSON "required" list if it should run automatically
+# 8. Uncomment all lines below (remove the leading #)
+#
+# TEMPLATE_DIR := $(SRC_DIR)/template
+# TEMPLATE_SOURCE := $(wildcard $(TEMPLATE_DIR)/*.py)
+# TEMPLATE_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).template.json
+#
+# $(TEMPLATE_ARTIFACT): $(PARAMETER_ARTIFACT) $(TEMPLATE_SOURCE) | $(ARTIFACT_DIR)
+# 	@echo "Running template: $(BOAT).$(CONFIGURATION)"
+# 	@if [ "$(UNAME)" = "Darwin" ]; then \
+# 		PYTHONPATH=$(FREECAD_BUNDLE)/Contents/Resources/lib:$(FREECAD_BUNDLE)/Contents/Resources/Mod:$(PWD) \
+# 		DYLD_LIBRARY_PATH=$(FREECAD_BUNDLE)/Contents/Frameworks:$(FREECAD_BUNDLE)/Contents/Resources/lib \
+# 		$(FREECAD_PYTHON) -m src.template \
+# 			--parameters $(PARAMETER_ARTIFACT) \
+# 			--output $@; \
+# 	else \
+# 		PYTHONPATH=$(PWD) $(FREECAD_PYTHON) -m src.template \
+# 			--parameters $(PARAMETER_ARTIFACT) \
+# 			--output $@; \
+# 	fi
+#
+# .PHONY: template
+# template: $(TEMPLATE_ARTIFACT)
+# 	@echo "✓ Template complete for $(BOAT).$(CONFIGURATION)"

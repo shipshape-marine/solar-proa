@@ -1,0 +1,9 @@
+{
+  "grounding_resistance": 1e-6,
+  "wire_resistance": 0.01,
+  "epsilon": 1e-4,
+  "mppt_battery_voltage_buffer": 2.0,
+  "voltage_mismatch_tolerance": 5.0,
+  "power_mismatch_tolerance_percentage": 1.0,
+  "array_decoder_pattern": "(arr|s|p)(\\d+)(?=_|\\s|$)"
+}

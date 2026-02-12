@@ -206,9 +206,8 @@ rig(rig_kuning, params, sail_angle=params['sail_angle_kuning'],
 # rudder_biru with rudder_rotation_biru
 
 # Calculate last aka Y position for rudder placement
-last_panel_index = params['panels_longitudinal'] // 2 - 1
-last_aka_index = params['akas_per_panel'] - 1
-last_aka_y = aka_y_position(params, last_panel_index, last_aka_index)
+
+last_aka_y = (params['akas_per_panel'] * params['panels_longitudinal'] / 2 + 1) * params['panel_width']
 
 rudder_biru = doc.addObject("App::Part", "Rudder Biru")
 rudder(rudder_biru, params, params['rudder_raised_biru'],

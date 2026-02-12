@@ -42,6 +42,9 @@
   "clamp_width_inches": 3,
   "clamp_height_inches": 2,
 
+  "vaka_stringer_width_inches": 2,
+  "vaka_stringer_height_inches": 1,
+    
   "frame_width_inches": 3,
   "frame_depth_inches": 2,
 

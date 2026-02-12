@@ -3,6 +3,13 @@ layout: default
 title: Roti Proa II - Design Specification and Renderings
 ---
 
+<div style="display: flex; align-items: center; gap: 2em; margin-bottom: 2em; flex-wrap: wrap;">
+  <div style="flex: 1; min-width: 400px; max-width: 600px;">
+    <img src="{{ '/renders/rp2.closehaul.render.isometric.png' | relative_url }}" alt="Roti Proa II" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <p style="font-size: 0.9em; color: #666; margin-top: 0.5em; font-style: italic;">Roti Proa II, sailing close-haul, isometric view generated from FreeCAD design</p>
+  </div>
+</div>
+
 [← Back to Roti Proa II Overview]({{ '/rp2.html' | relative_url }})
 
 ---

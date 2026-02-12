@@ -42,6 +42,9 @@
   "clamp_width_inches": 3,
   "clamp_height_inches": 2,
 
+  "vaka_stringer_width_inches": 2,
+  "vaka_stringer_height_inches": 1,
+
   "frame_width_inches": 3,
   "frame_depth_inches": 2,
 
@@ -60,7 +63,7 @@
   "mast_diameter": 152.4,
   "mast_thickness": 6.35,
   "mast_height": 8500,
-  "mast_distance_from_center_offset": -50,
+  "mast_distance_from_center_offset": -250,
   "mast_section_overlap": 800,
   
   "mast_partner_width_offset": 300,
@@ -96,10 +99,10 @@
   "sail_thickness": 2,
   
   "rudder_post_diameter": 50,
-  "rudder_blade_length": 500,
+  "rudder_blade_length": 1000,
   "rudder_blade_height": 500,
   "rudder_blade_thickness": 5,
-  "rudder_distance_from_vaka": 250,
+  "rudder_distance_from_vaka": 150,
   "rudder_below_bottom": 500,
   
   "rudder_bearing_block_diameter": 80,
@@ -107,7 +110,7 @@
   "rudder_aka_mount_pin_length": 150,
   
   "rudder_vaka_mount_length": 800,
-  "rudder_vaka_mount_angle": 5,
+  "rudder_vaka_mount_angle": 8,
   "rudder_vaka_backing_plate_thickness": 10,
   
   "rudder_ribs": 5,
@@ -133,7 +136,7 @@
   "gusset_thickness": 7,
 
   "tiller_rod_diameter": 10,
-  "tiller_rod_length": 1500,
+  "tiller_rod_length": 2500,
 
   "deck_load_y_offset": 2000,
   "deck_load_in_kg": 200,

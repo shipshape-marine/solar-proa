@@ -1,0 +1,83 @@
+{
+    "configuration_name": "electrical_circuit_setup",
+    "display_name": "Electric Proa",
+    "configuration_description": "",
+
+    "mppt_panel_setup": {
+        "description": "Combine all config_x in parallel. Set count to 0 to disable that config",
+        "config_1": {
+            "count": 2,
+            "description": {
+                "panel": "NA",
+                "mppt": "https://www.victronenergy.com/media/pg/Manual_BlueSolar_150-35__150-45/en/technical-specifications.html"
+            },
+            "panel_info": {
+                "power": 455,
+                "voltage": 40.0,
+                "in_series": 2,
+                "in_parallel": 2
+            },
+            "mppt_info": {
+                "max_input_voltage": 150.0,
+                "max_input_current": 45.0,
+                "max_output_voltage": 48.0,
+                "max_output_current": 45.0,
+                "efficiency": 0.95
+            }
+        },
+        "config_2": {
+            "count": 0,
+            "description": "Test",
+            "panel_info": {
+                "power": 600,
+                "voltage": 45.0,
+                "in_series": 3,
+                "in_parallel": 1
+            },
+            "mppt_info": {
+                "max_input_voltage": 150.0,
+                "max_input_current": 45.0,
+                "max_output_voltage": 48.0,
+                "max_output_current": 45.0,
+                "efficiency": 0.80
+            }
+        }
+
+    },
+    "battery_setup": {
+        "description": "Choose one battery type at a time. No mixing of battery types. Simplfied voltage-capacity to linear model",
+        "choice": "LiNMC",
+        "LiNMC": {
+            "battery_voltage": 25.9,
+            "min_voltage": 21.0,
+            "max_voltage": 29.4,
+
+            "battery_in_series": 2,
+            "battery_in_parallel": 1,
+            "max_charge_current": 100,
+            
+            "max_discharge_current": 50,
+            "capacity_ah": 100,
+            "current_soc": 1.0
+        },
+        "LiFePO4": {
+            "battery_voltage": 24.9,
+            "min_voltage": 21.0,
+            "max_voltage": 25.0,
+            "battery_in_series": 2,
+            "battery_in_parallel": 1,
+            "max_charge_current": 50,
+            "max_discharge_current": 50,
+            "capacity_ah": 50,
+            "current_soc": 1.0
+        }
+    },
+    "load_setup": {
+        "description": "Load will be powered in parallel. Throttle can leave empty for max power.",
+        "Torqeedo_Cruise_4.0": {
+            "total_power": 4000,
+            "nominal_voltage": 48.0,
+            "throttle": 1.0
+        }
+    }
+}

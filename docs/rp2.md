@@ -4,12 +4,9 @@ title: Roti Proa II - 9m Day Tourism Vessel
 ---
 
 <div style="display: flex; align-items: center; gap: 2em; margin-bottom: 2em; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 300px;">
-    <h1 style="margin: 0;">Roti Proa II</h1>
-    <h2 style="margin-top: 0.5em; font-weight: 300;">9-Meter Solar-Electric Day Tourism Vessel</h2>
-  </div>
-  <div style="flex: 1; min-width: 300px; max-width: 500px;">
-    <img src="{{ '/renders/rp2.closehaul.render.isometric.png' | relative_url }}" alt="Roti Proa II" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <div style="flex: 1; min-width: 400px; max-width: 600px;">
+    <img src="{{ '/images/rp2construction.jpg' | relative_url }}" alt="Roti Proa II Construction" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <p style="font-size: 0.9em; color: #666; margin-top: 0.5em; font-style: italic;">Main hull of Roti Proa II under construction by Kim Tuck Huat Pte Ltd, 5/2/2026, Johor Bahru, Malaysia</p>
   </div>
 </div>
 
@@ -87,21 +84,6 @@ The vessel's structural integrity has been validated under multiple load scenari
 | Lifting sling (crane) | {{ site.data.rp2_beaching_validate_structure.tests[8].summary.min_safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[8].summary.result }} |
 | Gunwale loads | {{ site.data.rp2_beaching_validate_structure.tests[9].summary.min_safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[9].summary.result }} |
 | Ama lift wind speed | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knots | INFO |
-
----
-
-## Configurations
-
-The vessel can be configured for different sailing conditions and use cases:
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1em; margin: 2em 0;">
-{% for config in site.data.configurations %}
-  <div style="border: 1px solid #ddd; padding: 1em; border-radius: 4px;">
-    <h4>{{ config.display_name }}</h4>
-    <p style="font-size: 0.9em; color: #666;">{{ config.description }}</p>
-  </div>
-{% endfor %}
-</div>
 
 ---
 

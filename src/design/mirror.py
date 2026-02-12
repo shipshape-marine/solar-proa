@@ -33,11 +33,73 @@ def mirror(side, params):
 
     aka_counter = 0  # global counter for naming
 
+    # Elliptical cylinders for frame boolean operations.
+    # Built in the hull's local frame (major along X, minor along Y,
+    # extruded along Z). Placement matches the hull so that OCCT
+    # applies the rotation/translation during boolean ops.
+    frame_outer_cyl = elliptical_cylinder(
+        params['vaka_length'] - 6 * params['vaka_thickness'],
+        params['vaka_width'] - 6 * params['vaka_thickness'],
+        params['freeboard'] - params['clamp_height'])
+    frame_outer_cyl.translate(Base.Vector(0, 0, -5))
+    frame_outer_cyl.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'], 0, params['bottom_height']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
+
+    frame_inner_cyl = elliptical_cylinder(
+        params['vaka_length'] - 6 * params['vaka_thickness'],
+        params['vaka_width'] - 6 * params['vaka_thickness']
+        - 2 * params['frame_width'],
+        params['freeboard'] + 10)
+    frame_inner_cyl.translate(Base.Vector(0, 0, -5))
+    frame_inner_cyl.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'], 0, params['bottom_height']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
+
+    # Bottom frame geometry: instead of boolean ops with an ellipsoid
+    # (which creates complex NURBS surfaces that hang FreeCAD), we
+    # compute the hull interior cross-section at each frame position
+    # and extrude a half-ellipse face directly.
+    #
+    # Ellipsoid interior semi-axes in hull local frame.
+    # Use 6*thickness offset to keep frames clearly inside the hull —
+    # the outer ellipsoid is NURBS (from scaled sphere) and doesn't
+    # align perfectly with analytic ellipse geometry.
+    bottom_a = (params['vaka_length'] - 6 * params['vaka_thickness']) / 2
+    bottom_b = (params['vaka_width'] - 6 * params['vaka_thickness']) / 2
+    bottom_c = (params['bottom_height'] * 2
+                - 6 * params['vaka_thickness']) / 2
+
+    # Rotation to map XY-plane face to YZ-plane (hull cross-section):
+    # X → Y, Y → Z, Z → X (cyclic permutation)
+    # Achieved by: 90° around X, then 90° around Z
+    rot_xy_to_yz = FreeCAD.Placement(
+        Base.Vector(0, 0, 0),
+        FreeCAD.Rotation(Base.Vector(0, 0, 1), 90).multiply(
+            FreeCAD.Rotation(Base.Vector(1, 0, 0), 90))).toMatrix()
+
+    hull_placement_matrix = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'], 0, params['bottom_height']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 1), 90)).toMatrix()
+
     for i in range(0, params['panels_longitudinal']):
         for j in range(0, params['akas_per_panel']):
             aka_counter += 1
             # aka_y: center of aka in y direction
             aka_y = aka_y_position(params, i, j)
+            # X position of the vaka-side hull/clamp edges at this aka_y
+            # (ellipse equation: narrower toward hull ends)
+            ellipse_scale = math.sqrt(max(0, 1 - (aka_y
+                                    / (params['vaka_length'] / 2)) ** 2))
+            clamp_x = (params['vaka_x_offset']
+                       + params['vaka_thickness']
+                       - params['vaka_width'] / 2 * ellipse_scale)
+            clamp_x_outer = (params['vaka_x_offset']
+                             - params['vaka_thickness']
+                             + params['vaka_width'] / 2 * ellipse_scale
+                             - params['clamp_width']
+                             - params['vaka_thickness'])
+
             if (aka_y < params['vaka_length'] / 2
                         - params['panel_width'] / 2 / params['akas_per_panel']):
                 aka = side.newObject("Part::Feature",
@@ -81,6 +143,138 @@ def mirror(side, params):
                                 aka_y,
                                 params['deck_level']),
                     FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
+
+                # frame: vertical rib inside hull, aligned with this aka
+                frame_board = Part.makeBox(
+                    params['vaka_width'] + 200,
+                    params['frame_depth'],
+                    params['freeboard'] + 10)
+                frame_board.translate(Base.Vector(
+                    params['vaka_x_offset'] - params['vaka_width'] / 2 - 100,
+                    aka_y - params['frame_depth'] / 2,
+                    params['bottom_height'] - 5))
+                frame = side.newObject("Part::Feature",
+                                       f"Frame_{aka_counter} (plywood)")
+                frame.Shape = frame_board.common(
+                    frame_outer_cyl).cut(frame_inner_cyl)
+
+                # bottom frame: bulkhead from fiberglass bottom to sole
+                # Built by extruding the hull's elliptical cross-section
+                # at this longitudinal position (avoids ellipsoid booleans)
+                bf_scale = math.sqrt(
+                    max(0, 1 - (aka_y / bottom_a) ** 2))
+                if bf_scale > 0.01:
+                    bf_y = bottom_b * bf_scale
+                    bf_z = bottom_c * bf_scale
+                    bf_ell = Part.Ellipse(
+                        Base.Vector(0, 0, 0), bf_y, bf_z)
+                    bf_arc = bf_ell.toShape(math.pi, 2 * math.pi)
+                    bf_line = Part.makeLine(
+                        bf_arc.Vertexes[-1].Point,
+                        bf_arc.Vertexes[0].Point)
+                    bf_face = Part.Face(Part.Wire([bf_arc, bf_line]))
+                    bf_face = bf_face.transformGeometry(rot_xy_to_yz)
+                    bf_local = bf_face.extrude(
+                        Base.Vector(params['frame_depth'], 0, 0))
+                    bf_local.translate(Base.Vector(
+                        aka_y - params['frame_depth'] / 2, 0, 0))
+                    bottom_frame = side.newObject(
+                        "Part::Feature",
+                        f"Bottom_Frame_{aka_counter} (plywood)")
+                    bottom_frame.Shape = bf_local.transformGeometry(
+                        hull_placement_matrix)
+
+                # clamp-aka-frame gussets
+                clamp_to_aka_gusset_right = side.newObject(
+                    "Part::Feature",
+                    f"Gusset_clamp_to_aka_right_{aka_counter} (aluminum)")
+                clamp_to_aka_gusset_right.Shape = upper_right_gusset(
+                    params['spine_width'], params['gusset_thickness'])
+                clamp_to_aka_gusset_right.Placement = FreeCAD.Placement(
+                    Base.Vector(clamp_x,
+                                aka_y + params['aka_width'] / 2,
+                                params['aka_base_level']),
+                    FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+                clamp_to_aka_gusset_left = side.newObject(
+                    "Part::Feature",
+                    f"Gusset_clamp_to_aka_left_{aka_counter} (aluminum)")
+                clamp_to_aka_gusset_left.Shape = upper_left_gusset(
+                    params['spine_width'], params['gusset_thickness'])
+                clamp_to_aka_gusset_left.Placement = FreeCAD.Placement(
+                    Base.Vector(clamp_x,
+                                aka_y - params['aka_width'] / 2,
+                                params['aka_base_level']),
+                    FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+            
+                frame_to_clamp_gusset_right = side.newObject(
+                    "Part::Feature",
+                    f"Gusset_frame_to_clamp_right_{aka_counter} (aluminum)")
+                frame_to_clamp_gusset_right.Shape = (
+                    lower_right_gusset(
+                        params['spine_width'], params['gusset_thickness']))
+                frame_to_clamp_gusset_right.Placement = FreeCAD.Placement(
+                    Base.Vector(clamp_x,
+                                aka_y + params['aka_width'] / 2,
+                                params['clamp_base_level']),
+                    FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+                frame_to_clamp_gusset_left = side.newObject(
+                    "Part::Feature",
+                    f"Gusset_frame_to_clamp_left_{aka_counter} (aluminum)")
+                frame_to_clamp_gusset_left.Shape = lower_left_gusset(
+                    params['spine_width'], params['gusset_thickness'])
+                frame_to_clamp_gusset_left.Placement = FreeCAD.Placement(
+                    Base.Vector(clamp_x,
+                                aka_y - params['aka_width'] / 2,
+                                params['clamp_base_level']),
+                    FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+                # outer-side clamp-aka-frame gussets (opposite side of vaka)
+                clamp_to_aka_gusset_outer_right = side.newObject(
+                    "Part::Feature",
+                    f"Gusset_clamp_to_aka_outer_right_{aka_counter} (aluminum)")
+                clamp_to_aka_gusset_outer_right.Shape = upper_right_gusset(
+                    params['spine_width'], params['gusset_thickness'])
+                clamp_to_aka_gusset_outer_right.Placement = FreeCAD.Placement(
+                    Base.Vector(clamp_x_outer,
+                                aka_y + params['aka_width'] / 2,
+                                params['aka_base_level']),
+                    FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+                clamp_to_aka_gusset_outer_left = side.newObject(
+                    "Part::Feature",
+                    f"Gusset_clamp_to_aka_outer_left_{aka_counter} (aluminum)")
+                clamp_to_aka_gusset_outer_left.Shape = upper_left_gusset(
+                    params['spine_width'], params['gusset_thickness'])
+                clamp_to_aka_gusset_outer_left.Placement = FreeCAD.Placement(
+                    Base.Vector(clamp_x_outer,
+                                aka_y - params['aka_width'] / 2,
+                                params['aka_base_level']),
+                    FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+                frame_to_clamp_gusset_outer_right = side.newObject(
+                    "Part::Feature",
+                    f"Gusset_frame_to_clamp_outer_right_{aka_counter} (aluminum)")
+                frame_to_clamp_gusset_outer_right.Shape = (
+                    lower_right_gusset(
+                        params['spine_width'], params['gusset_thickness']))
+                frame_to_clamp_gusset_outer_right.Placement = FreeCAD.Placement(
+                    Base.Vector(clamp_x_outer,
+                                aka_y + params['aka_width'] / 2,
+                                params['clamp_base_level']),
+                    FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+                frame_to_clamp_gusset_outer_left = side.newObject(
+                    "Part::Feature",
+                    f"Gusset_frame_to_clamp_outer_left_{aka_counter} (aluminum)")
+                frame_to_clamp_gusset_outer_left.Shape = lower_left_gusset(
+                    params['spine_width'], params['gusset_thickness'])
+                frame_to_clamp_gusset_outer_left.Placement = FreeCAD.Placement(
+                    Base.Vector(clamp_x_outer,
+                                aka_y - params['aka_width'] / 2,
+                                params['clamp_base_level']),
+                    FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
 
                 if (aka_counter <= params['panels_longitudinal'] / 2 * params['akas_per_panel']):
                     pillar = side.newObject("Part::Feature",
@@ -258,6 +452,62 @@ def mirror(side, params):
                         point_lower_biru,
                         FreeCAD.Rotation(Base.Vector(0, 1, 0), 45))
 
+    # center frame at Y=0: half-depth so mirroring completes it
+    frame_board_center = Part.makeBox(
+        params['vaka_width'] + 200,
+        params['frame_depth'] / 2,
+        params['freeboard'] + 10)
+    frame_board_center.translate(Base.Vector(
+        params['vaka_x_offset'] - params['vaka_width'] / 2 - 100,
+        0,
+        params['bottom_height'] - 5))
+    frame_center = side.newObject("Part::Feature",
+                                   "Frame_Center (plywood)")
+    frame_center.Shape = frame_board_center.common(
+        frame_outer_cyl).cut(frame_inner_cyl)
+
+
+    frame_to_clamp_gusset_right = side.newObject(
+        "Part::Feature",
+        f"Gusset_frame_to_clamp_right_center (aluminum)")
+    frame_to_clamp_gusset_right.Shape = (
+        lower_right_gusset(
+            params['spine_width'], params['gusset_thickness']))
+    frame_to_clamp_gusset_right.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'] - params['vaka_width'] / 2 - params['vaka_thickness'],
+                    params['frame_depth'] / 2,
+                    params['clamp_base_level']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+    frame_to_clamp_gusset_outer_right_center = side.newObject(
+        "Part::Feature",
+        f"Gusset_frame_to_clamp_outer_right_center (aluminum)")
+    frame_to_clamp_gusset_outer_right_center.Shape = (
+        lower_right_gusset(
+            params['spine_width'], params['gusset_thickness']))
+    frame_to_clamp_gusset_outer_right_center.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'] + params['vaka_width'] / 2
+                    - params['clamp_width'] - params['vaka_thickness'],
+                    params['frame_depth'] / 2,
+                    params['clamp_base_level']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+
+    # center bottom frame at Y=0: half-depth so mirroring completes it
+    # At Y=0, scale=1.0 so use full ellipsoid semi-axes
+    bf_ell_c = Part.Ellipse(Base.Vector(0, 0, 0), bottom_b, bottom_c)
+    bf_arc_c = bf_ell_c.toShape(math.pi, 2 * math.pi)
+    bf_line_c = Part.makeLine(
+        bf_arc_c.Vertexes[-1].Point,
+        bf_arc_c.Vertexes[0].Point)
+    bf_face_c = Part.Face(Part.Wire([bf_arc_c, bf_line_c]))
+    bf_face_c = bf_face_c.transformGeometry(rot_xy_to_yz)
+    bf_local_c = bf_face_c.extrude(
+        Base.Vector(params['frame_depth'] / 2, 0, 0))
+    bottom_frame_center = side.newObject("Part::Feature",
+                                          "Bottom_Frame_Center (plywood)")
+    bottom_frame_center.Shape = bf_local_c.transformGeometry(
+        hull_placement_matrix)
+
     # Cross-bracing between neighboring pillars (X-shaped)
     # Add bracing between each pair of adjacent akas
 
@@ -319,7 +569,7 @@ def mirror(side, params):
         brace_2.Placement = FreeCAD.Placement(
             point3,
             FreeCAD.Rotation(rotation_axis2, rotation_angle2))
-
+        
     spine_cleat = side.newObject("Part::Feature", "Spine_Cleat (steel)")
     spine_cleat.Shape = horn_cleat(200, 40, 50)
     spine_cleat.Placement = FreeCAD.Placement(
@@ -476,10 +726,8 @@ def mirror(side, params):
                         params['stringer_base_level']),
             FreeCAD.Rotation(Base.Vector(1, 0, 0), 90))
 
-    # Y position of the last (most aft) aka - used for rudder mount
-    last_panel_index = params['panels_longitudinal'] // 2 - 1
-    last_aka_index = params['akas_per_panel'] - 1
-    last_aka_y = aka_y_position(params, last_panel_index, last_aka_index)
+    # Y position of the last (most aft) aka
+    last_aka_y = (params['akas_per_panel'] * params['panels_longitudinal'] / 2 + 1) * params['panel_width']
 
     # cylinder to cut rudder cap hole into deck
     deck_cutter = Part.makeCylinder(

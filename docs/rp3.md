@@ -4,12 +4,9 @@ title: Roti Proa III - 13m Multi-Day Vessel
 ---
 
 <div style="display: flex; align-items: center; gap: 2em; margin-bottom: 2em; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 300px;">
-    <h1 style="margin: 0;">Roti Proa III</h1>
-    <h2 style="margin-top: 0.5em; font-weight: 300;">13-Meter Solar-Electric Multi-Day Cruiser</h2>
-  </div>
-  <div style="flex: 1; min-width: 300px; max-width: 500px;">
-    <img src="{{ '/renders/rp3.closehaul.render.isometric.png' | relative_url }}" alt="Roti Proa III" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <div style="flex: 1; min-width: 400px; max-width: 600px;">
+    <img src="{{ '/images/rp3.closehaul.render.isometric.png' | relative_url }}" alt="Roti Proa III" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <p style="font-size: 0.9em; color: #666; margin-top: 0.5em; font-style: italic;">Roti Proa II, sailing close-haul, isometric view generated from FreeCAD design</p>
   </div>
 </div>
 
@@ -45,9 +42,9 @@ Dragon boats have been used across Asia for over 2,000 years. The DB22 design re
 
 | Specification | Estimated Value |
 |--------------|----------------|
-| Overall Length (LOA) | {{ site.data.rp3_closehaul_parameter.vaka_length }} mm |
-| Beam (hull) | ~1.2m (traditional dragon boat proportions) |
-| Beam (with outrigger) | {{ site.data.rp3_closehaul_parameter.beam }} mm |
+| Overall Length (LOA) | 13 m |
+| Beam (hull) | 1.2 m (traditional dragon boat proportions) |
+| Beam (with outrigger) | 7.5 m |
 | Capacity | 5-6 passengers + 2 crew |
 | Solar Power | 6-8kW peak (estimated) |
 | Motor Power | 5-6kW electric (estimated) |
@@ -58,31 +55,6 @@ Dragon boats have been used across Asia for over 2,000 years. The DB22 design re
 | Water | Integrated desalination capability |
 
 *Note: Specifications are preliminary and subject to refinement during detailed design phase*
-
----
-
-## Buoyancy analysis
-
-We derive the following buoyancy characteristics from
-our automated analysis using Newton's method, iteratively adjusting the
-roll/pitch/z-offset of the boat according to the difference between the center/amount of buoyancy and the center/amount of mass. The numbers indicate the equilibrium achieved after 
-{{ site.data.rp3_beaching_buoyancy.iterations }} iterations using
-the beaching configuration (no sails and rudders lifted),
-see [implementation](https://github.com/solar-proa/CAD/blob/main/src/buoyancy/__main__.py).
-
-**Z-offset (boat lowering into the water):** {{ site.data.rp3_beaching_buoyancy.equilibrium.z_offset_mm }} mm  
-**Pitch degrees:** {{ site.data.rp3_beaching_buoyancy.equilibrium.pitch_deg }} arc degrees  
-**Roll degrees:** {{ site.data.rp3_beaching_buoyancy.equilibrium.roll_deg }} arc degrees  
-**Vaka submerged volume:** {{ site.data.rp3_beaching_buoyancy.vaka.submerged_volume_liters }} liters  
-**Vaka total volume:** {{ site.data.rp3_beaching_buoyancy.vaka.total_volume_liters }} liters  
-**Vaka submerged percentage:** {{ site.data.rp3_beaching_buoyancy.vaka.submerged_percent }} %  
-**Vaka z-offset:** {{ site.data.rp3_beaching_buoyancy.vaka.z_world_mm }} mm  
-**Ama submerged volume:** {{ site.data.rp3_beaching_buoyancy.ama.submerged_volume_liters }} liters  
-**Ama total volume:** {{ site.data.rp3_beaching_buoyancy.ama.total_volume_liters }} liters  
-**Ama submerged percentage:** {{ site.data.rp3_beaching_buoyancy.ama.submerged_percent }} %  
-**Ama z-offset:** {{ site.data.rp3_beaching_buoyancy.ama.z_world_mm }} mm  
-**Center of gravity (world-coordinates x, y, z):** {{ site.data.rp3_beaching_buoyancy.center_of_gravity_world.x }}, {{ site.data.rp3_beaching_buoyancy.center_of_gravity_world.y }}, {{ site.data.rp3_beaching_buoyancy.center_of_gravity_world.z }} mm  
-**Center of buoyancy (world-coordinates x, y, z):** {{ site.data.rp3_beaching_buoyancy.center_of_buoyancy.x }}, {{ site.data.rp3_beaching_buoyancy.center_of_buoyancy.y }}, {{ site.data.rp3_beaching_buoyancy.center_of_buoyancy.z }} mm  
 
 ---
 
@@ -149,32 +121,6 @@ This isn't just about technology transfer; it's about **cultural continuity** - 
 
 ---
 
-## 3D Renders
-
-*Automatically generated from parametric CAD models*
-
-{% assign render_files = site.static_files | where_exp: "file", "file.path contains 'renders'" | where_exp: "file", "file.path contains 'rp3'" | where_exp: "file", "file.extname == '.png'" %}
-
-{% for config in site.data.configurations %}
-  {% assign config_pattern = config.name | append: ".render" %}
-  <h3>{{ config.display_name }}</h3>
-
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1em; margin: 2em 0;">
-  {% assign config_files = render_files | where_exp: "file", "file.basename contains config_pattern" | sort: "basename" %}
-  {% for file in config_files %}
-    {% assign view_name = file.basename | split: ".render." | last %}
-    <div>
-      <img src="{{ file.path | relative_url }}" alt="{{ file.basename }}" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
-      <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">
-        {{ site.data.views[view_name].display_name }}
-      </p>
-    </div>
-  {% endfor %}
-  </div>
-{% endfor %}
-
----
-
 ## Partnership Opportunities
 
 RP3 development presents unique opportunities for strategic partners interested in:
@@ -195,44 +141,6 @@ The 2027 timeline allows partners to influence design decisions while maintainin
 **RP3 (2027):** Demonstrates multi-day voyage capability
 
 This progression de-risks the technology while building toward our ultimate vision: a fleet of carbon-neutral vessels serving Southeast Asia's coastal eco-tourism market.
-
----
-
-## Download CAD Models
-
-Access CAD models for all sail configurations in FreeCAD (.FCStd) and STEP (.step) formats.
-These files include the complete 3D geometry and can be modified for your specific requirements.
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1em; margin: 2em 0;">
-{% for config in site.data.rp3_downloads.configuration %}
-  <div style="padding: 1em; border: 1px solid #ddd; border-radius: 4px;">
-    <div style="font-weight: bold; margin-bottom: 0.5em; text-transform: capitalize;">
-      {{ config.name | replace: "_", " " }}
-    </div>
-    {% if config.description %}
-    <div style="font-size: 0.85em; color: #666; margin-bottom: 0.75em;">
-      {{ config.description }}
-    </div>
-    {% endif %}
-    <div style="display: flex; gap: 0.5em; flex-wrap: wrap;">
-      <a href="{{ '/downloads/' | append: config.filename | relative_url }}" style="background: #28a745; color: white; padding: 0.4em 0.8em; border-radius: 4px; text-decoration: none; font-size: 0.9em;">
-        📐 FreeCAD
-      </a>
-      {% if config.step_filename %}
-      <a href="{{ '/downloads/' | append: config.step_filename | relative_url }}" style="background: #007bff; color: white; padding: 0.4em 0.8em; border-radius: 4px; text-decoration: none; font-size: 0.9em;">
-        📦 STEP
-      </a>
-      {% endif %}
-    </div>
-  </div>
-{% endfor %}
-</div>
-
-**Formats:**
-- **FreeCAD (.FCStd):** Parametric model for [FreeCAD](https://www.freecad.org/) (free and open-source)
-- **STEP (.step):** Universal CAD format compatible with most CAD software
-
-**License:** Models are shared under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) - free to use, modify, and share with attribution.
 
 ---
 

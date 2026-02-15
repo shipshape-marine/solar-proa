@@ -1,0 +1,3 @@
+shipshape
+numpy
+matplotlib

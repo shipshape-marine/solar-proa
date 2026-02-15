@@ -67,6 +67,8 @@ jobs:
       - name: Install Python dependencies for validation
         run: |
           pip install matplotlib numpy shipshape
+          # Also install shipshape into FreeCAD's bundled Python (used for mass/buoyancy/gz)
+          ./squashfs-root/usr/bin/python -m pip install shipshape
 
       - name: Install TeX Live and SVG tools
         run: |

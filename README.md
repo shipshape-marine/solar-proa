@@ -1,4 +1,4 @@
-# Solar proa CAD models
+# Solar Proa
 
 ## About
 

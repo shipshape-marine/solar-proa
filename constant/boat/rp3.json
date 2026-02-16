@@ -4,6 +4,7 @@
   
   "panels_longitudinal": 6,
   "panels_transversal": 3,
+  "panels_per_string": 3,
   "deck_stringers": 4,
   
   "panel_length": 1762,

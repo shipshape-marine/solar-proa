@@ -1,8 +1,13 @@
+# Navigate to the current directory
+cd docs
+
+# Install all 3 options
+ridk install
+
 # Install dependencies
 bundle install
 
 # Run Jekyll locally
-cd docs
 bundle exec jekyll serve
 
 # Open in browser

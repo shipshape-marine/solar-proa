@@ -2,8 +2,8 @@ title: Solar Proa
 description: Wind-solar-powered Hybrid Vessels for the Tropics
 theme: jekyll-theme-cayman
 baseurl: ""
-url: "https://github.com/solar-proa"
-repository: solar-proa/CAD
+url: "https://github.com/shipshape-marine"
+repository: shipshape-marine/solar-proa
 
 # Build settings
 markdown: kramdown

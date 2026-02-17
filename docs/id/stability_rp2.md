@@ -58,7 +58,7 @@ Kesetimbangan daya apung dihitung menggunakan metode Newton, secara iteratif men
 | Pusat Gravitasi | {{ site.data.rp2_beaching_buoyancy.center_of_gravity_world.x }} | {{ site.data.rp2_beaching_buoyancy.center_of_gravity_world.y }} | {{ site.data.rp2_beaching_buoyancy.center_of_gravity_world.z }} |
 | Pusat Daya Apung | {{ site.data.rp2_beaching_buoyancy.center_of_buoyancy.x }} | {{ site.data.rp2_beaching_buoyancy.center_of_buoyancy.y }} | {{ site.data.rp2_beaching_buoyancy.center_of_buoyancy.z }} |
 
-Lihat [implementasi](https://github.com/solar-proa/CAD/blob/main/src/buoyancy/__main__.py).
+Lihat [implementasi](https://github.com/shipshape-marine/shipshape/blob/main/src/shipshape/buoyancy/__main__.py).
 
 ---
 
@@ -118,7 +118,7 @@ Untuk kenyamanan penumpang, periode roll 6-12 detik biasanya lebih disukai. Peri
 
 **Pertimbangan kritis:** Jika periode gelombang di area operasi adalah 3-6 detik (tipikal untuk perairan pantai), kapal mungkin mengalami resonansi pitch, yang bisa tidak nyaman bagi penumpang.
 
-Lihat [implementasi](https://github.com/solar-proa/CAD/blob/main/src/gz/__main__.py).
+Lihat [implementasi](https://github.com/shipshape-marine/shipshape/blob/main/src/shipshape/gz/__main__.py).
 
 ---
 

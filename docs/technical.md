@@ -44,7 +44,7 @@ The build process transforms parameter files into website-ready outputs through 
 | **gz** | Design (FreeCAD), Buoyancy | GZ curve JSON + PNG | Computes righting-arm curve over heel angles (shipshape) |
 | **render** | Colored design (FreeCAD) | PNG images | Generates isometric, top, front, right views |
 | **step** | FreeCAD model | STEP file | Exports universal CAD format |
-| **validate** | Parameters, Mass, GZ | Validation JSON | Structural validation: aka, mast, spine, capsize analysis (shipshape) |
+| **validate** | Parameters, Mass, GZ | Validation JSON | Structural validation: aka, mast, spine, capsize analysis |
 
 ---
 
@@ -94,10 +94,10 @@ This ensures the website always reflects the current state of the CAD models - r
 
 ## Repository Structure
 
-Design-specific code lives in the CAD repo. Boat-independent analysis (parameter merging, mass, buoyancy, GZ curves, structural validation) is provided by the [shipshape](https://github.com/solar-proa/shipshape) library.
+Design-specific code lives in this repo. Boat-independent analysis (parameter merging, mass, buoyancy, GZ curves) is provided by the [shipshape](https://github.com/shipshape-marine/shipshape) library. Structural validation lives in `src/structural/`.
 
 ```
-CAD/
+solar-proa/
 ├── constant/
 │   ├── boat/              # Boat parameter files (rp1.json, rp2.json, rp3.json)
 │   ├── configuration/     # Sailing configurations
@@ -109,6 +109,7 @@ CAD/
 │   ├── render/            # Render generation
 │   ├── step/              # STEP export
 │   ├── lines/             # Lines plan generation
+│   ├── structural/        # Structural validation (aka, mast, spine, capsize)
 │   └── buoyancy_design/   # Equilibrium positioning in FreeCAD
 ├── artifact/              # Generated outputs (models, renders, data)
 ├── docs/                  # Jekyll website source
@@ -121,7 +122,7 @@ CAD/
 
 - **[FreeCAD 1.0](https://www.freecad.org/)** - Open-source parametric CAD
 - **Python 3** - Scripting and automation
-- **[shipshape](https://github.com/solar-proa/shipshape)** - Boat-independent naval engineering library (parameter, mass, buoyancy, GZ, structural validation)
+- **[shipshape](https://github.com/shipshape-marine/shipshape)** - Boat-independent naval engineering library (parameter, mass, buoyancy, GZ)
 - **GNU Make** - Build orchestration and dependency tracking
 - **Jekyll** - Static site generation
 - **GitHub Actions** - CI/CD pipeline
@@ -131,12 +132,9 @@ CAD/
 
 ## Open Source
 
-The entire project is open source under permissive licenses:
+The entire project is open source under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-- **CAD Models:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
-- **Code:** MIT License
-
-**GitHub Repository:** [github.com/solar-proa/CAD](https://github.com/solar-proa/CAD)
+**GitHub Repository:** [github.com/shipshape-marine/solar-proa](https://github.com/shipshape-marine/solar-proa)
 
 Contributions, feedback, and forks are welcome.
 

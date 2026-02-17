@@ -516,7 +516,7 @@ The Roti Proa II structural design **passes all validation tests** with safety f
 
 ### Validation Software
 
-This report was generated automatically from the parametric CAD model using the `validate-structure` module. Source code: [github.com/solar-proa/CAD](https://github.com/solar-proa/CAD/tree/main/src/validate_structure)
+This report was generated automatically from the parametric CAD model using the `validate-structure` module. Source code: [github.com/shipshape-marine/solar-proa](https://github.com/shipshape-marine/solar-proa/tree/main/src/structural)
 
 ---
 

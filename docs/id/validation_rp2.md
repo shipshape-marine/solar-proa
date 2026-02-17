@@ -526,7 +526,7 @@ Desain struktural Roti Proa II **lulus semua tes validasi** dengan faktor keaman
 
 ### Perangkat Lunak Validasi
 
-Laporan ini dihasilkan secara otomatis dari model CAD parametrik menggunakan modul `validate-structure`. Kode sumber: [github.com/solar-proa/CAD](https://github.com/solar-proa/CAD/tree/main/src/validate_structure)
+Laporan ini dihasilkan secara otomatis dari model CAD parametrik menggunakan modul `validate-structure`. Kode sumber: [github.com/shipshape-marine/solar-proa](https://github.com/shipshape-marine/solar-proa/tree/main/src/structural)
 
 ---
 

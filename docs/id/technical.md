@@ -46,7 +46,7 @@ Proses build mengubah file parameter menjadi output siap-website melalui serangk
 | **gz** | Design (FreeCAD), Daya apung | JSON kurva GZ + PNG | Menghitung kurva lengan pemulih pada berbagai sudut kemiringan (shipshape) |
 | **render** | Design berwarna (FreeCAD) | Gambar PNG | Menghasilkan tampilan isometrik, atas, depan, kanan |
 | **step** | Model FreeCAD | File STEP | Mengekspor format CAD universal |
-| **validate** | Parameter, Massa, GZ | JSON validasi | Validasi struktural: aka, tiang, tulang belakang, analisis terbalik (shipshape) |
+| **validate** | Parameter, Massa, GZ | JSON validasi | Validasi struktural: aka, tiang, tulang belakang, analisis terbalik |
 
 ---
 
@@ -96,10 +96,10 @@ Ini memastikan website selalu mencerminkan kondisi terkini dari model CAD - rend
 
 ## Struktur Repositori
 
-Kode spesifik desain berada di repo CAD. Analisis yang tidak bergantung pada desain kapal tertentu (penggabungan parameter, massa, daya apung, kurva GZ, validasi struktural) disediakan oleh pustaka [shipshape](https://github.com/solar-proa/shipshape).
+Kode spesifik desain berada di repo ini. Analisis yang tidak bergantung pada desain kapal tertentu (penggabungan parameter, massa, daya apung, kurva GZ) disediakan oleh pustaka [shipshape](https://github.com/shipshape-marine/shipshape). Validasi struktural berada di `src/structural/`.
 
 ```
-CAD/
+solar-proa/
 ├── constant/
 │   ├── boat/              # File parameter kapal (rp1.json, rp2.json, rp3.json)
 │   ├── configuration/     # Konfigurasi pelayaran
@@ -111,6 +111,7 @@ CAD/
 │   ├── render/            # Generasi render
 │   ├── step/              # Ekspor STEP
 │   ├── lines/             # Generasi rencana garis
+│   ├── structural/        # Validasi struktural (aka, tiang, tulang belakang, capsize)
 │   └── buoyancy_design/   # Penempatan keseimbangan di FreeCAD
 ├── artifact/              # Output yang dihasilkan (model, render, data)
 ├── docs/                  # Sumber website Jekyll
@@ -123,7 +124,7 @@ CAD/
 
 - **[FreeCAD 1.0](https://www.freecad.org/)** - CAD parametrik sumber terbuka
 - **Python 3** - Scripting dan otomatisasi
-- **[shipshape](https://github.com/solar-proa/shipshape)** - Pustaka rekayasa kelautan independen (parameter, massa, daya apung, GZ, validasi struktural)
+- **[shipshape](https://github.com/shipshape-marine/shipshape)** - Pustaka rekayasa kelautan independen (parameter, massa, daya apung, GZ)
 - **GNU Make** - Orkestrasi build dan pelacakan ketergantungan
 - **Jekyll** - Generasi situs statis
 - **GitHub Actions** - Pipeline CI/CD
@@ -133,12 +134,9 @@ CAD/
 
 ## Sumber Terbuka
 
-Seluruh proyek adalah sumber terbuka di bawah lisensi permisif:
+Seluruh proyek adalah sumber terbuka di bawah [Lisensi Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-- **Model CAD:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
-- **Kode:** Lisensi MIT
-
-**Repositori GitHub:** [github.com/solar-proa/CAD](https://github.com/solar-proa/CAD)
+**Repositori GitHub:** [github.com/shipshape-marine/solar-proa](https://github.com/shipshape-marine/solar-proa)
 
 Kontribusi, umpan balik, dan fork sangat diterima.
 

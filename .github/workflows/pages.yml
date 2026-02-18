@@ -69,7 +69,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           # Also install shipshape into FreeCAD's bundled Python (used for mass/buoyancy/gz)
-          ./squashfs-root/usr/bin/python -m pip install shipshape==0.7.0
+          ./squashfs-root/usr/bin/python -m pip install shipshape==0.9.0
 
       - name: Install TeX Live and SVG tools
         run: |

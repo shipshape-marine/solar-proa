@@ -154,9 +154,12 @@ def compute_rotation_center(doc):
 
 
 def get_boat_bounds(doc):
-    """Get the bounding box of all objects in the document."""
+    """Get the bounding box of hull objects near the waterline."""
     xmin = ymin = zmin = float('inf')
     xmax = ymax = zmax = float('-inf')
+
+    waterline_zone_min = -2000
+    waterline_zone_max = 2000
 
     for obj in doc.Objects:
         if not hasattr(obj, 'Shape') or obj.Shape.isNull():
@@ -169,6 +172,9 @@ def get_boat_bounds(doc):
 
         bbox = obj.Shape.BoundBox
         if not bbox.isValid():
+            continue
+
+        if bbox.ZMin > waterline_zone_max or bbox.ZMax < waterline_zone_min:
             continue
 
         xmin = min(xmin, bbox.XMin)

@@ -222,9 +222,17 @@ def create_water_surface(doc, bounds: dict, water_level: float = 0.0):
 
 
 def get_boat_bounds(doc) -> dict:
-    """Get the bounding box of all objects in the document."""
+    """Get the bounding box of hull objects near the waterline.
+
+    Only considers objects that intersect the waterline zone (z between
+    -2000 and +2000mm), so masts, rigging, and other above-deck structures
+    don't inflate the water surface dimensions.
+    """
     xmin = ymin = zmin = float('inf')
     xmax = ymax = zmax = float('-inf')
+
+    waterline_zone_min = -2000  # mm
+    waterline_zone_max = 2000   # mm
 
     for obj in doc.Objects:
         if not hasattr(obj, 'Shape') or obj.Shape.isNull():
@@ -241,6 +249,10 @@ def get_boat_bounds(doc) -> dict:
 
         bbox = obj.Shape.BoundBox
         if not bbox.isValid():
+            continue
+
+        # Only include objects that intersect the waterline zone
+        if bbox.ZMin > waterline_zone_max or bbox.ZMax < waterline_zone_min:
             continue
 
         xmin = min(xmin, bbox.XMin)

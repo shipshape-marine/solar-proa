@@ -124,14 +124,29 @@ def export_renders(fcstd_path, output_render, background='#C6D2FF'):
     except:
         pass
 
+    # Hide water surface for camera framing (it extends far beyond the hull
+    # and causes fitAll to zoom out too much, especially in side views)
+    water_objs = []
+    for obj in doc.Objects:
+        if hasattr(obj, 'Label') and 'Water' in (obj.Label or ''):
+            if hasattr(obj, 'ViewObject') and obj.ViewObject:
+                water_objs.append(obj)
+
     # Export each view
     for view_name, view_method in views:
         print(f"Exporting {view_name} view...")
-        
+
+        # Hide water surface, fit camera to hull, then show it again
+        for obj in water_objs:
+            obj.ViewObject.Visibility = False
+
         # Set the view
         getattr(view, view_method)()
         view.fitAll()
-        
+
+        for obj in water_objs:
+            obj.ViewObject.Visibility = True
+
         # Export as PNG
         clean_name = base_name.replace('.color', '')
         output_path = os.path.join(output_render, f"{clean_name}.render.{view_name}.png")

@@ -1,0 +1,75 @@
+{
+    "MPPT": {
+        "Description": "MPPT will be configured in parallel based on specified count",
+        "Victron_150/45": {
+            "description": "https://www.victronenergy.com/media/pg/Manual_BlueSolar_150-35__150-45/en/technical-specifications.html",
+            "max_input_voltage": 150.0,
+            "max_input_current": 45.0,
+            "max_output_voltage": 48.0,
+            "max_output_current": 45.0,
+            "efficiency": 0.95
+        },
+        "Victron_250/100": {
+            "max_input_voltage": 250.0,
+            "max_input_current": 80.0,
+            "max_output_voltage": 60.0,
+            "max_output_current": 100.0,
+            "efficiency": 0.98
+        },
+        "Test_MPPT": {
+            "max_input_voltage": 150.0,
+            "max_input_current": 45.0,
+            "max_output_voltage": 48.0,
+            "max_output_current": 45.0,
+            "efficiency": 0.80
+        }
+    },
+
+    "Panel": {
+        "Description": "Panel configurations for solar arrays",
+        "Renogy_455W": {
+            "power": 455,
+            "voltage": 40.0
+        },
+        "Test_Panel": {
+            "power": 600,
+            "voltage": 45.0
+        }
+    },
+
+    "Battery": {
+        "Description": "Only 1 type of battery can be used at a time", 
+        "LiNMC": {
+            "battery_voltage": 25.9,
+            "min_voltage": 21.0,
+            "max_voltage": 29.4,
+            "max_charge_current": 100,
+            "max_discharge_current": 50,
+            "capacity_ah": 100
+        },
+        "LiFePO4": {
+            "battery_voltage": 24.9,
+            "min_voltage": 21.0,
+            "max_voltage": 25.0,
+            "max_charge_current": 50,
+            "max_discharge_current": 50,
+            "capacity_ah": 50
+        }
+    },
+
+    "Load": {
+        "Description": "Loads will be powered in parallel. Throttle can be specified in setup to limit max power.",
+        "Torqeedo_Cruise_2.0": {
+            "total_power": 2000,
+            "nominal_voltage": 24.0
+        },
+        "Torqeedo_Cruise_4.0": {
+            "total_power": 4000,
+            "nominal_voltage": 48.0
+        },
+        "Torqeedo_Cruise_6.0": {
+            "total_power": 8000,
+            "nominal_voltage": 48.0
+        }
+    }
+}

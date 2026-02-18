@@ -1,0 +1,32 @@
+{
+  "voyage_info": {
+    "name": "Mixed Solar with High-Throttle Stress Voyage"
+  },
+  "initial_battery_soc": 1.0,
+  "segments": [
+    {
+      "name": "Early Morning Departure",
+      "duration_minutes": 25,
+      "throttle": 1.0,
+      "solar_power": 0.0
+    },
+    {
+      "name": "Midday Cruising",
+      "duration_minutes": 90,
+      "throttle": 0.5,
+      "solar_power": 0.9
+    },
+    {
+      "name": "Afternoon Sprint",
+      "duration_minutes": 90,
+      "throttle": 1.0,
+      "solar_power": 0.8
+    },
+    {
+      "name": "Evening Return",
+      "duration_minutes": 45,
+      "throttle": 0.3,
+      "solar_power": 1.0
+    }
+  ]
+}

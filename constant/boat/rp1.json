@@ -46,6 +46,9 @@
   "vaka_stringer_width_inches": 2,
   "vaka_stringer_height_inches": 1,
 
+  "cockpit_sole_vaka_stringer_downward_offset": 50,
+  "cockpit_sole_thickness": 10,
+    
   "frame_width_inches": 3,
   "frame_depth_inches": 2,
 

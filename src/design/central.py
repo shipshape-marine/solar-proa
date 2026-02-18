@@ -46,6 +46,41 @@ def central(vessel, params):
         FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
     overhead.Shape = overhead.Shape.cut(cockpit_cutter_transformed)
 
+
+    # make a box for the cockpit sole to cut
+    
+    cockpit_sole_cutter = Part.makeBox(
+        params['vaka_width'] + 1000, 
+        params['cockpit_length'] + 2 * params['frame_depth'],
+        params['cockpit_sole_thickness'] + 100)
+    cockpit_sole_cutter.Placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'] - params['vaka_width'] - 500,
+                    - params['cockpit_length'] / 2
+                    - params['frame_depth'],
+                    params['vaka_stringer_base_level']
+                    - params['cockpit_sole_vaka_stringer_downward_offset']
+                    - 50),
+        FreeCAD.Rotation(Base.Vector(0, 0, 0), 0))
+    
+    # cockpit sole: create elliptical cylinder, transform geometry before
+    # boolean to avoid OCCT shift artifact on curved boolean intersections
+
+    cockpit_sole = vessel.newObject("Part::Feature", "Cockpit_Sole (plywood)")
+    cockpit_sole_shape = elliptical_cylinder(params['vaka_length']
+                                     - 2 * params['vaka_thickness'],
+                                     params['vaka_width']
+                                     - 2 * params['vaka_thickness'],
+                                     params['cockpit_sole_thickness'])
+    cockpit_sole_placement = FreeCAD.Placement(
+        Base.Vector(params['vaka_x_offset'] + 30, # fix due to bug in .common(.)
+                    0,
+                    params['vaka_stringer_base_level']
+                    - params['cockpit_sole_vaka_stringer_downward_offset']),
+        FreeCAD.Rotation(Base.Vector(0, 0, 1), 90))
+    cockpit_sole_shape = cockpit_sole_shape.transformGeometry(
+        cockpit_sole_placement.toMatrix())
+    cockpit_sole.Shape = cockpit_sole_shape.common(cockpit_sole_cutter)
+    
     # bottom: part of the hull below the sole
     bottom = vessel.newObject("Part::Feature", "Bottom (fiberglass_bottom)")
     # Create the flat bottom cylinder to cut from bottom

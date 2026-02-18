@@ -462,7 +462,7 @@ $(GZ_ARTIFACT): $(BUOYANCY_ARTIFACT) $(DESIGN_ARTIFACT) $(PARAMETER_ARTIFACT) | 
 		--output $@ \
 		--output-png $(GZ_PNG) \
 		--min-heel -40 \
-		--max-heel 45
+		--max-heel 50
 	@echo "✓ GZ curve: $@"
 
 .PHONY: gz

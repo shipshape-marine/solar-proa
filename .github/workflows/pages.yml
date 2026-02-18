@@ -46,7 +46,7 @@ jobs:
           # Create wrapper for running FreeCAD in console mode (for builds)
           cat > freecadcmd << 'WRAPPER_EOF'
           #!/bin/bash
-          xvfb-run -a ./squashfs-root/usr/bin/freecad --console "$@"
+          xvfb-run -a -s "-screen 0 3840x2160x24" ./squashfs-root/usr/bin/freecad --console "$@"
           WRAPPER_EOF
           chmod +x freecadcmd
           
@@ -57,7 +57,7 @@ jobs:
           export LD_LIBRARY_PATH=./squashfs-root/usr/lib:$LD_LIBRARY_PATH
           export PYTHONPATH=./squashfs-root/usr/lib:./squashfs-root/usr/Mod:$PYTHONPATH
           mkdir -p $FREECAD_USER_HOME
-          xvfb-run -a ./squashfs-root/usr/bin/python "$@"
+          xvfb-run -a -s "-screen 0 3840x2160x24" ./squashfs-root/usr/bin/python "$@"
           WRAPPER_EOF
           chmod +x freecad-python
           

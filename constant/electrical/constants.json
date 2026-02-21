@@ -1,0 +1,12 @@
+{
+  "GROUNDING_RESISTANCE": 1e-6,
+  "WIRE_RESISTANCE": 0.01,
+  "MPPT_BATTERY_VOLTAGE_BUFFER": 15.0,
+  "MOTOR_VOLTAGE_MISMATCH_TOLERANCE": 15.0,
+  "POWER_MISMATCH_TOLERANCE_PERCENTAGE": 1.0,
+  
+  "EPSILON": 1e-4,
+  "ARRAY_DECODER_PATTERN": "(arr|s|p)(\\d+)(?=_|\\s|$)",
+  "BARF": "==================================================\n",
+  "BARE": "\n=================================================="
+}

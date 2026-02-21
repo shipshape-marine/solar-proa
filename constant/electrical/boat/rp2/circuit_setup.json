@@ -1,0 +1,47 @@
+{
+    "configuration_name": "electrical_circuit_setup",
+    "display_name": "Electric Proa",
+    "configuration_description": "RP2",
+
+    "mppt_panel": {
+        "config_1": {
+            "count": 2,
+            "panel_info": {
+                "choice": "Renogy_455W",
+                "in_series": 2,
+                "in_parallel": 2,
+                "solar_power": 0.8
+            },
+            "mppt_info": {
+                "choice": "Victron_150/45"
+            }
+        },
+        "config_2": {
+            "count": 0,
+            "description": "Test",
+            "panel_info": {
+                "choice": "Test_Panel",
+                "in_series": 3,
+                "in_parallel": 1,
+                "solar_power": 0.8
+            },
+            "mppt_info": {
+                "choice": "Test_MPPT"
+            }
+        }
+    },
+    
+    "load": {
+        "load_1": {
+            "choice": "Torqeedo_Cruise_4.0",
+            "throttle": 1.0
+        }
+    },
+
+    "battery": {
+        "choice": "LiNMC",
+        "battery_in_series": 2,
+        "battery_in_parallel": 1,
+        "current_soc": 1.0
+    }
+}

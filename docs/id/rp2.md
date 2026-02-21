@@ -87,6 +87,13 @@ Integritas struktural kapal telah divalidasi di bawah beberapa skenario beban te
 
 ---
 
+## Simulasi Kelistrikan
+
+Sistem kelistrikan dimodelkan sebagai rangkaian DC panel surya–MPPT–baterai–motor. Simulasi menghitung titik operasi kondisi tunak, melakukan pengujian daya dan tingkat daya surya untuk memetakan batas sistem, dan menjalankan profil perjalanan multi-segmen untuk mengevaluasi daya tahan baterai dan batasan pengosongan dalam kondisi realistis.
+
+**[Lihat Pengaturan Kelistrikan Lengkap & Hasil Simulasi →]({{ '/id/electrical_rp2.html' | relative_url }})**
+
+
 ## Status Proyek
 
 **Fase Saat Ini:** Dalam Konstruksi

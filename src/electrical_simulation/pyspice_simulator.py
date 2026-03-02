@@ -1,7 +1,7 @@
 import datetime
 from .parse_result import parse_simulation_result
 from .result_checker import cross_check_result
-from PySpice.Spice.Netlist import Circuit
+from PySpice.Spice.Netlist import Circuit # type: ignore
 
 def begin_simulation(circuit, component_object, errors, ngspice_available=False,
                      start_simulation=True, ignore_error=True, simulation_logging=False,

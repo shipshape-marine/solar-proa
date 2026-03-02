@@ -1,4 +1,3 @@
-import json
 import re
 
 def parse_simulation_result(analysis, result, struc, SIMULATION_LOGGING=False, SHOW_PANELS=False, constants=None):

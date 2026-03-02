@@ -1,6 +1,6 @@
 import json
 
-from PySpice.Spice.Netlist import Circuit
+from PySpice.Spice.Netlist import Circuit # type: ignore
 
 from src.electrical_simulation.components.load_bak import Load_BAK
 

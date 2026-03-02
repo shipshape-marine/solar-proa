@@ -80,6 +80,7 @@ def build_circuit_from_json(circuit_setup: json, modifications: dict = {},
 
     # Load/Motor
     index = 0
+    load_arr = []
     for key in input_data["load"].keys():
         load_name = f"arr{index}_load_{input_data['load'][key]['choice']}"
         
@@ -90,23 +91,23 @@ def build_circuit_from_json(circuit_setup: json, modifications: dict = {},
                 input_data['load'][key]['throttle'] = modifications['throttle_setting']
         
         #NEW
-        load = Load(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
+        #load = Load(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
         
         #OLD
-        #load = Load_BAK(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
-        #err = load.setup_load(battery_array, log=component_logging)
-        #errors.append(err) if err else None
+        load = Load_BAK(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
+        err = load.setup_load(battery_array, log=component_logging)
+        errors.append(err) if err else None
         #END OLD
         
-        component_object["load"] = component_object.get("load", []) + [load]
+        #load_arr.append(load)
         index += 1  
+        
+    #component_object["load"] = load_arr
     
     #NEW
-    for load in component_object["load"]:
-        print(load)
-    load_array = Load_Array(circuit, components, constants, component_object["load"])
-    component_object["load_array"] = load_array
-    #errors.append(err) if err else None
+    #load_array = Load_Array(circuit, components, constants, load_arr)
+    #component_object["load_array"] = load_array
+    errors.append(err) if err else None
 
         
     # Load Balancer (One is enough to restrict battery output)

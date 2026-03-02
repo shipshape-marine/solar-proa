@@ -1,28 +1,33 @@
+from ..components.load import Load
+
+from ..components.battery_array import Battery_Array
+
+
 class Load_Array():
     def __init__(self, circuit, components, constants, load_list: list):
         self.circuit = circuit
         self.components = components
         self.constants = constants
-        self.sub_circuit = self.__create_array(load_list)
-        self.terminal = None
-        self.terminal_id = None
+        self.load_list: list[Load] = load_list
+        self.terminal = "load_array_positive"
+        self.terminal_id = "load_array_current"
+        self.__create_array()
             
-    def __create_array(self, load_list):
-        self.terminal = f"total_load_in_voltage"
-        self.terminal_id = f"total_load_in_current"
-        
-        for index, load in enumerate(load_list):
+    def __create_array(self):
+        """Connect all loads in parallel - each load shares the same positive and ground nodes."""
+        for index, load in enumerate(self.load_list):
             load_name = load.name()
-            load_pos = f"{load_name}_positive"
-            load_neg = f"{load_name}_negative"
+            load_resistance = load.MOTOR_VOLTAGE / (load.MOTOR_POWER_DEMAND / load.MOTOR_VOLTAGE) if load.MOTOR_POWER_DEMAND > 0 else 1e9
             
-            if index == 0:
-                self.circuit.V(self.terminal, load_pos, self.constants["GROUNDING_RESISTANCE"])
-            else:
-                prev_load_name = load_list[index-1].name()
-                self.circuit.R(f"load_{index}_internal", load_pos, f"{prev_load_name}_positive", self.constants["WIRE_RESISTANCE"])
-                    
-            self.circuit.R(f"load_{index}_grounding", load_neg, self.circuit.gnd, self.constants["GROUNDING_RESISTANCE"])
+            # Each load connects between the common positive terminal and ground (parallel)
+            self.circuit.R(f"load_{load_name}", self.terminal, self.circuit.gnd, load_resistance)
+    
+    def setup_loads(self, battery_array: Battery_Array, log=False):
+        """Connect the load array to the power source from battery_array."""
+        POWER_SOURCE = battery_array.get_terminal()
+        # Connect battery terminal to load array positive terminal via wire resistance
+        self.circuit.R(self.terminal_id, POWER_SOURCE, self.terminal, self.constants["WIRE_RESISTANCE"])
+        return None
     
     def get_terminal(self):
         return self.terminal

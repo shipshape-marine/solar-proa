@@ -6,6 +6,7 @@ def cross_check_result(analysis, component_object, result, constants=None):
     solar = result["solar_result"]
     load = result["load_result"]
     load_balancer = result["load_balancer"]
+    print(load)
     
     # --Error analysis---
     total_mppt_output = result["summary"]["data"][0]["current"]["total_mppt_output_current"]
@@ -52,6 +53,7 @@ Total Input Power: {input_power:.2f} W, restricted to: {actual_voltage_output*ac
         
     # Check battery discharge
     for each in load["data"]:
+        print(each)
         voltage = float(list(each["voltage"].values())[0])
         current = float(list(each["current"].values())[0])
         actual_power = voltage * current

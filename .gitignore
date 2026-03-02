@@ -13,3 +13,4 @@ docs/renders/*.png
 docs/dependency_graph.png
 
 squashfs-root/
+*.AppImage

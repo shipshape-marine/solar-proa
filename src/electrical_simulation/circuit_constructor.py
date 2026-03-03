@@ -83,7 +83,7 @@ def build_circuit_from_json(circuit_setup: json, modifications: dict = {},
     load_arr = []
     for key in input_data["load"].keys():
         load_name = f"arr{index}_load_{input_data['load'][key]['choice']}"
-        
+
         if modifications.get('throttle_setting') is not None:
             if type(modifications['throttle_setting']) == list:
                 input_data['load'][key]['throttle'] = modifications['throttle_setting'][index]
@@ -91,12 +91,13 @@ def build_circuit_from_json(circuit_setup: json, modifications: dict = {},
                 input_data['load'][key]['throttle'] = modifications['throttle_setting']
         
         #NEW
-        #load = Load(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
+        load = Load(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
+        #END NEW
         
         #OLD
-        load = Load_BAK(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
-        err = load.setup_load(battery_array, log=component_logging)
-        errors.append(err) if err else None
+        #load = Load_BAK(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
+        #err = load.setup_load(battery_array, log=component_logging)
+        #errors.append(err) if err else None
         #END OLD
         
         load_arr.append(load)
@@ -105,9 +106,13 @@ def build_circuit_from_json(circuit_setup: json, modifications: dict = {},
     component_object["load"] = load_arr
     
     #NEW
-    #load_array = Load_Array(circuit, components, constants, load_arr)
-    #component_object["load_array"] = load_array
+    load_array = Load_Array(circuit, components, constants, load_arr)
+    err = load_array.setup_loads(battery_array)
+    component_object["l_array"] = load_array
     errors.append(err) if err else None
+    #END NEW
+    
+    #print(component_object["load_array"])
 
         
     # Load Balancer (One is enough to restrict battery output)

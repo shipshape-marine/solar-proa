@@ -1,5 +1,3 @@
-from ..components.battery_array import Battery_Array
-
 RAWSPICE_ITERATIONS = 1e6
 
 class Load:

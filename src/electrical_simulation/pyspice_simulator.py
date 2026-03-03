@@ -17,7 +17,6 @@ def begin_simulation(circuit, component_object, errors, ngspice_available=False,
         if start_simulation:
             simulation_started = True
             meta_data = {"name": circuit.title, "date": datetime.datetime.now().isoformat()}
-            
             analysis, result, struc = __simulate__(circuit, meta_data, errors, ngspice_available, simulation_logging, constants)
             parse_simulation_result(analysis, result, struc, simulation_logging, show_panels, constants=constants)
             cross_check_result(analysis, component_object, result, constants=constants)
@@ -93,6 +92,11 @@ def __simulate__(circuit: Circuit, meta_data, errors, NGSPICE_AVAILABLE, simulat
         "data": [],
     }
     
+    load_array_result = {
+        "keyword": "l_array",
+        "array_count": 0,
+        "data": [],
+    }
     
     result = {
         "info": meta_data,
@@ -105,6 +109,7 @@ def __simulate__(circuit: Circuit, meta_data, errors, NGSPICE_AVAILABLE, simulat
         "panel_result": panel_result,
         "load_balancer": load_balancer,
         "load_result": load_result,
+        "l_array_result": load_array_result,
     }
     
     if not NGSPICE_AVAILABLE:
@@ -113,6 +118,7 @@ def __simulate__(circuit: Circuit, meta_data, errors, NGSPICE_AVAILABLE, simulat
         return None, result, struc
     
     try:
+        #print(circuit)
         simulator = circuit.simulator(temperature=25, nominal_temperature=25)
         analysis = simulator.operating_point()
     except Exception as e:

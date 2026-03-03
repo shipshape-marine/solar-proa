@@ -15,29 +15,12 @@
             "mppt_info": {
                 "choice": "Victron_150/45"
             }
-        },
-        "config_2": {
-            "count": 0,
-            "description": "Test",
-            "panel_info": {
-                "choice": "Test_Panel",
-                "in_series": 3,
-                "in_parallel": 1,
-                "solar_power": 0.8
-            },
-            "mppt_info": {
-                "choice": "Test_MPPT"
-            }
         }
     },
     
     "load": {
         "load_1": {
             "choice": "Torqeedo_Cruise_4.0",
-            "throttle": 1.0
-        },
-        "load_2": {
-            "choice": "Torqeedo_Cruise_6.0",
             "throttle": 1.0
         }
     },

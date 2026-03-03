@@ -19,13 +19,13 @@
     {
       "name": "Afternoon Sprint",
       "duration_minutes": 90,
-      "throttle": 1.0,
+      "throttle": 0.0,
       "solar_power": 0.8
     },
     {
       "name": "Evening Return",
       "duration_minutes": 45,
-      "throttle": 0.3,
+      "throttle": 0.0,
       "solar_power": 1.0
     }
   ]

@@ -37,7 +37,7 @@ def sweep_panel_power(circuit_setup: json, save_path, ngspice_available,
         if simulation_logging:
             print(f"\n{constants['BARF']}Starting Simulation with Panel Power Setting: {panel_power*100:.2f}%{constants['BARE']}")
         
-        circuit, component_object, errors = build_circuit_from_json(circuit_setup=circuit_setup, modifications={'panel_power_setting': panel_power}, constants=constants)
+        circuit, component_object, errors = build_circuit_from_json(circuit_setup=circuit_setup, modifications={'panel_power_setting': panel_power, 'throttle_setting': 1.0}, constants=constants)
         analysis, result = begin_simulation(circuit, component_object, errors, ngspice_available, constants=constants)
         
         # If the simulation fails at a certain panel power, stop the sweep

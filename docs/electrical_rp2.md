@@ -39,6 +39,8 @@ title: Roti Proa II - Electrical Simulation
   </div>
 </div>
 
+> **Note on Schematic Diagrams**: Will be replaced by a paramatised drawing using SchemDraw in the future
+
 ---
 
 ## Cable Sizing and Safety Analysis

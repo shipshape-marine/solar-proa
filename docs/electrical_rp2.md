@@ -30,11 +30,11 @@ title: Roti Proa II - Electrical Simulation
 
 <div style="max-width: 900px; margin: 2em auto;">
   <div style="margin-bottom: 2em;">
-    <img src="{{ '/images/circuit_diagrams_temp/Sensor Reader V3.svg' | relative_url }}" alt="Overall Electrical Layout" style="width: 100%; border: 1px solid #ddd; border-radius: 4px; background: #fff;">
+    <img src="{{ '/images/circuit_diagrams_temp/Sensor Reader V3.png' | relative_url }}" alt="Overall Electrical Layout" style="width: 100%; border: 1px solid #ddd; border-radius: 4px; background: #fff;">
     <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">Overall Electrical System Layout</p>
   </div>
   <div style="margin-bottom: 2em;">
-    <img src="{{ '/images/circuit_diagrams_temp/Sensor Reader V3-Microcontroller.svg' | relative_url }}" alt="Microcontroller Sensor Reader" style="width: 100%; border: 1px solid #ddd; border-radius: 4px; background: #fff;">
+    <img src="{{ '/images/circuit_diagrams_temp/Sensor Reader V3-Microcontroller.png' | relative_url }}" alt="Microcontroller Sensor Reader" style="width: 100%; border: 1px solid #ddd; border-radius: 4px; background: #fff;">
     <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">Microcontroller Unit for Sensor Reading</p>
   </div>
 </div>

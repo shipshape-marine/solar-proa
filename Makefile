@@ -204,8 +204,8 @@ sync-docs:
 		fi \
 	done
 	@echo "  Copied $$(ls artifact/*.json 2>/dev/null | wc -l | tr -d ' ') JSON files to docs/_data/"
-	@# Copy electrical config files to _data
-	@find $(CONST_DIR)/electrical -name '*.json' | while read file; do \
+	@# Copy electrical config files to _data (excluding constants.json which is not used by the website)
+	@find $(CONST_DIR)/electrical -name '*.json' ! -name 'constants.json' | while read file; do \
 		relpath=$$(echo "$$file" | sed 's|$(CONST_DIR)/electrical/||; s|/|_|g; s|\.json$$||'); \
 		cp "$$file" "docs/_data/$${relpath}.json"; \
 	done
@@ -628,17 +628,19 @@ ELECTRICAL_CONST_DIR := $(CONST_DIR)/electrical
 ELECTRICAL_CIRCUIT_FILE := $(ELECTRICAL_CONST_DIR)/boat/${BOAT}/circuit_setup.json
 ELECTRICAL_VOYAGE_FILE := $(ELECTRICAL_CONST_DIR)/voyage_setup.json
 ELECTRICAL_CONSTANTS_FILE := $(ELECTRICAL_CONST_DIR)/constants.json
+ELECTRICAL_BOAT_PARAMS_FILE := $(CONST_DIR)/boat/$(BOAT).json
 COMPONENT_FILES := $(wildcard $(ELECTRICAL_CONST_DIR)/components.json)
 SIMULATION_TYPE ?= all
 ELECTRICAL_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).electrical_simulation
 
-$(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(ELECTRICAL_SOURCE) $(COMPONENT_FILES) | $(ARTIFACT_DIR)
+$(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(ELECTRICAL_SOURCE) $(COMPONENT_FILES) $(ELECTRICAL_BOAT_PARAMS_FILE) | $(ARTIFACT_DIR)
 	@echo "Running electrical simulation ($(SIMULATION_TYPE)): $(BOAT)"
 	@$(PYTHON) -m src.electrical_simulation \
 		--circuit $(ELECTRICAL_CIRCUIT_FILE) \
 		--constants $(ELECTRICAL_CONSTANTS_FILE) \
 		--components $(COMPONENT_FILES) \
 		--boat $(BOAT) \
+		--boat-params $(ELECTRICAL_BOAT_PARAMS_FILE) \
 		--voyage $(ELECTRICAL_VOYAGE_FILE) \
 		--output $@ \
 		--simulation-type $(SIMULATION_TYPE)
@@ -647,38 +649,3 @@ $(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) 
 .PHONY: electrical-simulation
 electrical-simulation: $(ELECTRICAL_ARTIFACT)
 	@echo "✓ Electrical simulation completed"
-
-# ==============================================================================
-# TEMPLATE FOR NEW STAGES (copy this block and replace TEMPLATE/template)
-# ==============================================================================
-#
-# 1. Replace TEMPLATE with your stage name in UPPER_CASE (e.g., WINDAGE)
-# 2. Replace template with your stage name in lower_case (e.g., windage)
-# 3. Set the correct dependencies in the file rule prerequisites
-# 4. Set the output file extension (.json, .FCStd, .png, etc.)
-# 5. Fill in the recipe commands (macOS and Linux branches if needed)
-# 6. Add a help line in the 'help' target above
-# 7. Add to configuration JSON "required" list if it should run automatically
-# 8. Uncomment all lines below (remove the leading #)
-#
-# TEMPLATE_DIR := $(SRC_DIR)/template
-# TEMPLATE_SOURCE := $(wildcard $(TEMPLATE_DIR)/*.py)
-# TEMPLATE_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).template.json
-#
-# $(TEMPLATE_ARTIFACT): $(PARAMETER_ARTIFACT) $(TEMPLATE_SOURCE) | $(ARTIFACT_DIR)
-# 	@echo "Running template: $(BOAT).$(CONFIGURATION)"
-# 	@if [ "$(UNAME)" = "Darwin" ]; then \
-# 		PYTHONPATH=$(FREECAD_BUNDLE)/Contents/Resources/lib:$(FREECAD_BUNDLE)/Contents/Resources/Mod:$(PWD) \
-# 		DYLD_LIBRARY_PATH=$(FREECAD_BUNDLE)/Contents/Frameworks:$(FREECAD_BUNDLE)/Contents/Resources/lib \
-# 		$(FREECAD_PYTHON) -m src.template \
-# 			--parameters $(PARAMETER_ARTIFACT) \
-# 			--output $@; \
-# 	else \
-# 		PYTHONPATH=$(PWD) $(FREECAD_PYTHON) -m src.template \
-# 			--parameters $(PARAMETER_ARTIFACT) \
-# 			--output $@; \
-# 	fi
-#
-# .PHONY: template
-# template: $(TEMPLATE_ARTIFACT)
-# 	@echo "✓ Template complete for $(BOAT).$(CONFIGURATION)"

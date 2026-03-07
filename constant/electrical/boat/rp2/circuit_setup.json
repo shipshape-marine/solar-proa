@@ -8,8 +8,6 @@
             "count": 2,
             "panel_info": {
                 "choice": "Renogy_455W",
-                "in_series": 2,
-                "in_parallel": 2,
                 "solar_power": 0.8
             },
             "mppt_info": {

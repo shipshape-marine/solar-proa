@@ -10,5 +10,3 @@ artifacts/
 docs/dependency_graph.png
 /squashfs-root/
 *.AppImage
-
-

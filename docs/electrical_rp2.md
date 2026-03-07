@@ -83,14 +83,10 @@ The operating point and sweep simulations below provide the current values neede
 
 ### Power Generation
 
-{% assign total_panels = 0 %}
-{% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
-{% if cfg.count > 0 %}
-{% assign panels_per_array = cfg.panel_info.in_series | times: cfg.panel_info.in_parallel %}
-{% assign array_panels = panels_per_array | times: cfg.count %}
-{% assign total_panels = total_panels | plus: array_panels %}
-{% endif %}
-{% endif %}{% endfor %}
+{% assign boat_params = site.data.rp2_beaching_parameter %}
+{% assign panels_in_series = boat_params.panels_per_string %}
+{% assign panels_in_parallel = boat_params.panels_longitudinal | divided_by: boat_params.panels_transversal %}
+{% assign total_panels = boat_params.panels_longitudinal | times: boat_params.panels_transversal %}
 
 The solar array consists of **{{ total_panels }} panels** configured across {{ site.data.rp2_electrical_simulation_operating_point.mppt_result.array_count }} MPPT arrays (panels in series × panels in parallel × array count).
 
@@ -106,8 +102,8 @@ The solar array consists of **{{ total_panels }} panels** configured across {{ s
 | Model | {{ panel_choice | replace: "_", " " }} |
 | Power Rating | {{ panel.power }} W |
 | Voltage | {{ panel.voltage }} V |
-| Panels in Series | {{ cfg.panel_info.in_series }} |
-| Panels in Parallel | {{ cfg.panel_info.in_parallel }} |
+| Panels in Series | {{ panels_in_series }} |
+| Panels in Parallel | {{ panels_in_parallel }} |
 | Arrays Using This Panel | {{ cfg.count }} |
 
 {% endif %}{% endfor %}
@@ -279,6 +275,10 @@ Cable sizing must be determined using the simulation results in the [Circuit Con
 
 Configuration: **{{ site.data.rp2_electrical_simulation_operating_point.mppt_result.array_count }}× MPPT arrays** in parallel.
 
+{% assign boat_params = site.data.rp2_beaching_parameter %}
+{% assign panels_in_series = boat_params.panels_per_string %}
+{% assign panels_in_parallel = boat_params.panels_longitudinal | divided_by: boat_params.panels_transversal %}
+
 {% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
 {% if cfg.count == 0 %}{% continue %}{% endif %}
 {% assign panel_choice = cfg.panel_info.choice %}
@@ -294,8 +294,8 @@ Configuration: **{{ site.data.rp2_electrical_simulation_operating_point.mppt_res
 | Panel | {{ panel_choice | replace: "_", " " }} |
 | Panel Power | {{ panel.power }} W |
 | Panel Voltage | {{ panel.voltage }} V |
-| Panels in Series | {{ cfg.panel_info.in_series }} |
-| Panels in Parallel | {{ cfg.panel_info.in_parallel }} |
+| Panels in Series | {{ panels_in_series }} |
+| Panels in Parallel | {{ panels_in_parallel }} |
 | Solar Power | {{ cfg.panel_info.solar_power | times: 100 }}% |
 | MPPT | {{ mppt_choice | replace: "_", " " }} |
 | MPPT Max Input Voltage | {{ mppt.max_input_voltage }} V |

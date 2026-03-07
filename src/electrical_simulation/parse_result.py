@@ -68,8 +68,6 @@ def parse_simulation_result(analysis, result, struc, SIMULATION_LOGGING=False, S
             if i == len(pos) - 1:
                 break
             voltages[pos[i][0]] = voltages[pos[i][0]] - voltages[pos[i + 1][0]]
-        
-    #print(result['battery_result']['data'])
 
     # Branch currents
     for branch_name, branch in analysis.branches.items():

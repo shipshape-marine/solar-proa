@@ -42,6 +42,8 @@ def main():
                         help='Path to components JSON (e.g. constant/electrical/components.json)')
     parser.add_argument('--boat', required=True,
                         help='Boat name to select circuit configuration (e.g. rp1)')
+    parser.add_argument('--boat-params', default=None,
+                        help='Path to boat parameters JSON (e.g. constant/boat/rp2.json)')
     parser.add_argument('--voyage', default=None,
                         help='Path to voyage setup JSON (required for voyage simulation type)')
     parser.add_argument('--output', required=True,
@@ -61,6 +63,9 @@ def main():
     components = json.load(open(args.components))
     circuit_setup = json.load(open(args.circuit))
     combine_config_setup(circuit_setup, components)
+    if args.boat_params:
+        boat_params = json.load(open(args.boat_params))
+        apply_boat_panel_config(circuit_setup, boat_params)
     ngspice_available = check_ngspice()
 
     output_dir = args.output
@@ -143,6 +148,27 @@ def combine_config_setup(circuit_config, component_config):
     if circuit_config.get("battery") is not None:
         battery_choice = circuit_config["battery"]["choice"]
         circuit_config["battery"].update(component_config["Battery"][battery_choice])
+
+def apply_boat_panel_config(circuit_config, boat_params):
+    """Update panel in_series and in_parallel from boat parameters."""
+    if circuit_config.get("mppt_panel") is None:
+        return
+    
+    panels_per_string = boat_params.get("panels_per_string")
+    panels_longitudinal = boat_params.get("panels_longitudinal")
+    panels_transversal = boat_params.get("panels_transversal")
+    
+    if panels_per_string is None or panels_longitudinal is None or panels_transversal is None:
+        return
+    
+    in_series = panels_per_string
+    in_parallel = panels_longitudinal // panels_transversal
+    
+    for config in circuit_config["mppt_panel"].values():
+        if "panel_info" in config:
+            config["panel_info"]["in_series"] = in_series
+            config["panel_info"]["in_parallel"] = in_parallel
+            print(config["panel_info"]["in_series"], config["panel_info"]["in_parallel"])
      
 if __name__ == "__main__":
     main()

@@ -87,6 +87,13 @@ The vessel's structural integrity has been validated under multiple load scenari
 
 ---
 
+## Electrical Simulation
+
+The electrical system is modelled as a solar panel–MPPT–battery–motor DC circuit. The simulation computes the steady-state operating point, sweeps throttle and solar power levels to map system limits, and runs a multi-segment voyage profile to evaluate battery endurance and discharge constraints under realistic conditions.
+
+**[View Full Electrical Setup & Simulation Result →]({{ '/electrical_rp2.html' | relative_url }})**
+
+
 ## Project Status
 
 **Current Phase:** Under Construction

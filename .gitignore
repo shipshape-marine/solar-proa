@@ -8,3 +8,5 @@ artifacts/
 *.FCStd
 *.FCStd1
 docs/dependency_graph.png
+/squashfs-root/
+*.AppImage

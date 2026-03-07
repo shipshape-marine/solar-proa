@@ -71,6 +71,36 @@ jobs:
           # Also install shipshape into FreeCAD's bundled Python (used for mass/buoyancy/gz)
           ./squashfs-root/usr/bin/python -m pip install -r requirements.txt
 
+      - name: Cache ngspice shared library
+        id: cache-ngspice
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/lib/libngspice*
+          key: ngspice-34-shared
+
+      - name: Build and install ngspice shared library
+        if: steps.cache-ngspice.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get install -y libtool autoconf automake libreadline-dev
+          git clone https://git.code.sf.net/p/ngspice/ngspice /tmp/ngspice-code
+          cd /tmp/ngspice-code
+          git checkout ngspice-34
+          ./autogen.sh
+          ./configure --prefix=/usr/local --with-ngshared --enable-xspice --disable-debug
+          make -j$(nproc)
+          sudo make install
+          rm -rf /tmp/ngspice-code
+
+      - name: Configure ngspice library path
+        run: |
+          sudo ln -sf /usr/local/lib/libngspice.so.0 /usr/local/lib/libngspice.so
+          echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/ngspice.conf
+          sudo ldconfig
+
+      - name: Install PySpice
+        run: |
+          pip install PySpice
+
       - name: Install TeX Live and SVG tools
         run: |
           sudo apt-get update -y

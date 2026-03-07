@@ -6,3 +6,6 @@ diagrams
 renders
 downloads
 lines
+
+renders/*.png
+downloads/*.step

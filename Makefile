@@ -6,6 +6,9 @@
 
 UNAME := $(shell uname)
 
+# Detect Python command (python3 on macOS/Linux, python on Windows)
+PYTHON := $(shell python3 --version >/dev/null 2>&1 && echo python3 || echo python)
+
 # Detect FreeCAD command (different on different systems)
 FREECAD_APP := /Applications/FreeCAD.app/Contents/MacOS/FreeCAD
 FREECAD_BUNDLE := /Applications/FreeCAD.app
@@ -53,6 +56,7 @@ $(ARTIFACT_DIR) $(DOCS_DATA_DIR):
 # AUTO-DISCOVERY: Find all boats and configurations
 # ==============================================================================
 
+#Temporarily fix at rp2 to avoid running all the designs while testing
 #BOATS := $(basename $(notdir $(wildcard $(BOAT_DIR)/*.json)))
 BOATS := rp2
 CONFIGURATIONS := $(basename $(notdir $(wildcard $(CONFIGURATION_DIR)/*.json)))
@@ -91,7 +95,7 @@ all: required-all
 .PHONY: required
 required:
 	@echo "Running required stages for $(BOAT).$(CONFIGURATION)..."
-	@required_stages=$$(python3 -c "import json; config = json.load(open('$(CONFIGURATION_FILE)')); print(' '.join(config.get('required', [])))"); \
+	@required_stages=$$($(PYTHON) -c "import json; config = json.load(open('$(CONFIGURATION_FILE)')); print(' '.join(config.get('required', [])))"); \
 	for stage in $$required_stages; do \
 		echo "Running stage: $$stage"; \
 		$(MAKE) $$stage BOAT=$(BOAT) CONFIGURATION=$(CONFIGURATION) MATERIAL=$(MATERIAL) || true; \
@@ -106,7 +110,8 @@ required-all:
 		for configuration in $(CONFIGURATIONS); do \
 			echo ""; \
 			$(MAKE) required BOAT=$$boat CONFIGURATION=$$configuration || true; \
-		done \
+		done; \
+		$(MAKE) electrical-simulation BOAT=$$boat || true; \
 	done
 	@echo ""
 	@echo "✓ All required stages complete!"
@@ -135,6 +140,7 @@ help:
 	@echo "  make validate-structure     - Validate structural integrity (all load cases)"
 	@echo "  make lines                  - Generate lines plan (TechDraw with sections)"
 	@echo "  make lines-pdf              - Compile lines plan LaTeX to PDF"
+	@echo "  make electrical-simulation  - Run electrical simulation (SIMULATION_TYPE=operating_point, sweep_throttle, sweep_panel_power, voyage, or all)"
 	@echo ""
 	@echo "Parameter Targets:"
 	@echo "  make parameter              - Compute and save parameter to artifacts/"
@@ -144,12 +150,14 @@ help:
 	@echo "  make check                  - Check FreeCAD installation"
 	@echo "  make graph                  - Generate dependency graph (docs/dependency_graph.png)"
 	@echo "  make help                   - Show this help message"
+	@echo "  make sync-docs              - Copy artifacts to docs folders for local preview"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make parameter BOAT=rp1"
 	@echo "  make design BOAT=rp2 CONFIGURATION=closehaul"
 	@echo "  make color BOAT=rp3 CONFIGURATION=closehaul MATERIAL=proa"
 	@echo "  make render BOAT=rp2 CONFIGURATION=closehaul"
+	@echo "  make electrical-simulation BOAT=rp2 SIMULATION_TYPE=voyage"
 	@echo ""
 	@echo "FreeCAD: $(FREECAD)"
 
@@ -175,7 +183,7 @@ check:
 	@echo "✓ FreeCAD found: $(FREECAD)"
 	@echo ""
 	@echo "Checking Python..."
-	@python3 --version
+	@$(PYTHON) --version
 	@echo ""
 	@echo "Discovered boats: $(BOATS)"
 	@echo "Discovered configurations: $(CONFIGURATIONS)"
@@ -196,6 +204,12 @@ sync-docs:
 		fi \
 	done
 	@echo "  Copied $$(ls artifact/*.json 2>/dev/null | wc -l | tr -d ' ') JSON files to docs/_data/"
+	@# Copy electrical config files to _data (excluding constants.json which is not used by the website)
+	@find $(CONST_DIR)/electrical -name '*.json' ! -name 'constants.json' | while read file; do \
+		relpath=$$(echo "$$file" | sed 's|$(CONST_DIR)/electrical/||; s|/|_|g; s|\.json$$||'); \
+		cp "$$file" "docs/_data/$${relpath}.json"; \
+	done
+	@echo "  Copied electrical config files to docs/_data/"
 	@# Copy PNG renders
 	@if ls artifact/*.png 1>/dev/null 2>&1; then \
 		cp artifact/*.png docs/renders/; \
@@ -221,8 +235,8 @@ sync-docs:
 		echo "  Copied $$(ls artifact/*.step.step | wc -l | tr -d ' ') STEP files to docs/downloads/"; \
 	fi
 	@# Generate YAML files if scripts exist
-	@if [ -f docs/generate_downloads_yaml.py ]; then python3 docs/generate_downloads_yaml.py; fi
-	@if [ -f docs/generate_configurations_yaml.py ]; then python3 docs/generate_configurations_yaml.py; fi
+	@if [ -f docs/generate_downloads_yaml.py ]; then $(PYTHON) docs/generate_downloads_yaml.py; fi
+	@if [ -f docs/generate_configurations_yaml.py ]; then $(PYTHON) docs/generate_configurations_yaml.py; fi
 	@echo "✓ Docs sync complete"
 
 # make diagrams
@@ -247,7 +261,7 @@ zip:	clean
 # generate dependency graph
 .PHONY: graph
 graph:
-	@python3 docs/generate_dependency_graph.py docs/dependency_graph.png
+	@$(PYTHON) docs/generate_dependency_graph.py docs/dependency_graph.png
 
 # ==============================================================================
 # DEPENDENCY MANAGEMENT
@@ -603,3 +617,35 @@ $(LINES_PDF): $(LINES_TEX)
 .PHONY: lines-pdf
 lines-pdf: $(LINES_PDF)
 	@echo "✓ Lines plan PDF complete for $(BOAT).$(CONFIGURATION)"
+
+# ==============================================================================
+# ELECTRICAL SIMULATION
+# ==============================================================================
+
+ELECTRICAL_DIR := $(SRC_DIR)/electrical_simulation
+ELECTRICAL_SOURCE := $(wildcard $(ELECTRICAL_DIR)/*.py) $(wildcard $(ELECTRICAL_DIR)/components/*.py)
+ELECTRICAL_CONST_DIR := $(CONST_DIR)/electrical
+ELECTRICAL_CIRCUIT_FILE := $(ELECTRICAL_CONST_DIR)/boat/${BOAT}/circuit_setup.json
+ELECTRICAL_VOYAGE_FILE := $(ELECTRICAL_CONST_DIR)/voyage_setup.json
+ELECTRICAL_CONSTANTS_FILE := $(ELECTRICAL_CONST_DIR)/constants.json
+ELECTRICAL_BOAT_PARAMS_FILE := $(CONST_DIR)/boat/$(BOAT).json
+COMPONENT_FILES := $(wildcard $(ELECTRICAL_CONST_DIR)/components.json)
+SIMULATION_TYPE ?= all
+ELECTRICAL_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).electrical_simulation
+
+$(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(ELECTRICAL_SOURCE) $(COMPONENT_FILES) $(ELECTRICAL_BOAT_PARAMS_FILE) | $(ARTIFACT_DIR)
+	@echo "Running electrical simulation ($(SIMULATION_TYPE)): $(BOAT)"
+	@$(PYTHON) -m src.electrical_simulation \
+		--circuit $(ELECTRICAL_CIRCUIT_FILE) \
+		--constants $(ELECTRICAL_CONSTANTS_FILE) \
+		--components $(COMPONENT_FILES) \
+		--boat $(BOAT) \
+		--boat-params $(ELECTRICAL_BOAT_PARAMS_FILE) \
+		--voyage $(ELECTRICAL_VOYAGE_FILE) \
+		--output $@ \
+		--simulation-type $(SIMULATION_TYPE)
+	@echo "✓ Electrical simulation complete: $@"
+
+.PHONY: electrical-simulation
+electrical-simulation: $(ELECTRICAL_ARTIFACT)
+	@echo "✓ Electrical simulation completed"

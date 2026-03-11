@@ -50,7 +50,7 @@ Total Input Power: {input_power:.2f} W, restricted to: {actual_voltage_output*ac
     if excess_current > constants["EPSILON"]:
         result["warning"]["data"].append(f"Battery is overcharged by {excess_current} A")
         
-    # Check battery discharge
+    # Check battery discharge and add motor physics info
     for each in load["data"]:
         voltage = float(list(each["voltage"].values())[0])
         current = float(list(each["current"].values())[0])
@@ -63,14 +63,46 @@ Total Input Power: {input_power:.2f} W, restricted to: {actual_voltage_output*ac
         average_efficiency = temp_eff_calculation / mppt_count if mppt_count > 0 else 1.0
             
         index = each["array_index"]
-        power_rating = component_object["load"][index].power_rating() * average_efficiency
-        throttle_setting = component_object["load"][index].throttle_setting()
+        load_obj = component_object["load"][index]
+        power_rating = load_obj.power_rating() * average_efficiency
+        throttle_setting = load_obj.throttle_setting()
         actual_throttle = actual_power / power_rating if power_rating > 0 else 0.0
+        
+        # Add motor physics data to result if available
+        motor_op = load_obj.get_motor_operating_point()
+        if motor_op is not None:
+            each["motor_physics"] = {
+                "model_type": "BLDC",
+                "speed_rpm": motor_op.speed_rpm,
+                "efficiency": motor_op.efficiency,
+                "power_mechanical_w": motor_op.power_mechanical_w,
+                "power_electrical_w": motor_op.power_electrical_w,
+                "torque_nm": motor_op.torque_nm,
+                "is_stalled": motor_op.is_stalled
+            }
+            # Add info message about motor model
+            result["info"]["data"].append(
+                f"Motor {index}: Using BLDC physics model - "
+                f"{motor_op.speed_rpm:.0f} RPM, {motor_op.efficiency*100:.1f}% efficiency, "
+                f"{motor_op.power_mechanical_w:.1f}W mechanical output"
+            )
+        else:
+            each["motor_physics"] = {
+                "model_type": "linear",
+                "speed_rpm": None,
+                "efficiency": None,
+                "power_mechanical_w": None,
+                "power_electrical_w": actual_power,
+                "torque_nm": None,
+                "is_stalled": None
+            }
+        
         if (throttle_setting - actual_throttle) * 100 > constants["POWER_MISMATCH_TOLERANCE_PERCENTAGE"]:
             actual_throttle = actual_power / power_rating if power_rating > 0 else 0.0
             result["warning"]["data"].append(f"Battery array is being over-discharged. Motor {index} \
 has been restricted to {actual_throttle*100:.2f}% instead of {throttle_setting*100:.2f}% throttle level.")
         
     result["warning"]["array_count"] = len(result["warning"]["data"])
+    result["info"]["array_count"] = len(result["info"]["data"])
     return None
         

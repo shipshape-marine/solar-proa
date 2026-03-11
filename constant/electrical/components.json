@@ -58,16 +58,40 @@
     },
 
     "Load": {
-        "Description": "Loads will be powered in parallel. Throttle can be specified in setup to limit max power.",
+        "Description": "Loads will be powered in parallel. Throttle can be specified in setup to limit max power. Optional motor physics: add motor_kv, motor_resistance, motor_no_load_current, propeller_kp for realistic power calculation from throttle.",
         "Torqeedo_Cruise_2.0": {
+            "total_power": 2000,
+            "nominal_voltage": 24.0,
+            "motor_kv": 150,
+            "motor_resistance": 0.05,
+            "motor_no_load_current": 1.5,
+            "propeller_kp": 0.0008
+        },
+        "Torqeedo_Cruise_2.0_Simple": {
             "total_power": 2000,
             "nominal_voltage": 24.0
         },
         "Torqeedo_Cruise_4.0": {
             "total_power": 4000,
+            "nominal_voltage": 48.0,
+            "motor_kv": 120,
+            "motor_resistance": 0.04,
+            "motor_no_load_current": 2.0,
+            "propeller_kp": 0.0012
+        },
+        "Torqeedo_Cruise_4.0_Simple": {
+            "total_power": 4000,
             "nominal_voltage": 48.0
         },
         "Torqeedo_Cruise_6.0": {
+            "total_power": 8000,
+            "nominal_voltage": 48.0,
+            "motor_kv": 100,
+            "motor_resistance": 0.03,
+            "motor_no_load_current": 3.0,
+            "propeller_kp": 0.0018
+        },
+        "Torqeedo_Cruise_6.0_Simple": {
             "total_power": 8000,
             "nominal_voltage": 48.0
         }

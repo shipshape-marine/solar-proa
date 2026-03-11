@@ -243,6 +243,15 @@ Battery discharge limiter. Acts as a clamp to limit the battery to its specified
                 },
                 "current": {
                     "load_torqeedo_cruise_4.0": 9.728971153497696
+                },
+                "motor_physics": {
+                    "model_type": "BLDC",
+                    "speed_rpm": 3245.7,
+                    "efficiency": 0.89,
+                    "power_mechanical_w": 1520.3,
+                    "power_electrical_w": 1708.2,
+                    "torque_nm": 4.47,
+                    "is_stalled": false
                 }
             },
             {
@@ -252,6 +261,15 @@ Battery discharge limiter. Acts as a clamp to limit the battery to its specified
                 },
                 "current": {
                     "load_torqeedo_cruise_6.0": 77.75618203729391
+                },
+                "motor_physics": {
+                    "model_type": "linear",
+                    "speed_rpm": null,
+                    "efficiency": null,
+                    "power_mechanical_w": null,
+                    "power_electrical_w": 4365.2,
+                    "torque_nm": null,
+                    "is_stalled": null
                 }
             }
         ]
@@ -259,6 +277,41 @@ Battery discharge limiter. Acts as a clamp to limit the battery to its specified
 ```
 
 Loads are no longer stored within a single array (Similar to panels). Each load is its own index in the array. 
+
+### Motor Physics Model (New)
+
+When motor physics constants are configured in `components.json`, the simulation uses a BLDC motor model with optional propeller load coupling instead of the linear throttle-to-power conversion.
+
+**Motor model features:**
+- **Back-EMF**: Speed-dependent voltage that opposes motor current
+- **Propeller equilibrium**: Finds operating point where motor torque = propeller torque (τ = Kp × ω²)
+- **Efficiency calculation**: Mechanical power / electrical power
+- **Non-linear power scaling**: Power scales with ~throttle³ due to propeller load curve
+
+**Configuration** (in `constant/electrical/components.json`):
+
+```json
+"Torqeedo_Cruise_2.0": {
+    "total_power": 2000,
+    "nominal_voltage": 24.0,
+    "motor_kv": 150,           // Motor velocity constant (RPM/V)
+    "motor_resistance": 0.05,   // Winding resistance (ohms)
+    "motor_no_load_current": 1.5, // No-load current (amps)
+    "propeller_kp": 0.0008,     // Propeller load coefficient (N·m/(rad/s)²)
+    "propeller_enabled": true   // Enable propeller coupling
+}
+```
+
+**Backward compatibility:** If motor physics constants are not provided, the simulation falls back to the original linear model where `power = throttle × total_power`.
+
+**Motor physics output fields:**
+- `model_type`: "BLDC" for physics model, "linear" for fallback
+- `speed_rpm`: Motor speed in RPM (null for linear model)
+- `efficiency`: Motor efficiency 0-1 (null for linear model)
+- `power_mechanical_w`: Mechanical power output (null for linear model)
+- `power_electrical_w`: Electrical power consumption
+- `torque_nm`: Motor torque in N·m (null for linear model)
+- `is_stalled`: True if motor is in stall condition
 
 Note: Due to limitations in PySpice simulation of a current limiter, if > 1 load is connected and in total is drawing > 200% of the bus output, the current of the motor may be negative (Indicating the load is a power source).
 

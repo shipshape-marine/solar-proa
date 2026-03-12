@@ -175,7 +175,6 @@ def apply_boat_panel_config(circuit_config, boat_params):
         if "panel_info" in config:
             config["panel_info"]["in_series"] = in_series
             config["panel_info"]["in_parallel"] = in_parallel
-            print(config["panel_info"]["in_series"], config["panel_info"]["in_parallel"])
      
 if __name__ == "__main__":
     main()

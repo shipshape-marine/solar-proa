@@ -20,7 +20,7 @@ class Solar_Array:
         for p in range(self.PANEL_IN_PARALLEL):
             panel_row = []
             for s in range(self.PANEL_IN_SERIES):
-                panel_name = f"arr{array_number}_p{p}_{s}_panel"
+                panel_name = f"arr{array_number}_p{p}_s{s}_panel"
                 panel_row.append(panel_name)
                 
                 panel_pos = f"{panel_name}_positive"

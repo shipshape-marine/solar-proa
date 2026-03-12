@@ -28,8 +28,8 @@ def build_circuit_from_json(circuit_setup: json, modifications: dict = {},
     component_object = {}
     errors = []
     
-    # Battery Array    
-    battery_config = input_data["battery"]
+    # Battery Array (use a copy to avoid mutating the original config)
+    battery_config = dict(input_data["battery"])
     
     if modifications.get('max_discharge_current') is not None:
         battery_config['max_discharge_current'] = modifications['max_discharge_current']
@@ -94,7 +94,8 @@ def build_circuit_from_json(circuit_setup: json, modifications: dict = {},
             input_data['load'][key]['propeller_load_factor'] = modifications['propeller_load_factor']
         
         #NEW
-        load = Load(circuit, components, load_name=load_name, constants=constants, **input_data['load'][key])
+        load = Load(circuit, components, load_name=load_name, constants=constants,
+                    bus_voltage=battery_array.get_total_voltage(), **input_data['load'][key])
         #END NEW
         
         #OLD

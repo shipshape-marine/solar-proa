@@ -21,10 +21,9 @@
             "max_input_current": 45.0,
             "max_output_voltage": 48.0,
             "max_output_current": 45.0,
-            "efficiency": 0.80
+            "efficiency": 0.8
         }
     },
-
     "Panel": {
         "Description": "Panel configurations for solar arrays",
         "Renogy_455W": {
@@ -36,15 +35,14 @@
             "voltage": 45.0
         }
     },
-
     "Battery": {
-        "Description": "Only 1 type of battery can be used at a time", 
+        "Description": "Only 1 type of battery can be used at a time",
         "LiNMC": {
             "battery_voltage": 25.9,
             "min_voltage": 21.0,
             "max_voltage": 29.4,
             "max_charge_current": 100,
-            "max_discharge_current": 50,
+            "max_discharge_current": 100,
             "capacity_ah": 100
         },
         "LiFePO4": {
@@ -56,16 +54,14 @@
             "capacity_ah": 50
         }
     },
-
     "Load": {
-        "Description": "Loads will be powered in parallel. Throttle can be specified in setup to limit max power. Optional motor physics: add motor_kv, motor_resistance, motor_no_load_current, propeller_kp for realistic power calculation from throttle. propeller_load_factor (0-1, default 1.0) scales propeller load: 1.0=startup/bollard, 0.3-0.6=cruise equilibrium.",
+        "Description": "Loads will be powered in parallel. Throttle can be specified in setup to limit max power. Optional motor physics: add motor_kv, motor_resistance, motor_no_load_current for realistic BLDC power calculation. propeller_kp is auto-derived from motor specs to reach rated current at full throttle; override with explicit propeller_kp if needed. propeller_load_factor (0-1, default 1.0) scales propeller load: 1.0=startup/bollard, 0.3-0.6=cruise equilibrium.",
         "Torqeedo_Cruise_2.0": {
             "total_power": 2000,
             "nominal_voltage": 24.0,
             "motor_kv": 150,
             "motor_resistance": 0.05,
             "motor_no_load_current": 1.5,
-            "propeller_kp": 0.0008,
             "propeller_load_factor": 1.0
         },
         "Torqeedo_Cruise_2.0_Simple": {
@@ -78,8 +74,7 @@
             "motor_kv": 120,
             "motor_resistance": 0.04,
             "motor_no_load_current": 2.0,
-            "propeller_kp": 0.0012,
-            "propeller_load_factor": 1.0
+            "propeller_load_factor": 0.5
         },
         "Torqeedo_Cruise_4.0_Simple": {
             "total_power": 4000,
@@ -91,7 +86,6 @@
             "motor_kv": 100,
             "motor_resistance": 0.03,
             "motor_no_load_current": 3.0,
-            "propeller_kp": 0.0018,
             "propeller_load_factor": 1.0
         },
         "Torqeedo_Cruise_6.0_Simple": {

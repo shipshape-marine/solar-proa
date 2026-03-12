@@ -11,7 +11,8 @@ from .motor_model import (
     MotorConstants, 
     PropellerConstants,
     MotorOperatingPoint,
-    create_motor_model_from_config
+    create_motor_model_from_config,
+    derive_propeller_kp
 )
 
 
@@ -104,6 +105,7 @@ class TestMotorModelPropellerEquilibrium:
         kp = propeller.kp
         omega = op.speed_rad_s
         
+        # current_amps IS the winding current; net torque uses (I - I_nl)
         motor_torque = kt * (op.current_amps - motor.no_load_current)
         propeller_torque = kp * omega * omega
         
@@ -371,6 +373,183 @@ class TestPropellerLoadFactor:
         model = create_motor_model_from_config(config, bus_voltage=48.0)
         
         assert model.propeller.load_factor == 1.0
+
+
+class TestESCCurrentLimiting:
+    """Test ESC winding current limiting."""
+    
+    def test_current_limited_at_high_throttle(self):
+        """Motor should be current-limited when demand exceeds max_current."""
+        motor = MotorConstants(kv=120, resistance=0.04, no_load_current=2.0)
+        propeller = PropellerConstants(kp=0.001)
+        model = MotorModel(motor, propeller, bus_voltage=48.0, max_current=83.3)
+        
+        op = model.calculate_operating_point(1.0)
+        
+        assert op.current_amps <= 83.3 + 0.01
+        assert op.is_current_limited
+    
+    def test_not_current_limited_at_low_throttle(self):
+        """Motor should not be limited at low throttle."""
+        motor = MotorConstants(kv=120, resistance=0.04, no_load_current=2.0)
+        propeller = PropellerConstants(kp=0.001)
+        model = MotorModel(motor, propeller, bus_voltage=48.0, max_current=83.3)
+        
+        op = model.calculate_operating_point(0.05)
+        
+        assert not op.is_current_limited
+    
+    def test_no_limiting_without_max_current(self):
+        """Without max_current, current should not be limited."""
+        motor = MotorConstants(kv=120, resistance=0.04, no_load_current=2.0)
+        propeller = PropellerConstants(kp=0.001)
+        model = MotorModel(motor, propeller, bus_voltage=48.0)
+        
+        op = model.calculate_operating_point(1.0)
+        
+        assert not op.is_current_limited
+    
+    def test_stall_current_limited(self):
+        """Stall current should also be limited by max_current."""
+        motor = MotorConstants(kv=120, resistance=0.04, no_load_current=2.0)
+        model = MotorModel(motor, bus_voltage=48.0, max_current=83.3)
+        
+        # Very low throttle with high propeller load can cause stall
+        propeller = PropellerConstants(kp=100.0)  # Extremely heavy propeller
+        model_stall = MotorModel(motor, propeller, bus_voltage=48.0, max_current=83.3)
+        
+        op = model_stall.calculate_operating_point(0.01)
+        assert op.current_amps <= 83.3 + 0.01
+    
+    def test_power_plateaus_when_limited(self):
+        """Power should plateau when current is limited."""
+        motor = MotorConstants(kv=120, resistance=0.04, no_load_current=2.0)
+        propeller = PropellerConstants(kp=0.001)
+        model = MotorModel(motor, propeller, bus_voltage=48.0, max_current=83.3)
+        
+        op_80 = model.calculate_operating_point(0.8)
+        op_100 = model.calculate_operating_point(1.0)
+        
+        if op_80.is_current_limited and op_100.is_current_limited:
+            # Power should be the same when both are limited
+            assert abs(op_80.power_electrical_w - op_100.power_electrical_w) < 1.0
+
+
+class TestAutoKpDerivation:
+    """Test auto-derivation of propeller kp from motor specs."""
+    
+    def test_derive_kp_reaches_rated_current(self):
+        """Auto-derived kp should make motor reach rated current at full throttle."""
+        config = {
+            'motor_kv': 120,
+            'motor_resistance': 0.04,
+            'motor_no_load_current': 2.0,
+            'total_power': 4000,
+            'nominal_voltage': 48.0
+        }
+        model = create_motor_model_from_config(config, bus_voltage=48.0)
+        
+        assert model is not None
+        assert model.propeller is not None
+        assert model.max_current is not None
+        
+        op = model.calculate_operating_point(1.0)
+        
+        # At full throttle, current should be very close to max_current
+        expected_max = 4000 / 48.0  # 83.333A
+        assert abs(op.current_amps - expected_max) < 0.5
+    
+    def test_explicit_kp_overrides_auto(self):
+        """Explicit propeller_kp should override auto-derivation."""
+        config = {
+            'motor_kv': 120,
+            'motor_resistance': 0.04,
+            'motor_no_load_current': 2.0,
+            'propeller_kp': 0.005,
+            'total_power': 4000,
+            'nominal_voltage': 48.0
+        }
+        model = create_motor_model_from_config(config, bus_voltage=48.0)
+        
+        assert model.propeller.kp == 0.005
+    
+    def test_auto_kp_without_power_specs(self):
+        """Without total_power/nominal_voltage, no propeller coupling."""
+        config = {
+            'motor_kv': 120,
+            'motor_resistance': 0.04
+        }
+        model = create_motor_model_from_config(config, bus_voltage=48.0)
+        
+        assert model.propeller is None
+        assert model.max_current is None
+    
+    def test_derive_kp_function_positive(self):
+        """derive_propeller_kp should return a positive value."""
+        kp = derive_propeller_kp(
+            kv=120, resistance=0.04, no_load_current=2.0,
+            total_power=4000, nominal_voltage=48.0
+        )
+        assert kp > 0
+    
+    def test_full_throttle_not_limited_before_1(self):
+        """Motor should not be current-limited at throttle < ~0.95."""
+        config = {
+            'motor_kv': 120,
+            'motor_resistance': 0.04,
+            'motor_no_load_current': 2.0,
+            'total_power': 4000,
+            'nominal_voltage': 48.0
+        }
+        model = create_motor_model_from_config(config, bus_voltage=48.0)
+        
+        op_50 = model.calculate_operating_point(0.5)
+        assert not op_50.is_current_limited
+    
+    def test_power_increases_across_throttle_range(self):
+        """Power should increase across the full throttle range with auto-kp."""
+        config = {
+            'motor_kv': 120,
+            'motor_resistance': 0.04,
+            'motor_no_load_current': 2.0,
+            'total_power': 4000,
+            'nominal_voltage': 48.0
+        }
+        model = create_motor_model_from_config(config, bus_voltage=48.0)
+        
+        p_25 = model.get_power_from_throttle(0.25)
+        p_50 = model.get_power_from_throttle(0.50)
+        p_75 = model.get_power_from_throttle(0.75)
+        p_100 = model.get_power_from_throttle(1.0)
+        
+        assert p_25 < p_50 < p_75 <= p_100
+
+
+class TestNoLoadCurrentFix:
+    """Test that no-load current is not double-counted."""
+    
+    def test_current_at_no_load_speed(self):
+        """At near no-load speed, current should be close to no-load current."""
+        motor = MotorConstants(kv=150, resistance=0.05, no_load_current=1.5)
+        # Very light propeller so motor runs near no-load speed
+        propeller = PropellerConstants(kp=1e-7)
+        model = MotorModel(motor, propeller, bus_voltage=48.0)
+        
+        op = model.calculate_operating_point(0.5)
+        
+        # Current should be near no-load current, not 2x
+        assert op.current_amps < motor.no_load_current * 3
+    
+    def test_torque_uses_net_current(self):
+        """Torque should use (I - I_nl), not raw I."""
+        motor = MotorConstants(kv=150, resistance=0.05, no_load_current=1.5)
+        propeller = PropellerConstants(kp=0.0001)
+        model = MotorModel(motor, propeller, bus_voltage=48.0)
+        
+        op = model.calculate_operating_point(0.5)
+        
+        expected_torque = motor.kt * max(0, op.current_amps - motor.no_load_current)
+        assert abs(op.torque_nm - expected_torque) < 0.01
 
 
 if __name__ == "__main__":

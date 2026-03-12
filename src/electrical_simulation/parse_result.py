@@ -69,6 +69,12 @@ def parse_simulation_result(analysis, result, struc, SIMULATION_LOGGING=False, S
                 break
             voltages[pos[i][0]] = voltages[pos[i][0]] - voltages[pos[i + 1][0]]
 
+    for data in result["panel_result"]["data"]:
+        voltages = data['voltage']
+        for key in voltages.keys():
+            matches = dict(re.findall(constants["ARRAY_DECODER_PATTERN"], key))
+            #print(matches)
+            
     # Branch currents
     for branch_name, branch in analysis.branches.items():
         if branch_name.startswith("v"):

@@ -3,7 +3,7 @@ from .motor_model import create_motor_model_from_config, MotorModel
 RAWSPICE_ITERATIONS = 1e6
 
 class Load:
-    def __init__(self, circuit, components, constants=None, **kwargs):
+    def __init__(self, circuit, components, constants=None, bus_voltage=None, **kwargs):
         self.load_name = kwargs.get("load_name")
         self.throttle = kwargs.get("throttle", 1.0)
         self.MOTOR_VOLTAGE = kwargs.get("nominal_voltage")
@@ -12,8 +12,11 @@ class Load:
         self.constants = constants
         self.circuit = circuit
         
+        # Use actual bus voltage if provided, otherwise fall back to nominal
+        actual_bus_voltage = bus_voltage if bus_voltage is not None else self.MOTOR_VOLTAGE
+        
         # Try to create motor physics model from config
-        self.motor_model = create_motor_model_from_config(kwargs, self.MOTOR_VOLTAGE)
+        self.motor_model = create_motor_model_from_config(kwargs, actual_bus_voltage)
         
         # Calculate power demand using motor model or linear fallback
         if self.throttle <= 0.0:

@@ -79,6 +79,7 @@ Total Input Power: {input_power:.2f} W, restricted to: {actual_voltage_output*ac
                 "power_electrical_w": motor_op.power_electrical_w,
                 "torque_nm": motor_op.torque_nm,
                 "is_stalled": motor_op.is_stalled,
+                "is_current_limited": motor_op.is_current_limited,
                 "propeller_load_factor": motor_op.propeller_load_factor
             }
             # Add info message about motor model
@@ -98,7 +99,24 @@ Total Input Power: {input_power:.2f} W, restricted to: {actual_voltage_output*ac
                 "is_stalled": None
             }
         
-        if (throttle_setting - actual_throttle) * 100 > constants["POWER_MISMATCH_TOLERANCE_PERCENTAGE"]:
+        # Check if motor is current-limited by ESC or battery
+        if motor_op is not None:
+            # Warn when ESC is current-limiting the motor
+            if motor_op.is_current_limited:
+                result["warning"]["data"].append(
+                    f"Motor {index} ESC current-limited at {motor_op.current_amps:.1f}A. "
+                    f"Power capped at {motor_op.power_electrical_w:.0f}W "
+                    f"({throttle_setting*100:.0f}% throttle)."
+                )
+            
+            # Also check if battery further restricts below what the motor model expects
+            expected_power = motor_op.power_electrical_w
+            bldc_tolerance = max(constants["POWER_MISMATCH_TOLERANCE_PERCENTAGE"], 5.0)
+            if expected_power > 0 and (expected_power - actual_power) / expected_power * 100 > bldc_tolerance:
+                pct_delivered = actual_power / expected_power * 100 if expected_power > 0 else 0.0
+                result["warning"]["data"].append(f"Battery array is being over-discharged. Motor {index} \
+has been restricted to {pct_delivered:.2f}% of expected {expected_power:.0f}W at {throttle_setting*100:.0f}% throttle.")
+        elif (throttle_setting - actual_throttle) * 100 > constants["POWER_MISMATCH_TOLERANCE_PERCENTAGE"]:
             actual_throttle = actual_power / power_rating if power_rating > 0 else 0.0
             result["warning"]["data"].append(f"Battery array is being over-discharged. Motor {index} \
 has been restricted to {actual_throttle*100:.2f}% instead of {throttle_setting*100:.2f}% throttle level.")

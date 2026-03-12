@@ -286,6 +286,8 @@ When motor physics constants are configured in `components.json`, the simulation
 **Motor model features:**
 - **Back-EMF**: Speed-dependent voltage that opposes motor current
 - **Propeller equilibrium**: Finds operating point where motor torque = propeller torque (τ = Kp × ω²)
+- **ESC current limiting**: Caps winding current at rated current (`total_power / nominal_voltage`)
+- **Auto-derived propeller kp**: Calibrated so motor reaches rated current at full throttle
 - **Efficiency calculation**: Mechanical power / electrical power
 - **Non-linear power scaling**: Power scales with ~throttle³ due to propeller load curve
 
@@ -298,11 +300,19 @@ When motor physics constants are configured in `components.json`, the simulation
     "motor_kv": 150,           // Motor velocity constant (RPM/V)
     "motor_resistance": 0.05,   // Winding resistance (ohms)
     "motor_no_load_current": 1.5, // No-load current (amps)
-    "propeller_kp": 0.0008,     // Propeller load coefficient (N·m/(rad/s)²)
-    "propeller_load_factor": 1.0, // 1.0=startup/bollard, 0.3-0.6=cruise equilibrium
-    "propeller_enabled": true   // Enable propeller coupling
+    "propeller_load_factor": 1.0  // 1.0=startup/bollard, 0.3-0.6=cruise equilibrium
 }
 ```
+
+The propeller load coefficient (`kp`) is auto-derived from motor specs so that the motor reaches its rated current at full throttle. To override with a custom value, add `"propeller_kp": <value>` to the config.
+
+**ESC Current Limiting:**
+
+The model simulates ESC current limiting: `max_current = total_power / nominal_voltage`. When the motor would exceed this, the ESC reduces voltage to hold the limit. Key behaviors when current-limited:
+- Motor torque is constant (capped by current limit)
+- Equilibrium speed is fixed regardless of throttle
+- Power draw plateaus — increasing throttle has no further effect
+- The `is_current_limited` output field indicates this condition
 
 **Propeller Load Factor:**
 
@@ -331,6 +341,7 @@ The parameter can be overridden at runtime via `--propeller-load-factor` CLI arg
 - `power_electrical_w`: Electrical power consumption
 - `torque_nm`: Motor torque in N·m (null for linear model)
 - `is_stalled`: True if motor is in stall condition
+- `is_current_limited`: True if ESC is limiting winding current
 - `propeller_load_factor`: Load factor used (1.0=startup, <1.0=cruise)
 
 Note: Due to limitations in PySpice simulation of a current limiter, if > 1 load is connected and in total is drawing > 200% of the bus output, the current of the motor may be negative (Indicating the load is a power source).

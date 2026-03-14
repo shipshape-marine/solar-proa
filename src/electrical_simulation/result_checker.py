@@ -102,7 +102,7 @@ Total Input Power: {input_power:.2f} W, restricted to: {actual_voltage_output*ac
         # Check if motor is current-limited by ESC or battery
         if motor_op is not None:
             # Warn when ESC is current-limiting the motor
-            if motor_op.is_current_limited:
+            if motor_op.is_current_limited and throttle_setting < 1.0:
                 result["warning"]["data"].append(
                     f"Motor {index} ESC current-limited at {motor_op.current_amps:.1f}A. "
                     f"Power capped at {motor_op.power_electrical_w:.0f}W "

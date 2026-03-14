@@ -90,10 +90,11 @@ The operating point and sweep simulations below provide the current values neede
 
 The solar array consists of **{{ total_panels }} panels** configured across {{ site.data.rp2_electrical_simulation_operating_point.mppt_result.array_count }} MPPT arrays (panels in series × panels in parallel × array count).
 
-{% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
+{% for entry in site.data.rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
 {% if cfg.count == 0 %}{% continue %}{% endif %}
 {% assign panel_choice = cfg.panel_info.choice %}
-{% assign panel = site.data.components.Panel[panel_choice] %}
+{% assign panel = site.data.electrical_components.Panel[panel_choice] %}
+
 
 #### Panel: {{ panel_choice | replace: "_", " " }}
 
@@ -111,7 +112,7 @@ The solar array consists of **{{ total_panels }} panels** configured across {{ s
 ### Power Management
 
 {% assign mppt_count = 0 %}
-{% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
+{% for entry in site.data.rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
 {% if cfg.count > 0 %}
 {% assign mppt_count = mppt_count | plus: cfg.count %}
 {% endif %}
@@ -119,10 +120,10 @@ The solar array consists of **{{ total_panels }} panels** configured across {{ s
 
 The power management system uses **{{ mppt_count }} MPPT charge controller(s)** to regulate solar input to the DC bus.
 
-{% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
+{% for entry in site.data.rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
 {% if cfg.count == 0 %}{% continue %}{% endif %}
 {% assign mppt_choice = cfg.mppt_info.choice %}
-{% assign mppt = site.data.components.MPPT[mppt_choice] %}
+{% assign mppt = site.data.electrical_components.MPPT[mppt_choice] %}
 
 #### MPPT: {{ mppt_choice | replace: "_", " " }}
 
@@ -140,9 +141,9 @@ The power management system uses **{{ mppt_count }} MPPT charge controller(s)** 
 
 ### Energy Storage
 
-{% assign bat_choice = site.data.boat_rp2_circuit_setup.battery.choice %}
-{% assign bat = site.data.components.Battery[bat_choice] %}
-{% assign bat_setup = site.data.boat_rp2_circuit_setup.battery %}
+{% assign bat_choice = site.data.rp2_circuit_setup.battery.choice %}
+{% assign bat = site.data.electrical_components.Battery[bat_choice] %}
+{% assign bat_setup = site.data.rp2_circuit_setup.battery %}
 {% assign total_batteries = bat_setup.battery_in_series | times: bat_setup.battery_in_parallel %}
 {% assign total_capacity = bat.capacity_ah | times: bat_setup.battery_in_parallel %}
 {% assign total_energy = bat.battery_voltage | times: bat_setup.battery_in_series | times: total_capacity | divided_by: 1000.0 %}
@@ -168,14 +169,14 @@ The energy storage system uses **{{ total_batteries }} battery cells** ({{ bat_s
 
 {% assign load_count = 0 %}
 {% assign total_power = 0 %}
-{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.components.Load[load_choice] %}
+{% for load_entry in site.data.rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.electrical_components.Load[load_choice] %}
 {% assign load_count = load_count | plus: 1 %}
 {% assign total_power = total_power | plus: load_spec.total_power %}
 {% endfor %}
 
 The propulsion system consists of **{{ load_count }} motor(s)** with a combined maximum power of {{ total_power }} W.
 
-{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.components.Load[load_choice] %}
+{% for load_entry in site.data.rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.electrical_components.Load[load_choice] %}
 
 #### Motor: {{ load_choice | replace: "_", " " }}
 
@@ -279,14 +280,15 @@ Configuration: **{{ site.data.rp2_electrical_simulation_operating_point.mppt_res
 {% assign panels_in_series = boat_params.panels_per_string %}
 {% assign panels_in_parallel = boat_params.panels_longitudinal | divided_by: boat_params.panels_transversal %}
 
-{% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
+{% for entry in site.data.rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
 {% if cfg.count == 0 %}{% continue %}{% endif %}
 {% assign panel_choice = cfg.panel_info.choice %}
-{% assign panel = site.data.components.Panel[panel_choice] %}
+{% assign panel = site.data.electrical_components.Panel[panel_choice] %}
 {% assign mppt_choice = cfg.mppt_info.choice %}
-{% assign mppt = site.data.components.MPPT[mppt_choice] %}
+{% assign mppt = site.data.electrical_components.MPPT[mppt_choice] %}
 
-#### {{ entry[0] | replace: "_", " " | capitalize }}
+
+#### {{ entry[0] | replace: "config_", "Array " }}
 
 | Parameter | Value |
 |-----------|-------|
@@ -308,9 +310,9 @@ Configuration: **{{ site.data.rp2_electrical_simulation_operating_point.mppt_res
 
 ### Battery Setup
 
-{% assign bat_choice = site.data.boat_rp2_circuit_setup.battery.choice %}
-{% assign bat = site.data.components.Battery[bat_choice] %}
-{% assign bat_setup = site.data.boat_rp2_circuit_setup.battery %}
+{% assign bat_choice = site.data.rp2_circuit_setup.battery.choice %}
+{% assign bat = site.data.electrical_components.Battery[bat_choice] %}
+{% assign bat_setup = site.data.rp2_circuit_setup.battery %}
 
 Battery chemistry: **{{ bat_choice }}**
 
@@ -329,7 +331,7 @@ Battery chemistry: **{{ bat_choice }}**
 
 ### Load Setup
 
-{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.components.Load[load_choice] %}
+{% for load_entry in site.data.rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.electrical_components.Load[load_choice] %}
 
 | Parameter | Value |
 |-----------|-------|
@@ -389,7 +391,7 @@ Steady-state operating point based on the circuit setup configuration.
 
 | Load | Throttle |
 |------|----------|
-{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}| {{ load_cfg.choice | replace: "_", " " }} | {{ load_cfg.throttle | times: 100 }}% |
+{% for load_entry in site.data.rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}| {{ load_cfg.choice | replace: "_", " " }} | {{ load_cfg.throttle | times: 100 }}% |
 {% endfor %}
 
 {% if op.error.data.size > 0 %}
@@ -544,6 +546,10 @@ At low solar power levels, the battery discharge current exceeds the configured 
 
 {% assign voyage = site.data.voyage_setup %}
 
+The voyage simulation enables operators and route planners to model an entire journey before departure, providing estimated forecasts of energy consumption and battery State of Charge (SOC) across all anticipated operating conditions. 
+
+By defining a route as a sequence of discrete voyage sections — each characterised by the throttle setting and expected irradiance — the simulation captures the dynamic nature of real-world operations rather than relying on averaged assumptions. Each section is processed independently and the resulting energy draw is accumulated continuously, allowing the predicted SOC to be tracked as a curve over time.
+
 ### Voyage Profile: {{ voyage.voyage_info.name }}
 
 Initial battery SOC: **{{ voyage.initial_battery_soc | times: 100 }}%**
@@ -607,6 +613,9 @@ During the voyage, the battery discharge limit is exceeded at several points due
 
 </details>
 {% endif %}
+
+
+
 
 ---
 

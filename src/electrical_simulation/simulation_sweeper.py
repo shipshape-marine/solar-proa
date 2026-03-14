@@ -44,6 +44,7 @@ def sweep_panel_power(circuit_setup: json, save_path, ngspice_available,
             print(f"\n{constants['BARF']}Starting Simulation with Panel Power Setting: {panel_power*100:.2f}%{constants['BARE']}")
         
         modifications = {'panel_power_setting': panel_power, 'throttle_setting': 1.0}
+        #modifications["throttle_setting"] = 0.0
         if propeller_load_factor is not None:
             modifications['propeller_load_factor'] = propeller_load_factor
         

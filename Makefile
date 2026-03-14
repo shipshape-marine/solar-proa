@@ -623,17 +623,16 @@ lines-pdf: $(LINES_PDF)
 # ==============================================================================
 
 ELECTRICAL_DIR := $(SRC_DIR)/electrical_simulation
-ELECTRICAL_SOURCE := $(wildcard $(ELECTRICAL_DIR)/*.py) $(wildcard $(ELECTRICAL_DIR)/components/*.py)
 ELECTRICAL_CONST_DIR := $(CONST_DIR)/electrical
-ELECTRICAL_CIRCUIT_FILE := $(ELECTRICAL_CONST_DIR)/boat/${BOAT}/circuit_setup.json
+ELECTRICAL_CIRCUIT_FILE := $(ELECTRICAL_CONST_DIR)/${BOAT}_circuit_setup.json
 ELECTRICAL_VOYAGE_FILE := $(ELECTRICAL_CONST_DIR)/voyage_setup.json
 ELECTRICAL_CONSTANTS_FILE := $(ELECTRICAL_CONST_DIR)/constants.json
 ELECTRICAL_BOAT_PARAMS_FILE := $(CONST_DIR)/boat/$(BOAT).json
-COMPONENT_FILES := $(wildcard $(ELECTRICAL_CONST_DIR)/components.json)
+COMPONENT_FILES := $(wildcard $(ELECTRICAL_CONST_DIR)/electrical_components.json)
 SIMULATION_TYPE ?= all
 ELECTRICAL_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).electrical_simulation
 
-$(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(ELECTRICAL_SOURCE) $(COMPONENT_FILES) $(ELECTRICAL_BOAT_PARAMS_FILE) | $(ARTIFACT_DIR)
+$(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(COMPONENT_FILES) $(ELECTRICAL_BOAT_PARAMS_FILE) | $(ARTIFACT_DIR)
 	@echo "Running electrical simulation ($(SIMULATION_TYPE)): $(BOAT)"
 	@$(PYTHON) -m src.electrical_simulation \
 		--circuit $(ELECTRICAL_CIRCUIT_FILE) \

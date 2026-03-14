@@ -93,7 +93,7 @@ The solar array consists of **{{ total_panels }} panels** configured across {{ s
 {% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
 {% if cfg.count == 0 %}{% continue %}{% endif %}
 {% assign panel_choice = cfg.panel_info.choice %}
-{% assign panel = site.data.components.Panel[panel_choice] %}
+{% assign panel = site.data.electrical_components.Panel[panel_choice] %}
 
 #### Panel: {{ panel_choice | replace: "_", " " }}
 
@@ -122,7 +122,7 @@ The power management system uses **{{ mppt_count }} MPPT charge controller(s)** 
 {% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
 {% if cfg.count == 0 %}{% continue %}{% endif %}
 {% assign mppt_choice = cfg.mppt_info.choice %}
-{% assign mppt = site.data.components.MPPT[mppt_choice] %}
+{% assign mppt = site.data.electrical_components.MPPT[mppt_choice] %}
 
 #### MPPT: {{ mppt_choice | replace: "_", " " }}
 
@@ -141,7 +141,7 @@ The power management system uses **{{ mppt_count }} MPPT charge controller(s)** 
 ### Energy Storage
 
 {% assign bat_choice = site.data.boat_rp2_circuit_setup.battery.choice %}
-{% assign bat = site.data.components.Battery[bat_choice] %}
+{% assign bat = site.data.electrical_components.Battery[bat_choice] %}
 {% assign bat_setup = site.data.boat_rp2_circuit_setup.battery %}
 {% assign total_batteries = bat_setup.battery_in_series | times: bat_setup.battery_in_parallel %}
 {% assign total_capacity = bat.capacity_ah | times: bat_setup.battery_in_parallel %}
@@ -168,14 +168,14 @@ The energy storage system uses **{{ total_batteries }} battery cells** ({{ bat_s
 
 {% assign load_count = 0 %}
 {% assign total_power = 0 %}
-{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.components.Load[load_choice] %}
+{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.electrical_components.Load[load_choice] %}
 {% assign load_count = load_count | plus: 1 %}
 {% assign total_power = total_power | plus: load_spec.total_power %}
 {% endfor %}
 
 The propulsion system consists of **{{ load_count }} motor(s)** with a combined maximum power of {{ total_power }} W.
 
-{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.components.Load[load_choice] %}
+{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.electrical_components.Load[load_choice] %}
 
 #### Motor: {{ load_choice | replace: "_", " " }}
 
@@ -282,9 +282,9 @@ Configuration: **{{ site.data.rp2_electrical_simulation_operating_point.mppt_res
 {% for entry in site.data.boat_rp2_circuit_setup.mppt_panel %}{% if entry[0] contains "config_" %}{% assign cfg = entry[1] %}
 {% if cfg.count == 0 %}{% continue %}{% endif %}
 {% assign panel_choice = cfg.panel_info.choice %}
-{% assign panel = site.data.components.Panel[panel_choice] %}
+{% assign panel = site.data.electrical_components.Panel[panel_choice] %}
 {% assign mppt_choice = cfg.mppt_info.choice %}
-{% assign mppt = site.data.components.MPPT[mppt_choice] %}
+{% assign mppt = site.data.electrical_components.MPPT[mppt_choice] %}
 
 #### {{ entry[0] | replace: "_", " " | capitalize }}
 
@@ -309,7 +309,7 @@ Configuration: **{{ site.data.rp2_electrical_simulation_operating_point.mppt_res
 ### Battery Setup
 
 {% assign bat_choice = site.data.boat_rp2_circuit_setup.battery.choice %}
-{% assign bat = site.data.components.Battery[bat_choice] %}
+{% assign bat = site.data.electrical_components.Battery[bat_choice] %}
 {% assign bat_setup = site.data.boat_rp2_circuit_setup.battery %}
 
 Battery chemistry: **{{ bat_choice }}**
@@ -329,7 +329,7 @@ Battery chemistry: **{{ bat_choice }}**
 
 ### Load Setup
 
-{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.components.Load[load_choice] %}
+{% for load_entry in site.data.boat_rp2_circuit_setup.load %}{% assign load_cfg = load_entry[1] %}{% assign load_choice = load_cfg.choice %}{% assign load_spec = site.data.electrical_components.Load[load_choice] %}
 
 | Parameter | Value |
 |-----------|-------|

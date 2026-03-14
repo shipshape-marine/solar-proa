@@ -207,7 +207,7 @@ sync-docs:
 	@# Copy electrical config files to _data (excluding constants.json which is not used by the website)
 	@find $(CONST_DIR)/electrical -name '*.json' ! -name 'constants.json' | while read file; do \
 		relpath=$$(echo "$$file" | sed 's|$(CONST_DIR)/electrical/||; s|/|_|g; s|\.json$$||'); \
-		cp "$$file" "docs/_data/$${relpath}.json"; \
+		cp "$$file" "docs/_data/electrical_$${relpath}.json"; \
 	done
 	@echo "  Copied electrical config files to docs/_data/"
 	@# Copy PNG renders
@@ -630,10 +630,12 @@ ELECTRICAL_VOYAGE_FILE := $(ELECTRICAL_CONST_DIR)/voyage_setup.json
 ELECTRICAL_CONSTANTS_FILE := $(ELECTRICAL_CONST_DIR)/constants.json
 ELECTRICAL_BOAT_PARAMS_FILE := $(CONST_DIR)/boat/$(BOAT).json
 COMPONENT_FILES := $(wildcard $(ELECTRICAL_CONST_DIR)/components.json)
+ELECTRICAL := components
+ELECTRICAL_FILE := $(ELECTRICAL_CONST_DIR)/$(ELECTRICAL).json
 SIMULATION_TYPE ?= all
 ELECTRICAL_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).electrical_simulation
 
-$(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(ELECTRICAL_SOURCE) $(COMPONENT_FILES) $(ELECTRICAL_BOAT_PARAMS_FILE) | $(ARTIFACT_DIR)
+$(ELECTRICAL_ARTIFACT): $(ELECTRICAL_FILE) $(CABLES_ARTIFACT) $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(ELECTRICAL_SOURCE) $(COMPONENT_FILES) $(ELECTRICAL_BOAT_PARAMS_FILE) | $(ARTIFACT_DIR)
 	@echo "Running electrical simulation ($(SIMULATION_TYPE)): $(BOAT)"
 	@$(PYTHON) -m src.electrical_simulation \
 		--circuit $(ELECTRICAL_CIRCUIT_FILE) \

@@ -5,9 +5,10 @@ class Solar_Array:
         self.constants = constants
         self.PANEL_IN_PARALLEL = kwargs.get("in_parallel")
         self.PANEL_IN_SERIES = kwargs.get("in_series")
-        self.PANEL_CURRENT = max(self.constants["EPSILON"], kwargs.get("calculated_power") / kwargs.get("voltage"))
-        self.PANEL_INTERNAL_R = kwargs.get("voltage") / self.PANEL_CURRENT
-        self.PANEL_ARRAY_TOTAL_VOLTAGE = self.PANEL_IN_SERIES * kwargs.get("voltage")
+        self.PANEL_VOLTAGE = kwargs.get("voltage")
+        self.PANEL_CURRENT = max(self.constants["EPSILON"], kwargs.get("calculated_power") / self.PANEL_VOLTAGE)
+        self.PANEL_INTERNAL_R = self.PANEL_VOLTAGE / self.PANEL_CURRENT
+        self.PANEL_ARRAY_TOTAL_VOLTAGE = self.PANEL_IN_SERIES * self.PANEL_VOLTAGE
         self.PANEL_ARRAY_TOTAL_CURRENT = self.PANEL_IN_PARALLEL * self.PANEL_CURRENT
         self.PANEL_ARRAY_TOTAL_POWER = self.PANEL_ARRAY_TOTAL_VOLTAGE * self.PANEL_ARRAY_TOTAL_CURRENT
         self.terminal = None
@@ -26,38 +27,32 @@ class Solar_Array:
                 panel_pos = f"{panel_name}_positive"
                 panel_neg = f"{panel_name}_negative"
                 
-                # Current source: neg -> pos
-                self.circuit.I(panel_name, panel_neg, panel_pos, self.PANEL_CURRENT)
-                
-                # Ground all panel, else panel can only deliver voltage by a factor of 40 for some reason
-                self.circuit.R(f"{panel_name}_leak_to_gnd", panel_neg, self.circuit.gnd, self.constants["GROUNDING_RESISTANCE"])
-
-                if s != 0:
+                self.circuit.V(panel_name, panel_pos, panel_neg, self.PANEL_VOLTAGE)
+                if s == 0:
+                    self.circuit.R(f"{panel_name}_grounding", panel_neg, self.circuit.gnd, self.constants["GROUNDING_RESISTANCE"])
+                else:
                     prev_panel_name = f"arr{array_number}_p{p}_s{s-1}_panel"
-                    # Internal resistance
-                    self.circuit.R(f"{panel_name}_internal", panel_neg, f"{prev_panel_name}_positive", self.PANEL_INTERNAL_R)
-
+                    self.circuit.R(f"{panel_name}_internal", panel_neg, f"{prev_panel_name}_positive", self.constants["WIRE_RESISTANCE"])
+                
             self.components["panel"].append(panel_row)
         
+        # Wire positive terminal of each parallel string      
         for index, row in enumerate(self.components["panel"]):
-            solar_row_end = row[-1]
-            positive_node = f"{solar_row_end}_positive"
+            panel_row_end = row[-1]
+            positive_node = f"{panel_row_end}_positive"
             panel_wire = f"arr{array_number}_panel_wire_{index}"
-            self.circuit.R(panel_wire, positive_node, f"arr{array_number}_solar_array_output", self.constants["WIRE_RESISTANCE"])
+            self.circuit.R(panel_wire, positive_node, "panel_input_measured", self.constants["WIRE_RESISTANCE"])  
             self.components["wire"].append(panel_wire)
-            # Small resistance to model wiring losses
-        
-        self.terminal = f"arr{array_number}_solar_array_output_measured"
-        
+            
+        self.terminal = f"arr{array_number}_solar_array_output"
         self.circuit.V(f"arr{array_number}_solar_array_output", 
-                       f"arr{array_number}_solar_array_output",
-                       f"{self.terminal}", 
+                       "panel_input_measured", 
+                       self.terminal,
                        self.constants["GROUNDING_RESISTANCE"])
         
-       
         if log:
-            print(self)
-            
+            print(self)        
+
         return None
     
     def get_terminal(self):

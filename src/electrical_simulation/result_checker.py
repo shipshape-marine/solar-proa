@@ -37,7 +37,6 @@ does not equal Battery Input Current ({total_battery_input} A) + Load Current ({
         output_curr_limit = component_object["mppt"][i].get_output_limit()
         actual_curr_output = mppt_data[i]["current"]["mppt_output"]
         actual_voltage_output = mppt_data[i]["voltage"]["mppt_output"]
-
         solar_output_voltage = solar_data[i]["voltage"]["solar_array_output"]
         solar_output_current = solar_data[i]["current"]["solar_array_output"]
         input_power = solar_output_voltage * solar_output_current * component_object["mppt"][i].get_efficiency()

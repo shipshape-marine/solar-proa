@@ -1,3 +1,4 @@
+import json
 import re
 
 def parse_simulation_result(analysis, result, struc, SIMULATION_LOGGING=False, SHOW_PANELS=False, constants=None):
@@ -19,7 +20,7 @@ def parse_simulation_result(analysis, result, struc, SIMULATION_LOGGING=False, S
             if 'ignore' in node_name:
                 matched = True
                 break
-            
+
             if dic.get("keyword", 'None') in node_name:
                 matched = True
                 matches = dict(re.findall(constants["ARRAY_DECODER_PATTERN"], node_name))
@@ -39,42 +40,10 @@ def parse_simulation_result(analysis, result, struc, SIMULATION_LOGGING=False, S
 
         if not matched:
             print(f"Missing node ({node_name}): {float(node.as_ndarray()[0]):.2f} V")
-    
-    # Post process voltage for battery
-    ## Current measurement is to ground instead of across the battery, resulting in batt0 24V and batt2 48v
-    for data in result['battery_result']['data']:
-        voltages:dict = data['voltage']
-        
-        pos = []
-        neg = []
-        
-        for key in voltages.keys():
-            matches = dict(re.findall(constants["ARRAY_DECODER_PATTERN"], key))
-            series_no = int(matches['s'])
 
-            if "positive" in key:
-                if len(pos) < series_no + 1:
-                    pos.extend([[] for _ in range(series_no + 1 - len(pos))])
-                pos[series_no] = (key, series_no)
-            elif "negative" in key:
-                if len(neg) < series_no + 1:
-                    neg.extend([[] for _ in range(series_no + 1 - len(neg))])
-                neg[series_no] = (key, series_no)
-        
-        pos.sort(key=lambda x: -x[1])
-        neg.sort(key=lambda x: x[1])
-        
-        for i in range(len(pos)):
-            if i == len(pos) - 1:
-                break
-            voltages[pos[i][0]] = voltages[pos[i][0]] - voltages[pos[i + 1][0]]
-
-    for data in result["panel_result"]["data"]:
-        voltages = data['voltage']
-        for key in voltages.keys():
-            matches = dict(re.findall(constants["ARRAY_DECODER_PATTERN"], key))
-            #print(matches)
-            
+    post_process(result["battery_result"]["data"], constants)
+    post_process(result['panel_result']['data'], constants)
+ 
     # Branch currents
     for branch_name, branch in analysis.branches.items():
         if branch_name.startswith("v"):
@@ -129,3 +98,38 @@ def parse_simulation_result(analysis, result, struc, SIMULATION_LOGGING=False, S
                 for branch, current in data['current'].items():
                     print("\t"*min(1, count) + f"\t{branch}: {current:.2f} A")
             print(constants['BARE'])
+            
+def post_process(res_list, constants):
+       # Post process voltage for battery
+    ## Current measurement is to ground instead of across the battery, resulting in batt0 24V and batt2 48v
+    for data in res_list:
+        voltages:dict = data['voltage']
+        
+        pos = {}
+        neg = {}
+
+        for key in voltages.keys():
+            matches = dict(re.findall(constants["ARRAY_DECODER_PATTERN"], key))
+            series_no = int(matches['s'])
+            parallel_no = int(matches['p'])
+
+            if "positive" in key:
+                found = pos.get(series_no, None)
+                if not found:
+                    pos[series_no] = [(key, parallel_no)]
+                else:
+                    pos[series_no].append((key, parallel_no))
+            elif "negative" in key:
+                found = neg.get(series_no, None)
+                if not found:
+                    neg[series_no] = [(key, parallel_no)]
+                else:
+                    neg[series_no].append((key, parallel_no))
+        
+        for i in range(len(pos)):
+            pos[i].sort(key=lambda x: x[1])
+            neg[i].sort(key=lambda x: x[1])
+            for j in range(len(pos[i])):
+                voltages[pos[i][j][0]] = voltages[pos[i][j][0]] - voltages[neg[i][j][0]]
+                voltages[neg[i][j][0]] = 0.00
+            

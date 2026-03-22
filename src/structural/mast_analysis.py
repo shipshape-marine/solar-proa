@@ -24,7 +24,7 @@ from .beam_mechanics import (
 # Air properties
 AIR_DENSITY_KG_M3 = 1.225
 SAIL_DRAG_COEFFICIENT = 1.15  # Flat plate perpendicular to wind
-
+#Using formula from ISO12215-10 Clause 7.2 Table 5 case b (multihull, SC1), rho and cd not required
 
 def knots_to_ms(knots: float) -> float:
     """Convert wind speed from knots to m/s."""
@@ -33,9 +33,9 @@ def knots_to_ms(knots: float) -> float:
 
 def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
     """
-    Calculate wind force on sail.
-
-    F = 0.5 * rho * V^2 * Cd * A
+    Calculate wind force on sail (Per mast)
+    
+    F = 0.72 * V^2 * A (ISO12215-10 Clause 7.2 Table 5)
 
     Args:
         wind_speed_knots: Wind speed in knots
@@ -45,8 +45,7 @@ def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
         Force in Newtons
     """
     V = knots_to_ms(wind_speed_knots)
-    return 0.5 * AIR_DENSITY_KG_M3 * V**2 * SAIL_DRAG_COEFFICIENT * sail_area_m2
-
+    return 0.72  * V**2 * sail_area_m2 / 2
 
 def calculate_mast_geometry(params: Dict[str, Any]) -> Dict[str, float]:
     """
@@ -268,6 +267,7 @@ def validate_mast(params: Dict[str, Any],
                   min_safety_factor: float = 2.0) -> Dict[str, Any]:
     """
     Validate mast structural integrity under wind loading.
+    Validation is in line with ISO 12215-10 Clause 5.3, any relevant enginnering method can be used to estimate stress evaluation
 
     Args:
         params: Design parameters

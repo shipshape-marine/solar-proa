@@ -1,0 +1,34 @@
+{
+    "configuration_name": "electrical_circuit_setup",
+    "display_name": "Test Circuit - Load Only (single linear load)",
+    "configuration_description": "No solar (solar_power 0.0) and one linear load at half throttle on a 2S1P 48 V battery. Expected load demand 0.5 x 500 W = 250 W, i.e. 250 W / 48 V = 5.2 A drawn from the battery.",
+
+    "mppt_panel": {
+        "config_1": {
+            "count": 1,
+            "panel_info": {
+                "choice": "Test_Panel",
+                "in_series": 1,
+                "in_parallel": 1,
+                "solar_power": 0.0
+            },
+            "mppt_info": {
+                "choice": "Test_MPPT"
+            }
+        }
+    },
+
+    "load": {
+        "load_1": {
+            "choice": "Test_Load_Linear",
+            "throttle": 0.5
+        }
+    },
+
+    "battery": {
+        "choice": "Test_Battery",
+        "battery_in_series": 2,
+        "battery_in_parallel": 1,
+        "current_soc": 0.5
+    }
+}

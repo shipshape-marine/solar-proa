@@ -1,0 +1,64 @@
+{
+    "MPPT": {
+        "Test_MPPT": {
+            "description": "Test MPPT with round numbers: 10 A output cap, 0.9 efficiency. max_output_voltage 36 V sits within MPPT_BATTERY_VOLTAGE_BUFFER (15 V) of both a 1S (24 V) and a 2S (48 V) Test_Battery at SOC 0.5, so no voltage-mismatch error is raised for either topology.",
+            "max_input_voltage": 150.0,
+            "max_input_current": 45.0,
+            "max_output_voltage": 36.0,
+            "max_output_current": 10.0,
+            "efficiency": 0.9
+        }
+    },
+    "Panel": {
+        "Test_Panel": {
+            "description": "100 W at 20 V, so one panel string sources exactly 5 A.",
+            "power": 100,
+            "voltage": 20.0
+        }
+    },
+    "Battery": {
+        "Test_Battery": {
+            "description": "24 V nominal per cell. Battery_Array prefers min/max interpolation, so at current_soc 0.5 the per-cell voltage is exactly 24.0 V.",
+            "battery_voltage": 24.0,
+            "min_voltage": 20.0,
+            "max_voltage": 28.0,
+            "max_charge_current": 20,
+            "max_discharge_current": 20,
+            "capacity_ah": 50
+        },
+        "Test_Battery_Low_Discharge": {
+            "description": "Test_Battery with a 5 A discharge cap, used to force over-discharge restriction.",
+            "battery_voltage": 24.0,
+            "min_voltage": 20.0,
+            "max_voltage": 28.0,
+            "max_charge_current": 20,
+            "max_discharge_current": 5,
+            "capacity_ah": 50
+        },
+        "Test_Battery_Low_Charge": {
+            "description": "Test_Battery with a 2 A charge cap, used to force the load balancer to absorb excess charge current.",
+            "battery_voltage": 24.0,
+            "min_voltage": 20.0,
+            "max_voltage": 28.0,
+            "max_charge_current": 2,
+            "max_discharge_current": 20,
+            "capacity_ah": 50
+        }
+    },
+    "Load": {
+        "Test_Load_Linear": {
+            "description": "No motor physics constants, so Load falls back to the linear model: power = throttle x total_power.",
+            "total_power": 500,
+            "nominal_voltage": 24.0
+        },
+        "Test_Load_BLDC": {
+            "description": "BLDC physics model. propeller_kp is auto-derived so rated current (500 W / 24 V = 20.83 A) is reached at full throttle.",
+            "total_power": 500,
+            "nominal_voltage": 24.0,
+            "motor_kv": 100,
+            "motor_resistance": 0.1,
+            "motor_no_load_current": 1.0,
+            "propeller_load_factor": 1.0
+        }
+    }
+}

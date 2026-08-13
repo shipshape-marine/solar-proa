@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+testpaths = ["src/electrical_simulation/tests"]
+pythonpath = ["."]
+markers = [
+    "integration: requires NgSpice shared library (deselect with '-m \"not integration\"')",
+]

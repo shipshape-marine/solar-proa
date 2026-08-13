@@ -1,0 +1,26 @@
+{
+    "voyage_info": {
+        "name": "Test Voyage - Discharge, Charge, Mixed"
+    },
+    "initial_battery_soc": 0.5,
+    "segments": [
+        {
+            "name": "Discharge Segment",
+            "duration_minutes": 5,
+            "throttle": 0.8,
+            "solar_power": 0.0
+        },
+        {
+            "name": "Charge Segment",
+            "duration_minutes": 5,
+            "throttle": 0.0,
+            "solar_power": 1.0
+        },
+        {
+            "name": "Mixed Segment",
+            "duration_minutes": 5,
+            "throttle": 0.5,
+            "solar_power": 0.5
+        }
+    ]
+}

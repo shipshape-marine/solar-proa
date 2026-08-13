@@ -1,0 +1,34 @@
+{
+    "configuration_name": "electrical_circuit_setup",
+    "display_name": "Test Circuit - High Load System",
+    "configuration_description": "One panel array (~2.3 A) with a full-throttle BLDC load (~500 W, ~20.8 A at 24 V) on a 1S1P battery limited to 5 A discharge (Test_Battery_Low_Discharge). Demand far exceeds the discharge limit, so load current is restricted and an over-discharge warning is expected.",
+
+    "mppt_panel": {
+        "config_1": {
+            "count": 1,
+            "panel_info": {
+                "choice": "Test_Panel",
+                "in_series": 1,
+                "in_parallel": 1,
+                "solar_power": 1.0
+            },
+            "mppt_info": {
+                "choice": "Test_MPPT"
+            }
+        }
+    },
+
+    "load": {
+        "load_1": {
+            "choice": "Test_Load_BLDC",
+            "throttle": 1.0
+        }
+    },
+
+    "battery": {
+        "choice": "Test_Battery_Low_Discharge",
+        "battery_in_series": 1,
+        "battery_in_parallel": 1,
+        "current_soc": 0.5
+    }
+}

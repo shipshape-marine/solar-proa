@@ -1,0 +1,34 @@
+{
+    "configuration_name": "electrical_circuit_setup",
+    "display_name": "Test Circuit - Balanced System",
+    "configuration_description": "One 100 W panel array feeding a BLDC load at quarter throttle on a 2S1P 48 V battery. Load demand (~76 W) is close to the power the MPPT delivers to the bus (~69 W), so battery current sits near zero.",
+
+    "mppt_panel": {
+        "config_1": {
+            "count": 1,
+            "panel_info": {
+                "choice": "Test_Panel",
+                "in_series": 1,
+                "in_parallel": 1,
+                "solar_power": 1.0
+            },
+            "mppt_info": {
+                "choice": "Test_MPPT"
+            }
+        }
+    },
+
+    "load": {
+        "load_1": {
+            "choice": "Test_Load_BLDC",
+            "throttle": 0.25
+        }
+    },
+
+    "battery": {
+        "choice": "Test_Battery",
+        "battery_in_series": 2,
+        "battery_in_parallel": 1,
+        "current_soc": 0.5
+    }
+}

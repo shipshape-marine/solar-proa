@@ -1,0 +1,34 @@
+{
+    "configuration_name": "electrical_circuit_setup",
+    "display_name": "Test Circuit - Oversized Solar",
+    "configuration_description": "Two panel arrays (~4.6 A into a 24 V bus) against a lightly loaded 1S1P battery whose charge limit is 2 A (Test_Battery_Low_Charge). Load draws only ~2.1 A at 0.1 throttle, so charge current exceeds the limit and the load balancer must absorb the excess (overcharge warning).",
+
+    "mppt_panel": {
+        "config_1": {
+            "count": 2,
+            "panel_info": {
+                "choice": "Test_Panel",
+                "in_series": 1,
+                "in_parallel": 1,
+                "solar_power": 1.0
+            },
+            "mppt_info": {
+                "choice": "Test_MPPT"
+            }
+        }
+    },
+
+    "load": {
+        "load_1": {
+            "choice": "Test_Load_Linear",
+            "throttle": 0.1
+        }
+    },
+
+    "battery": {
+        "choice": "Test_Battery_Low_Charge",
+        "battery_in_series": 1,
+        "battery_in_parallel": 1,
+        "current_soc": 0.5
+    }
+}

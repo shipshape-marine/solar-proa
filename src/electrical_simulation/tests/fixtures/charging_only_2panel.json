@@ -1,0 +1,29 @@
+{
+    "configuration_name": "electrical_circuit_setup",
+    "display_name": "Test Circuit - Charging Only (2 panel arrays)",
+    "configuration_description": "Two independent 100 W panel arrays, each with its own MPPT, charging a 2S1P 48 V battery with no loads. Exercises multi-array indexing (arr0, arr1).",
+
+    "mppt_panel": {
+        "config_1": {
+            "count": 2,
+            "panel_info": {
+                "choice": "Test_Panel",
+                "in_series": 1,
+                "in_parallel": 1,
+                "solar_power": 1.0
+            },
+            "mppt_info": {
+                "choice": "Test_MPPT"
+            }
+        }
+    },
+
+    "load": {},
+
+    "battery": {
+        "choice": "Test_Battery",
+        "battery_in_series": 2,
+        "battery_in_parallel": 1,
+        "current_soc": 0.5
+    }
+}

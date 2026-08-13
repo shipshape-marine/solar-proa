@@ -1,3 +1,7 @@
 shipshape==0.10.0
 numpy
 matplotlib
+
+# testing
+pytest
+pytest-mock

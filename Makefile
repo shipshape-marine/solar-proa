@@ -140,7 +140,7 @@ help:
 	@echo "  make validate-structure     - Validate structural integrity (all load cases)"
 	@echo "  make lines                  - Generate lines plan (TechDraw with sections)"
 	@echo "  make lines-pdf              - Compile lines plan LaTeX to PDF"
-	@echo "  make electrical-simulation  - Run electrical simulation (SIMULATION_TYPE=operating_point, sweep_throttle, sweep_panel_power, voyage, or all)"
+	@echo "  make electrical-simulation  - Run electrical simulation (SIMULATION_TYPE=all; TEST=unit|integration|all|<name> to run tests first)"
 	@echo ""
 	@echo "Parameter Targets:"
 	@echo "  make parameter              - Compute and save parameter to artifacts/"
@@ -623,6 +623,7 @@ lines-pdf: $(LINES_PDF)
 # ==============================================================================
 
 ELECTRICAL_DIR := $(SRC_DIR)/electrical_simulation
+ELECTRICAL_TEST_DIR := $(ELECTRICAL_DIR)/tests
 ELECTRICAL_CONST_DIR := $(CONST_DIR)/electrical
 ELECTRICAL_CIRCUIT_FILE := $(ELECTRICAL_CONST_DIR)/${BOAT}_circuit_setup.json
 ELECTRICAL_VOYAGE_FILE := $(ELECTRICAL_CONST_DIR)/voyage_setup.json
@@ -630,9 +631,29 @@ ELECTRICAL_CONSTANTS_FILE := $(ELECTRICAL_CONST_DIR)/constants.json
 ELECTRICAL_BOAT_PARAMS_FILE := $(CONST_DIR)/boat/$(BOAT).json
 COMPONENT_FILES := $(wildcard $(ELECTRICAL_CONST_DIR)/electrical_components.json)
 SIMULATION_TYPE ?= all
+TEST ?=
 ELECTRICAL_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).electrical_simulation
 
+# Build the pytest command from TEST=  (empty means no tests)
+ifdef TEST
+ifeq ($(TEST),unit)
+PYTEST_CMD := $(PYTHON) -m pytest $(ELECTRICAL_TEST_DIR) -m "not integration" -v --tb=short
+else ifeq ($(TEST),integration)
+PYTEST_CMD := $(PYTHON) -m pytest $(ELECTRICAL_TEST_DIR) -m "integration" -v --tb=short
+else ifeq ($(TEST),all)
+PYTEST_CMD := $(PYTHON) -m pytest $(ELECTRICAL_TEST_DIR) -v --tb=short
+else
+PYTEST_CMD := $(PYTHON) -m pytest $(ELECTRICAL_TEST_DIR) -k "$(TEST)" -v --tb=short
+endif
+else
+PYTEST_CMD :=
+endif
+
 $(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) $(COMPONENT_FILES) $(ELECTRICAL_BOAT_PARAMS_FILE) | $(ARTIFACT_DIR)
+ifdef TEST
+	@echo "Running electrical simulation tests (TEST=$(TEST))..."
+	@$(PYTEST_CMD)
+endif
 	@echo "Running electrical simulation ($(SIMULATION_TYPE)): $(BOAT)"
 	@$(PYTHON) -m src.electrical_simulation \
 		--circuit $(ELECTRICAL_CIRCUIT_FILE) \
@@ -643,8 +664,8 @@ $(ELECTRICAL_ARTIFACT): $(ELECTRICAL_CIRCUIT_FILE) $(ELECTRICAL_CONSTANTS_FILE) 
 		--voyage $(ELECTRICAL_VOYAGE_FILE) \
 		--output $@ \
 		--simulation-type $(SIMULATION_TYPE)
-	@echo "✓ Electrical simulation complete: $@"
+	@echo "Electrical simulation complete: $@"
 
 .PHONY: electrical-simulation
 electrical-simulation: $(ELECTRICAL_ARTIFACT)
-	@echo "✓ Electrical simulation completed"
+	@echo "Electrical simulation completed"

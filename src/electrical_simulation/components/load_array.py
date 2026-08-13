@@ -7,6 +7,24 @@ RAWSPICE_ITERATIONS = 1e6
 
 class Load_Array():
     def __init__(self, circuit, components, constants, load_list: list):
+        """
+        Load array component.
+
+        Bus node connecting all loads; handles current distribution and
+        discharge limiting.
+
+        Takes no kwargs — all parameters are positional:
+            circuit (Circuit): PySpice circuit the nodes are added to
+            components (dict): Shared component-name registry
+            constants (dict): Simulation constants; required (no default,
+                unlike the other components) because WIRE_RESISTANCE is read
+                while wiring the array
+            load_list (list[Load]): Loads to attach to the bus, in array order
+
+        __create_array is called here, so the per-load nodes exist as soon as
+        the object is constructed; setup_loads must be called afterwards to
+        connect the battery and install the discharge-limiting current sources.
+        """
         self.circuit = circuit
         self.components = components
         self.constants = constants

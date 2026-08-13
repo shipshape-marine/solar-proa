@@ -4,6 +4,49 @@ RAWSPICE_ITERATIONS = 1e6
 
 class Load:
     def __init__(self, circuit, components, constants=None, bus_voltage=None, **kwargs):
+        """
+        Load component.
+
+        Behavioural current sink on the DC bus; the power demand comes from the
+        BLDC motor model when motor constants are present, otherwise from linear
+        scaling (throttle x total_power).
+
+        Named parameters (not kwargs):
+            bus_voltage (float): Actual DC bus voltage (V) the motor model is
+                solved against; build_circuit_from_json passes the battery pack
+                voltage. Falls back to nominal_voltage when None.
+
+        Required kwargs:
+            load_name (str): Node-name prefix for this load. Injected by
+                build_circuit_from_json as arr{N}_load_{choice}, not read from
+                the circuit JSON.
+            nominal_voltage (float): Motor nominal voltage (V); also the
+                bus_voltage fallback, and the divisor for the ESC current limit
+                (total_power / nominal_voltage)
+            total_power (float): Motor rated power (W); the linear model's
+                full-throttle demand and the basis of the ESC current limit
+
+        Optional kwargs:
+            throttle (float): Throttle position, 0.0-1.0 (default: 1.0). At
+                throttle <= 0.0 the demand is pinned to GROUNDING_RESISTANCE and
+                no operating point is produced.
+            motor_kv (float): Motor velocity constant (RPM/V)
+            motor_resistance (float): Winding resistance (ohms)
+                motor_kv and motor_resistance must BOTH be present to enable the
+                BLDC physics model; if either is missing the linear fallback is
+                used regardless of the other motor/propeller kwargs.
+            motor_no_load_current (float): No-load current (A) (default: 0.0)
+            propeller_kp (float): Propeller load coefficient (N·m/(rad/s)^2).
+                When omitted it is auto-derived from total_power and
+                nominal_voltage so rated current is reached at full throttle.
+            propeller_load_factor (float): Load scale, 1.0 = startup/bollard,
+                <1.0 = cruise equilibrium (default: 1.0)
+            choice (str): Component name from electrical_components.json
+                (resolved upstream, accepted and ignored here)
+
+        Note: constants defaults to None but GROUNDING_RESISTANCE is read below
+        on the zero-throttle path, so a constants dict is effectively mandatory.
+        """
         self.load_name = kwargs.get("load_name")
         self.throttle = kwargs.get("throttle", 1.0)
         self.MOTOR_VOLTAGE = kwargs.get("nominal_voltage")

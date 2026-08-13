@@ -3,6 +3,33 @@ from ..components.solar_panel_array import Solar_Array
 
 class MPPT:
     def __init__(self, circuit, components, constants=None, **kwargs):
+        """
+        MPPT charge controller component.
+
+        Current regulator converting solar input to DC bus output; limited by
+        max_output_current and applies an efficiency loss.
+
+        Required kwargs:
+            max_input_voltage (float): Max panel-side voltage (V); setup_mppt
+                returns an error string if the array exceeds it
+            max_input_current (float): Max panel-side current (A); setup_mppt
+                returns an error string if the array exceeds it
+            max_output_voltage (float): Rated bus-side voltage (V); setup_mppt
+                returns an error string if it differs from the battery pack
+                voltage by more than MPPT_BATTERY_VOLTAGE_BUFFER
+            max_output_current (float): Output current cap (A); the behavioural
+                regulator emits min(max_output_current, computed current)
+            efficiency (float): Conversion efficiency, 0.0-1.0; scales input
+                power to output power
+
+        Optional kwargs:
+            choice (str): Component name from electrical_components.json
+                (resolved upstream, accepted and ignored here)
+
+        Note: constants defaults to None but MPPT_BATTERY_VOLTAGE_BUFFER is read
+        below (and GROUNDING_RESISTANCE/WIRE_RESISTANCE in setup_mppt), so a
+        constants dict is effectively mandatory.
+        """
         self.constants = constants
         self.MPPT_MAX_INPUT_VOLTAGE = kwargs.get("max_input_voltage")
         self.MPPT_MAX_INPUT_CURRENT = kwargs.get("max_input_current")

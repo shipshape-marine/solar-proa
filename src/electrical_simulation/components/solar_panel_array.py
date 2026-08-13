@@ -1,6 +1,35 @@
 
 class Solar_Array:
     def __init__(self, circuit, components, constants=None, **kwargs):
+        """
+        Solar panel array component.
+
+        Voltage sources in series/parallel representing panels; provides current
+        to the MPPT input.
+
+        Required kwargs:
+            in_series (int): Number of panels in series per string
+            in_parallel (int): Number of strings in parallel
+            voltage (float): Per-panel voltage (V); must be non-zero, it divides
+                calculated_power to give the per-panel current
+            calculated_power (float): Per-panel power (W) for this run, computed
+                upstream by build_circuit_from_json as
+                power x (panel_power_setting or solar_power, default 1.0)
+
+        Optional kwargs:
+            power (float): Per-panel rated power (W) from the component spec.
+                Not read here — build_circuit_from_json reads it to derive
+                calculated_power. Accepted and ignored.
+            solar_power (float): Irradiance scale factor, 0.0-1.0 (default 1.0
+                upstream). Not read here — build_circuit_from_json applies it to
+                power unless a panel_power_setting modification overrides it.
+                Accepted and ignored.
+            choice (str): Component name from electrical_components.json
+                (resolved upstream, accepted and ignored here)
+
+        Note: constants defaults to None but EPSILON is read below, so a
+        constants dict is effectively mandatory.
+        """
         self.circuit = circuit
         self.constants = constants
         self.PANEL_IN_PARALLEL = kwargs.get("in_parallel")

@@ -4,6 +4,22 @@ RAWSPICE_ITERATIONS = 1e6
 
 class Load_Balancer:
     def __init__(self, circuit, components, constants=None):
+        """
+        Load balancer component.
+
+        Behavioural current sink absorbing excess charge current when the
+        battery is full or the charge limit is reached.
+
+        Takes no kwargs — the signature has no **kwargs, so passing any keyword
+        beyond those below raises TypeError:
+            circuit (Circuit): PySpice circuit the nodes are added to
+            components (dict): Shared component-name registry
+            constants (dict): Simulation constants (default: None). Effectively
+                mandatory — GROUNDING_RESISTANCE is read in balance_loads.
+
+        The charge limit itself is not configured here; balance_loads reads it
+        from the Battery_Array via get_charge_limit().
+        """
         self.circuit = circuit
         self.components = components
         self.constants = constants

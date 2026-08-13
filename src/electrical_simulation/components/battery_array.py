@@ -1,6 +1,41 @@
 
 class Battery_Array:
     def __init__(self, circuit, components, constants=None, **kwargs):
+        """
+        Battery array component.
+
+        Voltage sources in series/parallel representing battery cells; provides
+        the DC bus reference voltage.
+
+        Required kwargs:
+            battery_in_series (int): Number of cells in series per string
+            battery_in_parallel (int): Number of strings in parallel
+            max_charge_current (float): Max charge current per string (A)
+            max_discharge_current (float): Max discharge current per string (A)
+
+        Cell voltage — supply either the min/max pair or the nominal value:
+            min_voltage (float): Per-cell min voltage (V), at SOC 0.0
+            max_voltage (float): Per-cell max voltage (V), at SOC 1.0
+                When both min_voltage and max_voltage are given they take
+                precedence and the cell voltage is interpolated linearly from
+                current_soc; battery_voltage is then ignored.
+            battery_voltage (float): Per-cell nominal voltage (V), used only
+                when min_voltage or max_voltage is missing/None
+
+        Optional kwargs:
+            current_soc (float): Current state of charge, 0.0-1.0 (default: 1.0);
+                only used for the min/max voltage interpolation
+            choice (str): Component name from electrical_components.json
+                (resolved upstream, accepted and ignored here)
+            capacity_ah (float): Per-string capacity (Ah). Not read by this
+                component — the voyage engine reads it from the circuit setup
+                (capacity_ah x battery_in_parallel x 60 = pack A-min) for SOC
+                tracking. Accepted and ignored here.
+
+        Note: constants defaults to None but the netlist helpers below require
+        GROUNDING_RESISTANCE and WIRE_RESISTANCE, so a constants dict is
+        effectively mandatory.
+        """
         self.circuit = circuit
         self.BATTERY_IN_PARALLEL = kwargs.get("battery_in_parallel")
         self.BATTERY_IN_SERIES = kwargs.get("battery_in_series")

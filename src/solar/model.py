@@ -1,33 +1,40 @@
 import FreeCAD as App
 
-doc = App.openDocument("./artifact/rp2.closehaul.step.step")
+doc = App.openDocument("C:/Users/phert/OneDrive - National University of Singapore/fyp/solar-proa/artifact/rp2.closehaul.design.FCStd")
 
 sails = []
 panels = []
 masts = []
 
+# for obj in doc.Objects:
+#     if not hasattr(obj, "Shape"):
+#         continue
+
+#     if obj.Shape.isNull():
+#         continue
+
+#     if obj.Label.startswith("Sail"):
+#         sails.append(obj)
+
+#     elif obj.Label.startswith("Panel_"):
+#         panels.append(obj)
+
+#     elif obj.Label.startswith("Mast") or obj.Label.contains(""):
+#         masts.append(obj)
+    
+
+tesselated = []
+print(len(doc.Objects))
 for obj in doc.Objects:
     if not hasattr(obj, "Shape"):
         continue
-
-    if obj.Shape.isNull():
-        continue
-
-    if obj.Label.startswith("Sail"):
-        sails.append(obj)
-
-    elif obj.Label.startswith("Panel_"):
-        panels.append(obj)
-
-    elif obj.Label.startswith("Mast"):
-        masts.append(obj)
-    
+    vertices, triangles = obj.Shape.tessellate(5)
 
 
 
 print(list(map(lambda x: x.Placement, sails)))
 print(list(map(lambda x: x.Placement, panels)))
-print(list(map(lambda x: x.Placement, masts)))
+print(list(map(lambda x: x.Label, masts)))
 
 sail = sails[0]
 shape = sail.Shape

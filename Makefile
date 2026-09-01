@@ -4,20 +4,51 @@
 # PLATFORM DETECTION AND FREECAD CONFIGURATION
 # ==============================================================================
 
+# Detect Windows without shelling out to `uname` (it isn't on PATH there,
+# and calling it before SHELL/PATH are fixed up below would just error).
+ifeq ($(OS),Windows_NT)
+UNAME := Windows
+else
 UNAME := $(shell uname)
+endif
 
-# Detect Python command (python3 on macOS/Linux, python on Windows)
+# On Windows, set up a real POSIX shell (Git Bash) and locate FreeCAD before
+# anything below shells out - GNU Make's Windows port needs a real shell for
+# the mkdir -p / rm -rf / $$(...) recipes used throughout this file, and needs
+# coreutils (mkdir, rm, cp, sed, find, wc...) on PATH for its "run command
+# directly" fast path. Git for Windows ships both, so borrow them regardless
+# of what invoked make.
+ifeq ($(UNAME),Windows)
+GIT_WIN_DIR ?= C:/Program Files/Git
+FREECAD_WIN_DIR ?= C:/Program Files/FreeCAD 1.1
+SHELL := $(GIT_WIN_DIR)/bin/bash.exe
+export PATH := $(GIT_WIN_DIR)/usr/bin;$(PATH)
+# Windows' console codepage isn't UTF-8, so Python scripts that print "✓" etc.
+# crash with UnicodeEncodeError unless forced into UTF-8 mode.
+export PYTHONUTF8 := 1
+endif
+
+# Detect Python command (python3 on macOS/Linux, FreeCAD's bundled python on
+# Windows since there is normally no separate system Python installed there)
+ifeq ($(UNAME),Windows)
+PYTHON := "$(FREECAD_WIN_DIR)/bin/python.exe"
+else
 PYTHON := $(shell python3 --version >/dev/null 2>&1 && echo python3 || echo python)
+endif
 
 # Detect FreeCAD command (different on different systems)
 FREECAD_APP := /Applications/FreeCAD.app/Contents/MacOS/FreeCAD
 FREECAD_BUNDLE := /Applications/FreeCAD.app
+ifeq ($(UNAME),Windows)
+FREECAD := "$(FREECAD_WIN_DIR)/bin/freecadcmd.exe"
+else
 FREECAD := $(shell which freecad 2>/dev/null || \
                    which freecadcmd 2>/dev/null || \
                    (test -f $(FREECAD_APP) && echo $(FREECAD_APP)) || \
                    echo "freecad")
+endif
 
-# On macOS use GUI app, on Linux use headless
+# On macOS use GUI app, on Linux use headless, on Windows use the local install
 ifeq ($(UNAME),Darwin)
 	FREECAD_CMD := $(FREECAD_APP) --console
 	FREECAD_PYTHON := $(FREECAD_BUNDLE)/Contents/Resources/bin/python
@@ -25,6 +56,14 @@ ifeq ($(UNAME),Darwin)
 # Conda env with FreeCAD (for geometry modules via shipshape)
 	CONDA_PYTHON := /Users/henz/anaconda3/envs/freecad/bin/python
 	FREECAD_LIB := /Users/henz/anaconda3/envs/freecad/lib
+else ifeq ($(UNAME),Windows)
+	FREECAD_CMD := $(FREECAD)
+	FREECAD_PYTHON := "$(FREECAD_WIN_DIR)/bin/python.exe"
+	FILTER_NOISE :=
+# No conda on Windows; reuse FreeCAD's bundled Python. For the mass/buoyancy/gz
+# stages, run `"$(FREECAD_WIN_DIR)/bin/python.exe" -m pip install -r requirements.txt` once.
+	CONDA_PYTHON := $(FREECAD_PYTHON)
+	FREECAD_LIB :=
 else
 	FREECAD_CMD := xvfb-run -a freecadcmd
 	FREECAD_PYTHON := freecad-python
@@ -243,7 +282,7 @@ sync-docs:
 .PHONY: diagrams
 diagrams: 
 	@echo "making all diagrams..."
-	PYTHONPATH=$(PWD) python3 -m src.structural.diagrams
+	PYTHONPATH=$(PWD) $(PYTHON) -m src.structural.diagrams
 
 # serve website locally
 .PHONY: localhost
@@ -268,7 +307,7 @@ graph:
 # ==============================================================================
 
 .deps: requirements.txt
-	pip install -r requirements.txt
+	$(PYTHON) -m pip install -r requirements.txt
 	@touch $@
 
 # ==============================================================================
@@ -284,7 +323,7 @@ PARAMETER_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).parameter.json
 $(PARAMETER_ARTIFACT): $(BOAT_FILE) $(CONFIGURATION_FILE) .deps
 	@echo "Computing parameters for $(BOAT) and $(CONFIGURATION)..."
 	@mkdir -p $(ARTIFACT_DIR)
-	@PYTHONPATH=$(PWD) python3 -m shipshape.parameter \
+	@PYTHONPATH=$(PWD) $(PYTHON) -m shipshape.parameter \
 		--compute src.parameter.compute \
 		--boat $(BOAT_FILE) \
 		--configuration $(CONFIGURATION_FILE) \
@@ -368,7 +407,7 @@ $(COLOR_ARTIFACT): $(DESIGN_ARTIFACT) $(MATERIAL_FILE) $(COLOR_SOURCE) | $(COLOR
 			"$(COLOR_ARTIFACT)" \
 			"$(FREECAD_APP)"; \
 	else \
-		freecad-python -m src.color \
+		$(FREECAD_PYTHON) -m src.color \
 			--design "$(DESIGN_ARTIFACT)" \
 			--color "$(MATERIAL_FILE)" \
 			--outputdesign "$(COLOR_ARTIFACT)"; \
@@ -407,7 +446,7 @@ render: $(COLOR_ARTIFACT) $(RENDER_SOURCE)
 	@if [ "$(UNAME)" = "Darwin" ]; then \
 		$(RENDER_DIR)/render_mac.sh "$(COLOR_ARTIFACT)" "$(ARTIFACT_DIR)" "$(FREECAD_APP)"; \
 	else \
-		FCSTD_FILE="$(COLOR_ARTIFACT)" IMAGE_DIR="$(ARTIFACT_DIR)" freecad-python -m src.render; \
+		FCSTD_FILE="$(COLOR_ARTIFACT)" IMAGE_DIR="$(ARTIFACT_DIR)" $(FREECAD_PYTHON) -m src.render; \
 	fi
 	@echo "Cropping images with ImageMagick..."
 	@if command -v convert >/dev/null 2>&1; then \
@@ -530,7 +569,7 @@ buoyancy-render: $(BUOYANCY_DESIGN_ARTIFACT) $(RENDER_SOURCE)
 	@if [ "$(UNAME)" = "Darwin" ]; then \
 		$(RENDER_DIR)/render_mac.sh "$(BUOYANCY_DESIGN_ARTIFACT)" "$(ARTIFACT_DIR)" "$(FREECAD_APP)"; \
 	else \
-		FCSTD_FILE="$(BUOYANCY_DESIGN_ARTIFACT)" IMAGE_DIR="$(ARTIFACT_DIR)" freecad-python -m src.render; \
+		FCSTD_FILE="$(BUOYANCY_DESIGN_ARTIFACT)" IMAGE_DIR="$(ARTIFACT_DIR)" $(FREECAD_PYTHON) -m src.render; \
 	fi
 	@echo "Cropping images with ImageMagick..."
 	@if command -v convert >/dev/null 2>&1; then \
@@ -553,7 +592,7 @@ VALIDATE_STRUCTURE_ARTIFACT := $(ARTIFACT_DIR)/$(BOAT).$(CONFIGURATION).validate
 
 $(VALIDATE_STRUCTURE_ARTIFACT): $(PARAMETER_ARTIFACT) $(MASS_ARTIFACT) $(GZ_ARTIFACT) | $(ARTIFACT_DIR)
 	@echo "Running structural validation: $(BOAT).$(CONFIGURATION)"
-	@PYTHONPATH=$(PWD) python3 -m src.structural \
+	@PYTHONPATH=$(PWD) $(PYTHON) -m src.structural \
 		--parameters $(PARAMETER_ARTIFACT) \
 		--mass $(MASS_ARTIFACT) \
 		--gz $(GZ_ARTIFACT) \

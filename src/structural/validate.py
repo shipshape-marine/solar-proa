@@ -11,6 +11,10 @@ from .wave_slam import validate_wave_slam, validate_frontal_wave_slam, validate_
 from .lifting_sling import validate_lifting_sling
 from .gunwale_analysis import validate_gunwale_loads
 from .capsize_analysis import calculate_ama_lift_windspeed
+from .iso_materials import validate_material_traceability
+from .iso_joint_check import validate_aka_joint
+from .iso_global_loads import validate_global_loads
+from .iso_design_pressure import compare_to_wave_slam_model
 
 
 def run_validation(params: Dict[str, Any],
@@ -84,6 +88,22 @@ def run_validation(params: Dict[str, Any],
     if gz_data is not None:
         ama_lift_result = calculate_ama_lift_windspeed(params, gz_data)
         tests.append(ama_lift_result)
+
+    # Test 12: ISO 12215-3 aluminium alloy family + documentation traceability
+    material_result = validate_material_traceability(alloy_datasheet_available=False)
+    tests.append(material_result)
+
+    # Test 13: ISO 12215-6 aka-to-vaka joint good practice + first-pass weld sizing
+    joint_result = validate_aka_joint(params, mass_data)
+    tests.append(joint_result)
+
+    # Test 14: ISO 12215-7 multihull global loads (GLC1 torsion, GLC5 longitudinal)
+    global_loads_result = validate_global_loads(params, mass_data)
+    tests.append(global_loads_result)
+
+    # Test 15: ISO 12215-7 float pressure vs. existing ad hoc wave-slam model (informational)
+    pressure_cross_check_result = compare_to_wave_slam_model(params, mass_data)
+    tests.append(pressure_cross_check_result)
 
     # Overall pass requires all tests to pass
     overall_passed = all(t['passed'] for t in tests)

@@ -414,6 +414,20 @@ def print_ama_lift_report(result: Dict[str, Any]) -> None:
     print(f"  (wind from ama side, full sail, no crew movement)")
 
 
+def print_iso_report(result: Dict[str, Any]) -> None:
+    """Print report for an ISO 12215 traceability/cross-check test."""
+    print()
+    print("-" * 60)
+    print(f"ISO CHECK: {result['description']}")
+    print("-" * 60)
+    summary = result.get('summary', {})
+    if summary:
+        for key, value in summary.items():
+            print(f"  {key}: {value}")
+    else:
+        print(f"  passed: {result['passed']}")
+
+
 def print_validation_report(results: Dict[str, Any]) -> None:
     """Print a human-readable validation report."""
     print()
@@ -446,6 +460,9 @@ def print_validation_report(results: Dict[str, Any]) -> None:
             print_gunwale_report(test)
         elif test['test_name'] == 'ama_lift_windspeed':
             print_ama_lift_report(test)
+        elif test['test_name'] in ('iso_material_traceability', 'iso_aka_joint_traceability',
+                                    'iso_global_loads', 'iso_design_pressure_cross_check'):
+            print_iso_report(test)
 
     # Overall result
     print()
@@ -494,6 +511,10 @@ def print_validation_report(results: Dict[str, Any]) -> None:
         elif name == 'ama_lift_windspeed':
             wind_speed = test['summary']['ama_lift_windspeed_knots']
             print(f"  {name}: {wind_speed:.0f} knots (INFO)")
+        elif name in ('iso_material_traceability', 'iso_aka_joint_traceability',
+                      'iso_global_loads', 'iso_design_pressure_cross_check'):
+            result_str = test.get('summary', {}).get('result', 'INFO')
+            print(f"  {name}: {result_str}")
         else:
             sf = test['summary']['safety_factor']
             status = "✓ PASS" if passed else "✗ FAIL"

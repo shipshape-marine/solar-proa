@@ -13,6 +13,29 @@ ALUMINUM_E_MPA = 69000
 PVC_E_MPA = 3000
 GRAVITY = 9.81
 
+# ISO-cited aluminium properties for EN AW-6061 T5/T6 closed profile (extruded
+# RHS/SHS - the aka/brace/mast section type), per BS EN ISO 12215-5:2019
+# Annex B, Table B.2 (design stress of metal stiffeners, heat-treatable alloys).
+# These are distinct from ALUMINUM_YIELD_STRENGTH_MPA above: that constant is a
+# generic textbook 6061-T6 yield value used directly as an allowable elsewhere
+# in this package; the values below are ISO's own tabulated mechanical
+# properties and ISO-mandated design-stress knockdown factors, used only by
+# the iso_* traceability modules for cross-checking. See
+# constant/standards/iso12215.json for full citation.
+ISO_AL_6061_ULTIMATE_MPA = 245       # sigma_u, unwelded ultimate tensile strength
+ISO_AL_6061_ULTIMATE_WELDED_MPA = 165  # sigma_uw, welded ultimate tensile strength
+ISO_AL_6061_YIELD_MPA = 205          # sigma_y, unwelded yield strength
+ISO_AL_6061_YIELD_WELDED_MPA = 115   # sigma_yw, welded yield strength (HAZ-reduced)
+
+# Table 17 / Annex B design stress for stiffeners, heat-treatable alloys:
+# sigma_d = 0.7 * sigma_yw (welded), or min(0.6*sigma_u, 0.9*sigma_y) if unwelded
+ISO_AL_DESIGN_STRESS_WELDED_MPA = 0.7 * ISO_AL_6061_YIELD_WELDED_MPA
+ISO_AL_DESIGN_STRESS_UNWELDED_MPA = min(
+    0.6 * ISO_AL_6061_ULTIMATE_MPA, 0.9 * ISO_AL_6061_YIELD_MPA
+)
+# tau_d = 0.58 * sigma_d (both Part 5 Table 17 and Part 7 Table 12 use this ratio)
+ISO_AL_SHEAR_DESIGN_STRESS_WELDED_MPA = 0.58 * ISO_AL_DESIGN_STRESS_WELDED_MPA
+
 
 def calculate_rhs_section_properties(width_mm, height_mm, thickness_mm):
     """

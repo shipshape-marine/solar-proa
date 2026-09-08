@@ -4,6 +4,8 @@ title: Roti Proa II - Structural Safety Report
 ---
 
 [← Back to Roti Proa II Overview]({{ '/rp2.html' | relative_url }})
+&nbsp;|&nbsp;
+[ISO 12215 Traceability →]({{ '/iso_traceability.html' | relative_url }})
 
 ---
 

@@ -1,0 +1,98 @@
+{
+  "_readme": [
+    "Bibliographic manifest for the BS EN ISO 12215 small-craft standard series as cited by src/structural/.",
+    "This file records WHICH standard, edition and clause/table numbers a given calculation is traceable to.",
+    "It intentionally contains no normative text, formulas, or reproduced tables from the standards themselves:",
+    "ISO/BSI documents are copyrighted and this repository is public (shipshape-marine/solar-proa, published to",
+    "solarproa.org). Source PDFs are held locally by the design team and are not redistributed via this repo.",
+    "When a code module cites a clause/table number, it should also be listed under that standard's",
+    "'cited_by' entries here so this manifest stays the single source of truth for citation provenance."
+  ],
+  "standards": [
+    {
+      "designation": "BS EN ISO 12215-3:2018",
+      "iso_text_identical_to": "ISO 12215-3:2002",
+      "title": "Small craft — Hull construction and scantlings — Part 3: Materials: Steel, aluminium alloys, wood, other materials",
+      "role": "Material requirements (steel, aluminium, wood). Used here for aluminium alloy family classification.",
+      "clauses_used": [
+        {
+          "clause": "4.7.1",
+          "summary": "General: non-heat-treatable vs heat-treatable aluminium alloy groups; both sea-water resistant; treated-alloy properties may be reduced after welding."
+        },
+        {
+          "clause": "4.7.2",
+          "summary": "Non-heat-treatable alloys: major alloying element Mg (+ Mn or Si); typical use is rolled products (sheet/strip/plate) — 5000-series."
+        },
+        {
+          "clause": "4.7.3",
+          "summary": "Heat-treatable alloys: major alloying element Si (+ Mg and/or Mn); typical use is extruded products (sections, bars, closed profiles) — 6000-series. This is the family the aka/mast extrusions fall under."
+        },
+        {
+          "clause": "4.7.4",
+          "summary": "Al-Cu and Al-Zn alloy groups (2000/7000-series) should not be used for small-craft construction without special protection."
+        },
+        {
+          "clause": "7.3",
+          "summary": "Documentation requirement: material data sheet must state chemical composition, grade, temper condition, minimum mechanical properties, AND minimum/expected mechanical properties after welding."
+        }
+      ],
+      "cited_by": ["src/structural/iso_materials.py"]
+    },
+    {
+      "designation": "BS EN ISO 12215-5:2019",
+      "iso_text_identical_to": "ISO 12215-5:2019, corrected version 2024-03",
+      "title": "Small craft — Hull construction and scantlings — Part 5: Design pressures for monohulls, design stresses, scantlings determination",
+      "role": "Design pressures and material design-stress allowables for monohull panels/stiffeners. Applied here to the vaka (main hull) as a monohull; NOT applied to global aka/crossbeam loads (see ISO 12215-7 instead).",
+      "clauses_used": [
+        {"clause": "8.2", "summary": "Design category factor k_DC (A=1.0, B=0.8, C=0.6, D=0.4)."},
+        {"clause": "8.3", "summary": "Dynamic load factor k_DYN (planing k_DYN1/k_DYN2; displacement/sailing craft use k_DYN=3 for k_L purposes only)."},
+        {"clause": "8.5", "summary": "Area pressure reduction factor k_AR, function of design area A_D and k_R (differs for plating vs stiffeners)."},
+        {"clause": "9.2", "summary": "Table 13: design pressures for sailing craft bottom/deck/side (P_BS, P_DS, P_SS)."},
+        {"clause": "10.3", "summary": "Table 17: design stresses by material/method, e.g. aluminium stiffeners sigma_d = 0.7*sigma_yw (welded), sigma_d = min(0.6 sigma_u, 0.9 sigma_y) if unwelded."},
+        {"clause": "Annex B, Table B.1/B.2", "summary": "Mechanical properties and design stress of metal plating (B.1) and stiffeners (B.2) by alloy/temper, incl. EN AW-6061 closed profile T5/T6: sigma_u=245, sigma_uw=165, sigma_y=205, sigma_yw=115 N/mm2, design stress sigma_d=0.7*sigma_yw=81 N/mm2 (welded)."}
+      ],
+      "cited_by": ["src/structural/iso_design_pressure.py", "src/structural/iso_materials.py"]
+    },
+    {
+      "designation": "BS EN ISO 12215-6:2018",
+      "iso_text_identical_to": "ISO 12215-6:2008",
+      "title": "Small craft — Hull construction and scantlings — Part 6: Structural arrangements and details",
+      "role": "Qualitative load-transfer / connection detailing good practice. NOTE: the numeric bonding-width / k_j tabbing formulas in this standard (Clause 7.2 'Bonding') are specific to FRP/composite construction and do NOT apply to the aluminium aka-to-vaka joint. For metal construction, this standard gives only qualitative good-practice principles (no closed-form joint capacity formula) — flagged explicitly as a gap in iso_joint_check.py.",
+      "clauses_used": [
+        {"clause": "6.3.1/6.3.2", "summary": "General load transfer: concentrated loads shall be transmitted via stiff supporting members/brackets, not landed on unsupported plating; avoid knife-edge load crossing (6.3.5)."},
+        {"clause": "6.3.4", "summary": "Floating frame guidance (by analogy): weld or glue area at a stiffener-to-support connection should generally not be less than the stiffener web area."},
+        {"clause": "8.1", "summary": "Metal construction: structural continuity, no abrupt section changes, taper >=33% where section changes."},
+        {"clause": "8.2", "summary": "End connections: 'shall provide adequate end fixity and effective transmission of the bending moment and shear force into the supporting member' — qualitative requirement only, no formula given."},
+        {"clause": "8.7/8.8", "summary": "Good-practice welding (Annex C) and riveting: rivet diameter >= thickest plate thickness or 25% of total connected thickness; edge distance >=1.5x plate thickness; rivet spacing >=2.5x diameter."}
+      ],
+      "cited_by": ["src/structural/iso_joint_check.py"]
+    },
+    {
+      "designation": "ISO 12215-7:2020",
+      "title": "Small craft — Hull construction and scantlings — Part 7: Determination of loads for multihulls and of their local scantlings using ISO 12215-5",
+      "role": "THE governing multihull standard — resolves the monohull-vs-proa applicability gap for global crossbeam/aka loads. Confirmed in hand (Downloads copy, first edition 2020-11) rather than assumed absent.",
+      "clauses_used": [
+        {"clause": "6.1.4", "summary": "Crossbeam definition for catamarans/trimarans."},
+        {"clause": "Table 10/11", "summary": "Global load cases GLC1-GLC6 and the conditions under which each must be checked for a given structural arrangement."},
+        {"clause": "12.4, Table 12", "summary": "Design stresses under global loads: aluminium alloys sigma_d = 0.7*sigma_yw, tau_d = 0.7*tau_yw (welded); non-welded properties apply if not welded."},
+        {"clause": "12.5, Table 13", "summary": "GLC1: diagonal torsional moment in quartering sea, M_TD = 0.5*k_DC*m_LDC*9.81*k_DYNM*0.076*L_DIAG / 1000 (kNm)."},
+        {"clause": "12.6/12.7", "summary": "GLC2 rig loads (per ISO 12215-10) combined with GLC1: 0.5*GLC1+GLC2 or GLC1+0.5*GLC2, whichever greater."},
+        {"clause": "12.10, Table 15", "summary": "GLC5: longitudinal force on one hull/float, e.g. trimaran float F_LT = min(5*m_LDC, 5*m_FLOAT) kN, distributed to crossbeams by relative EI."},
+        {"clause": "Annex D", "summary": "Technical background: torsional moment resisted by differential bending of crossbeams (treated as built-in at the hull, strain-energy method); worked example for a 2-beam catamaran."}
+      ],
+      "applicability_caveat": "This standard's worked formulas and Figure 9 structural-arrangement categories assume symmetric catamarans/trimarans (two equal hulls, or one main hull + two equal floats). RP2 is a Pacific-proa layout: ONE main hull (vaka) + ONE asymmetric outrigger float (ama). Formulas keyed to 'trimaran float' (e.g. GLC5) are used here as the closest available analogue for the single ama, engineering judgement applied and flagged explicitly wherever used — this is not a literal fit and is the residual, irreducible gap even with Part 7 in hand.",
+      "cited_by": ["src/structural/iso_global_loads.py"],
+      "source_location_note": "Digital copy on file is named ambiguously (iso_12215_small_craft_hull_construction_and_scantlings_7_compress.pdf); content verified page-by-page to be ISO 12215-7:2020, first edition."
+    },
+    {
+      "designation": "BS EN ISO 12215-10:2020",
+      "title": "Small craft — Hull construction and scantlings — Part 10: Rig loads and rig attachment in sailing craft",
+      "role": "Rig/mast wind loading. Already used by src/structural/mast_analysis.py prior to this work; edition reconciled against the newer 2020 copy as part of this effort.",
+      "clauses_used": [
+        {"clause": "7.2, Table 5", "summary": "Wind force on sail F = 0.72*V^2*A (case b, multihull SC1) — matches existing mast_analysis.py citation; see reconciliation note in iso_traceability.md."},
+        {"clause": "5.3", "summary": "Any relevant engineering method may be used to estimate stress evaluation — matches existing mast_analysis.py citation."}
+      ],
+      "cited_by": ["src/structural/mast_analysis.py"]
+    }
+  ]
+}

@@ -35,18 +35,16 @@ from typing import Dict, Any
 
 from .beam_mechanics import (
     ISO_AL_DESIGN_STRESS_WELDED_MPA, GRAVITY,
-    calculate_rhs_section_properties,
+    calculate_rhs_section_properties, count_akas,
+    ASSUMED_DESIGN_CATEGORY, K_DC_BY_CATEGORY,
 )
 from .lifting_sling import get_total_boat_mass
 
 
-# Design category factor k_DC (ISO 12215-5 8.2, reused by Part 7 Table 13).
-# RP2's design category has not been formally declared yet; Category B
-# (coastal, day-tourism in Singapore/Indonesia waters) is assumed as a
-# placeholder and MUST be confirmed by the designer per ISO 12217 before
-# this number is used for certification.
-ASSUMED_DESIGN_CATEGORY = 'B'
-K_DC_BY_CATEGORY = {'A': 1.0, 'B': 0.8, 'C': 0.6, 'D': 0.4}
+# Design category factor k_DC (ISO 12215-5 8.2, reused by Part 7 Table 13) -
+# see beam_mechanics.py for ASSUMED_DESIGN_CATEGORY/K_DC_BY_CATEGORY, shared
+# with iso_design_pressure.py so the placeholder can't be updated in one file
+# and missed in the other.
 
 # k_DYNM (dynamic load factor for GLC1, ISO 12215-7 Table 13) is referenced
 # in the Table 13 formula but its own definition table was not captured in
@@ -134,9 +132,7 @@ def calculate_glc5_longitudinal_force(params: Dict[str, Any],
     aka_length_mm = params['aka_length']
     vaka_width_mm = params['vaka_width']
 
-    panels_per_half = params['panels_longitudinal'] // 2
-    akas_per_panel = params.get('akas_per_panel', 1)
-    num_akas = 2 * panels_per_half * akas_per_panel
+    num_akas = count_akas(params)
 
     # Equal-stiffness akas (same section) -> force splits evenly per Table 15
     # item 2 (F_Li = F_L * EI_i/L^3 / sum(EI_i/L^3), which reduces to 1/n when

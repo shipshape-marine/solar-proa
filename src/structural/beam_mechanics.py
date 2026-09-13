@@ -36,6 +36,30 @@ ISO_AL_DESIGN_STRESS_UNWELDED_MPA = min(
 # tau_d = 0.58 * sigma_d (both Part 5 Table 17 and Part 7 Table 12 use this ratio)
 ISO_AL_SHEAR_DESIGN_STRESS_WELDED_MPA = 0.58 * ISO_AL_DESIGN_STRESS_WELDED_MPA
 
+# ISO 12215-5 8.2 / Part 7 Table 13 design category factor k_DC. RP2's design
+# category has not been formally declared yet; Category B (coastal,
+# day-tourism in Singapore/Indonesia waters) is assumed as a placeholder and
+# MUST be confirmed by the designer per ISO 12217 before this number is used
+# for certification. Shared by iso_global_loads.py and iso_design_pressure.py
+# so a future update to the confirmed category can't update one and miss the
+# other.
+ASSUMED_DESIGN_CATEGORY = 'B'
+K_DC_BY_CATEGORY = {'A': 1.0, 'B': 0.8, 'C': 0.6, 'D': 0.4}
+
+
+def count_akas(params):
+    """
+    Number of akas (crossbeams) in the design.
+
+    Convention shared by aka_analysis.py, iso_global_loads.py, and
+    iso_joint_check.py: panels_longitudinal counts panels along the full
+    length of the boat (both halves), so panels_per_half akas run down each
+    side, times akas_per_panel per panel, times 2 sides.
+    """
+    panels_per_half = params['panels_longitudinal'] // 2
+    akas_per_panel = params.get('akas_per_panel', 1)
+    return 2 * panels_per_half * akas_per_panel
+
 
 def calculate_rhs_section_properties(width_mm, height_mm, thickness_mm):
     """

@@ -9,7 +9,7 @@ from typing import Dict, Any, List, Tuple
 
 from .beam_mechanics import (
     ALUMINUM_YIELD_STRENGTH_MPA, ALUMINUM_E_MPA, GRAVITY,
-    calculate_rhs_section_properties
+    calculate_rhs_section_properties, count_akas
 )
 
 
@@ -192,9 +192,7 @@ def validate_suspended_ama(params: Dict[str, Any],
     tip_mass, distributed_mass, outrigger_components = extract_outrigger_mass(mass_data)
     total_outrigger_mass = tip_mass + distributed_mass
 
-    panels_per_half = params['panels_longitudinal'] // 2
-    akas_per_panel = params.get('akas_per_panel', 1)
-    num_akas = 2 * panels_per_half * akas_per_panel
+    num_akas = count_akas(params)
 
     analysis_strong = analyze_aka_cantilever(params, tip_mass, distributed_mass, num_akas, 'strong')
     analysis_weak = analyze_aka_cantilever(params, tip_mass, distributed_mass, num_akas, 'weak')

@@ -29,7 +29,7 @@ from typing import Dict, Any
 
 from .beam_mechanics import (
     ISO_AL_DESIGN_STRESS_WELDED_MPA, ISO_AL_SHEAR_DESIGN_STRESS_WELDED_MPA,
-    calculate_rhs_section_properties,
+    calculate_rhs_section_properties, count_akas,
 )
 from .aka_analysis import extract_outrigger_mass, analyze_aka_cantilever
 from .iso_global_loads import calculate_glc5_longitudinal_force
@@ -84,9 +84,7 @@ def get_aka_peak_load(params: Dict[str, Any], mass_data: Dict[str, Any]) -> Dict
     """
     tip_mass, distributed_mass, _ = extract_outrigger_mass(mass_data)
 
-    panels_per_half = params['panels_longitudinal'] // 2
-    akas_per_panel = params.get('akas_per_panel', 1)
-    num_akas = 2 * panels_per_half * akas_per_panel
+    num_akas = count_akas(params)
 
     static_analysis = analyze_aka_cantilever(params, tip_mass, distributed_mass, num_akas, 'strong')
     static_moment_nmm = static_analysis['moment_breakdown']['M_total_nmm']

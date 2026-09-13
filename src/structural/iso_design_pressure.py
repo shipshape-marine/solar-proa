@@ -28,10 +28,8 @@ See constant/standards/iso12215.json for citation details.
 
 from typing import Dict, Any
 
+from .beam_mechanics import ASSUMED_DESIGN_CATEGORY, K_DC_BY_CATEGORY
 from .lifting_sling import get_total_boat_mass
-
-ASSUMED_DESIGN_CATEGORY = 'B'  # see iso_global_loads.py - same unconfirmed placeholder
-K_DC_BY_CATEGORY = {'A': 1.0, 'B': 0.8, 'C': 0.6, 'D': 0.4}
 
 # ISO 12215-5 8.3: sailing/displacement craft use k_DYN=3 for k_L purposes
 # (k_DYN itself is not used directly in the bottom pressure formula for

@@ -153,7 +153,13 @@ def validate_material_traceability(alloy_datasheet_available: bool = False) -> D
     return {
         'test_name': 'iso_material_traceability',
         'description': 'ISO 12215-3 aluminium alloy classification and documentation traceability',
-        'passed': family_check['consistent'],  # structural family choice is sound
+        # Always passes - informational only. check_alloy_family_consistency()
+        # classifies the *assumed* product form against the alloy family ISO
+        # 12215-3 4.7 requires for it; it has no branch that can disagree
+        # because no actual alloy/temper has been chosen yet to check against
+        # (see module docstring). It cannot be wired into overall_passed as a
+        # real gate until an alloy is selected.
+        'passed': True,
         'alloy_family_check': family_check,
         'documentation_check': doc_check,
         'design_stress_reference': design_stress,

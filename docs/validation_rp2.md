@@ -188,9 +188,9 @@ The mast experiences significant bending loads when sailing in strong winds. The
 
 Wind force on the sail is estimated per mast using the formula from ISO 12215-10 Clause 7.2 Table 5 (case b, multihull SC1):
 
-$$F = \frac{0.72 \times V^2 \times A}{2}$$
+$$F = 0.72 \times V^2 \times A$$
 
-where *V* is wind speed in m/s and *A* is total sail area. The division by 2 accounts for the load being shared between two masts. The mast is analyzed for:
+where *V* is wind speed in m/s and *A* is total sail area. The 0.72 coefficient already includes the ½ dynamic-pressure term (Note 3: 1.2 × 0.5 × 1.2 = 0.72), so no further division is applied. See [ISO 12215 Structural Traceability](iso_traceability.md) for details. The mast is analyzed for:
 - Bending stress at the partner
 - Shear stress at the partner
 - Combined axial-bending interaction (column buckling)

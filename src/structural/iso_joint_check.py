@@ -32,6 +32,7 @@ from .beam_mechanics import (
     calculate_rhs_section_properties,
 )
 from .aka_analysis import extract_outrigger_mass, analyze_aka_cantilever
+from .iso_global_loads import calculate_glc5_longitudinal_force
 
 
 GOOD_PRACTICE_CHECKLIST = [
@@ -65,11 +66,21 @@ GOOD_PRACTICE_CHECKLIST = [
 
 def get_aka_peak_load(params: Dict[str, Any], mass_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Get the aka's peak moment/shear at the vaka connection from the existing
-    suspended-ama static check (aka_analysis.py), for use as the joint design
-    demand. This reuses the existing static load case rather than duplicating
-    it - see iso_global_loads.py for the separate ISO 12215-7 dynamic global
-    load cross-check, which produces a different (generally higher) demand.
+    Get the aka's governing moment/shear at the vaka connection, for use as
+    the joint design demand. Compares two load cases and takes the governing
+    (larger) of each component, since the joint has to survive whichever
+    demand is actually higher rather than only the one this module happened
+    to check first:
+
+    - Static suspended-ama case (aka_analysis.py, strong axis).
+    - ISO 12215-7 GLC5 dynamic longitudinal case (iso_global_loads.py, weak
+      axis) - generally the higher demand, per that module's own docstring.
+
+    Neither load case is distributed per-axis here; the weld/fastener sizing
+    in check_weld_capacity_by_analogy() is a scalar area check (not axis-
+    resolved), so taking the max of each component is the conservative,
+    ISO-anchored bound available without a real joint geometry to resolve
+    combined bending.
     """
     tip_mass, distributed_mass, _ = extract_outrigger_mass(mass_data)
 
@@ -77,13 +88,34 @@ def get_aka_peak_load(params: Dict[str, Any], mass_data: Dict[str, Any]) -> Dict
     akas_per_panel = params.get('akas_per_panel', 1)
     num_akas = 2 * panels_per_half * akas_per_panel
 
-    analysis = analyze_aka_cantilever(params, tip_mass, distributed_mass, num_akas, 'strong')
+    static_analysis = analyze_aka_cantilever(params, tip_mass, distributed_mass, num_akas, 'strong')
+    static_moment_nmm = static_analysis['moment_breakdown']['M_total_nmm']
+    static_shear_n = static_analysis['load']['total_force_per_aka_n']
+
+    glc5 = calculate_glc5_longitudinal_force(params, mass_data)
+    glc5_moment_nmm = glc5['moment_per_aka_nm'] * 1000
+    glc5_shear_n = glc5['force_per_aka_n']
+
+    governing_moment_nmm = max(static_moment_nmm, glc5_moment_nmm)
+    governing_shear_n = max(static_shear_n, glc5_shear_n)
 
     return {
-        'source': 'aka_analysis.validate_suspended_ama (strong axis)',
-        'moment_at_vaka_nmm': analysis['moment_breakdown']['M_total_nmm'],
-        'shear_at_vaka_n': analysis['load']['total_force_per_aka_n'],
-        'section': analysis['section_properties'],
+        'source': 'max(aka_analysis static suspended-ama, ISO 12215-7 GLC5 dynamic)',
+        'moment_at_vaka_nmm': governing_moment_nmm,
+        'shear_at_vaka_n': governing_shear_n,
+        'section': static_analysis['section_properties'],
+        'load_cases_compared': {
+            'static_suspended_ama_strong_axis': {
+                'moment_nmm': round(static_moment_nmm, 0),
+                'shear_n': round(static_shear_n, 1),
+            },
+            'iso_12215_7_glc5_weak_axis': {
+                'moment_nmm': round(glc5_moment_nmm, 0),
+                'shear_n': round(glc5_shear_n, 1),
+            },
+            'governing_moment_source': 'GLC5' if glc5_moment_nmm > static_moment_nmm else 'static',
+            'governing_shear_source': 'GLC5' if glc5_shear_n > static_shear_n else 'static',
+        },
     }
 
 
@@ -135,8 +167,9 @@ def check_weld_capacity_by_analogy(params: Dict[str, Any],
         'method': (
             'Engineering analogy to ISO 12215-6 6.3.4 (weld/glue area >= '
             'stiffener web area), NOT a literal ISO 12215-6 formula - none '
-            'exists for metal end connections. Demand from aka_analysis.py '
-            'static suspended-ama load case.'
+            'exists for metal end connections. Demand is the governing '
+            '(larger) of the aka_analysis.py static suspended-ama case and '
+            'the ISO 12215-7 GLC5 dynamic case - see get_aka_peak_load().'
         ),
         'aka_web_area_mm2': round(web_area_mm2, 1),
         'applied_moment_nm': round(moment_nmm / 1000, 1),
@@ -172,9 +205,10 @@ def validate_aka_joint(params: Dict[str, Any], mass_data: Dict[str, Any]) -> Dic
         'known_gap': (
             'No aka-to-vaka joint/bracket design exists in this codebase yet '
             '- only the aka beam itself is checked elsewhere (aka_analysis.py, '
-            'the 3.27 SF). This module derives an ISO-anchored minimum for '
-            'comparison once a real joint (welded bracket, bolted flange, '
-            'etc.) is designed; it does not replace that design.'
+            'the 3.27 SF, and iso_global_loads.py GLC5). This module derives '
+            'an ISO-anchored minimum, against the governing of those two load '
+            'cases, for comparison once a real joint (welded bracket, bolted '
+            'flange, etc.) is designed; it does not replace that design.'
         ),
         'good_practice_checklist': GOOD_PRACTICE_CHECKLIST,
         'peak_load': peak_load,

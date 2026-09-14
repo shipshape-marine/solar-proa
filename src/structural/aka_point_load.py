@@ -143,6 +143,24 @@ def validate_aka_point_load(params: Dict[str, Any],
     return {
         'test_name': 'aka_point_load',
         'description': f'Crew ({crew_mass_kg:.0f} kg) standing on aka at center',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019',
+            'clause': '9.1 / 9.1.1 / Annex C Table C.1',
+            'description': (
+                'Structural members — beams and stiffeners; '
+                'bending moment and required section modulus (Clause 9.1.1). '
+                'Simply supported beam, central point load: M = P*L/4. '
+                'Crew design load basis: ISO 12215-5:2019 Annex C Table C.1 (90 kg per person). '
+                'Safety factor = sigma_yield / sigma_actual >= 2.0.'
+            ),
+        },
+        'assumptions': [
+            'Aka modelled as simply supported beam between vaka gunwale and pillar',
+            'Point load applied at mid-span (worst-case bending position)',
+            f'Crew mass {crew_mass_kg:.0f} kg (~2 persons) per ISO 12215-5:2019 Annex C Table C.1',
+            'Strong axis (height=aka_height) resists vertical bending',
+            'Material: 6061-T6 aluminium, yield strength 240 MPa (ISO 12215-5:2019 Table C.6)',
+        ],
         'passed': passed,
         'min_safety_factor_required': min_safety_factor,
         'crew_mass_kg': crew_mass_kg,

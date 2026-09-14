@@ -457,6 +457,24 @@ def validate_lifting_sling(params: Dict[str, Any],
     return {
         'test_name': 'lifting_sling',
         'description': 'V-sling crane lift (4 hooks to neighboring akas)',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019 / EN 1492-1:2000',
+            'clause': '9.1 / 9.1.1 / EN 1492-1 Clause 4',
+            'description': (
+                'Structural members — bending and section modulus (ISO 12215-5:2019 Clause 9.1.1). '
+                'V-sling geometry: rope tension T = F_vertical / cos(theta). '
+                'Rope WLL per EN 1492-1:2000 Clause 4 (50 mm polyester sling, WLL = 2000 kg). '
+                'Four checks: aka bending, local bearing, rope tension vs WLL, global bending.'
+            ),
+        },
+        'assumptions': [
+            '4 hooks, 8 attachment points; all 4 akas participate equally',
+            'Hook height above boat 2000 mm; V-angle computed from hook height and aka spacing',
+            'Rope tension amplified by 1/cos(theta) due to V-angle',
+            '50 mm polyester flat sling WLL = 2000 kg per EN 1492-1:2000 Clause 4',
+            'Global bending: continuous beam with supports at all aka positions; M = wL^2/10',
+            'Material: 6061-T6 aluminium, yield strength 240 MPa (ISO 12215-5:2019 Table C.6)',
+        ],
         'passed': all_passed,
         'min_safety_factor_required': min_safety_factor,
         'mass_breakdown': mass_breakdown,

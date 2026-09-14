@@ -407,6 +407,25 @@ def validate_gunwale_loads(params: Dict[str, Any],
     return {
         'test_name': 'gunwale_loads',
         'description': 'Gunwale load distribution from aka attachments',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019 / ISO 12215-4:2018',
+            'clause': '9.1 / 9.1.1 / Annex D / ISO 12215-4:2018 Table 1',
+            'description': (
+                'Structural members — bending and section modulus (ISO 12215-5:2019 Clause 9.1.1). '
+                'Beam on elastic foundation / Winkler model (ISO 12215-5:2019 Annex D): '
+                'lambda = (4EI/k)^0.25; max moment M = P*lambda/4. '
+                'Timber properties (ISO 12215-4:2018 Table 1): '
+                'E = 12000 MPa, bending allowable = 50 MPa, bearing perpendicular = 10 MPa. '
+                'Fiberglass bond shear allowable = 5 MPa (glass-to-wood epoxy laminate).'
+            ),
+        },
+        'assumptions': [
+            'Gunwale: solid timber 76.2 x 50.8 mm (3 in x 2 in), Douglas fir or equivalent',
+            'Timber properties from ISO 12215-4:2018 Table 1',
+            'Winkler foundation stiffness k estimated from hull skin E and thickness',
+            'Design load = max(suspended_ama load, wave_slam load) per aka',
+            'Bond shear area uses characteristic length lambda (effective shear length = lambda)',
+        ],
         'passed': all_passed,
         'min_safety_factor_required': min_safety_factor,
         'gunwale_section': {

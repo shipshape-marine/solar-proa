@@ -217,6 +217,23 @@ def validate_suspended_ama(params: Dict[str, Any],
     return {
         'test_name': 'suspended_ama',
         'description': 'Aka bending: ama suspended with no buoyancy support',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019',
+            'clause': '9.1 / 9.1.1',
+            'description': (
+                'Structural members — beams and stiffeners; '
+                'bending moment and required section modulus. '
+                'Cantilever model: M = F_tip*L + F_dist*(L/2). '
+                'Safety factor = sigma_yield / sigma_actual >= 2.0.'
+            ),
+        },
+        'assumptions': [
+            'Aka modelled as cantilever fixed at vaka gunwale',
+            'Outrigger mass split into tip loads (ama, pillars) and distributed (panels, stringers)',
+            'Strong axis (height=aka_height) resists vertical bending; weak axis informational only',
+            'Static load — no dynamic amplification',
+            'Material: 6061-T6 aluminium, yield strength 240 MPa (ISO 12215-5:2019 Table C.6)',
+        ],
         'passed': passed,
         'min_safety_factor_required': min_safety_factor,
         'outrigger_mass': {

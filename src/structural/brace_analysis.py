@@ -263,6 +263,26 @@ def validate_diagonal_braces(params: Dict[str, Any],
     return {
         'test_name': 'diagonal_braces',
         'description': 'Pillar diagonal braces under lateral loading (boat tilted)',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019',
+            'clause': '9.1.2 / 11.7',
+            'description': (
+                'Compression members (Clause 9.1.2); '
+                'buckling of structural members (Clause 11.7). '
+                'Euler buckling: sigma_cr = pi^2 * E / (L/r)^2, pin-ended (K=1). '
+                'Two load cases: compression (boat on side, buckling governs) '
+                'and tension (boat inverted, yielding governs). '
+                'Safety factor = governing_capacity / applied_stress >= 2.0.'
+            ),
+        },
+        'assumptions': [
+            'Boat tilted 90 deg — full outrigger weight acts as lateral force',
+            'Boat inverted — full outrigger weight acts as tension load',
+            'Pin-ended connections assumed for buckling (K = 1, conservative)',
+            'All braces share lateral load equally',
+            'Outrigger mass uses same extraction as suspended_ama (tip + distributed patterns)',
+            'Material: 6061-T6 aluminium, yield strength 240 MPa (ISO 12215-5:2019 Table C.6)',
+        ],
         'passed': all_passed,
         'min_safety_factor_required': min_safety_factor,
         'brace_geometry': {

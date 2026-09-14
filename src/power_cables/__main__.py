@@ -23,8 +23,9 @@ except ImportError:
 
 from wiring import wire_solar_panels
 
-# Initialize headless GUI (Linux only) - MUST be done BEFORE opening document
-if platform.system() == 'Linux' and not App.GuiUp:
+# Initialize headless GUI (Linux/Windows, where freecadcmd has no Qt event
+# loop) - MUST be done BEFORE opening document
+if platform.system() in ('Linux', 'Windows') and not App.GuiUp:
     print("Initializing headless GUI for ViewObject support...")
     try:
         from PySide import QtGui
@@ -74,7 +75,7 @@ def main():
     print(doc, doc.Name)
 
     # Create GUI document to ensure ViewObject is available
-    if platform.system() == 'Linux':
+    if platform.system() in ('Linux', 'Windows'):
         try:
             Gui.getDocument(doc.Name)
             print("✓ GUI document created")

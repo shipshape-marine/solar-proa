@@ -94,11 +94,12 @@ from mirror import *
 
 print("All imports complete")
 
-# Initialize headless GUI (Linux only) - MUST be done before creating document
-# This is the same approach used in render.py
+# Initialize headless GUI (Linux/Windows, where freecadcmd has no Qt event
+# loop) - MUST be done before creating document. This is the same approach
+# used in render.py
 import platform
-if platform.system() == 'Linux' and not App.GuiUp:
-    print("Initializing headless GUI (Linux) before document creation...")
+if platform.system() in ('Linux', 'Windows') and not App.GuiUp:
+    print(f"Initializing headless GUI ({platform.system()}) before document creation...")
     try:
         from PySide import QtGui
         try:
@@ -291,7 +292,7 @@ if 'wind_speed_kt' in params:
 doc.recompute()
 
 # Set visibility for all objects (works because GUI was initialized early)
-if platform.system() == 'Linux':
+if platform.system() in ('Linux', 'Windows'):
     print("Setting object visibility...")
     def make_all_visible(obj_list):
         """Recursively make all objects visible"""

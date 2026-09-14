@@ -19,9 +19,10 @@ except ImportError:
     sys.exit(1)
 
 
-# Initialize headless GUI (Linux only) - MUST be done BEFORE opening document
-# This enables ViewObject properties in console mode
-if platform.system() == 'Linux' and not App.GuiUp:
+# Initialize headless GUI (Linux/Windows, where freecadcmd has no Qt event
+# loop) - MUST be done BEFORE opening document. This enables ViewObject
+# properties in console mode
+if platform.system() in ('Linux', 'Windows') and not App.GuiUp:
     print("Initializing headless GUI for ViewObject support...")
     try:
         from PySide import QtGui
@@ -161,7 +162,7 @@ def main():
     doc = App.openDocument(args.design)
     
     # Create GUI document to ensure ViewObject is available
-    if platform.system() == 'Linux':
+    if platform.system() in ('Linux', 'Windows'):
         try:
             import FreeCADGui as Gui
             Gui.getDocument(doc.Name)

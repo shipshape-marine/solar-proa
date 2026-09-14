@@ -94,7 +94,7 @@ def init_gui():
     import platform
     from PySide import QtGui
 
-    if platform.system() == 'Linux':
+    if platform.system() in ('Linux', 'Windows'):
         try:
             QtGui.QApplication()
         except RuntimeError:

@@ -13,6 +13,53 @@ ALUMINUM_E_MPA = 69000
 PVC_E_MPA = 3000
 GRAVITY = 9.81
 
+# ISO-cited aluminium properties for EN AW-6061 T5/T6 closed profile (extruded
+# RHS/SHS - the aka/brace/mast section type), per BS EN ISO 12215-5:2019
+# Annex B, Table B.2 (design stress of metal stiffeners, heat-treatable alloys).
+# These are distinct from ALUMINUM_YIELD_STRENGTH_MPA above: that constant is a
+# generic textbook 6061-T6 yield value used directly as an allowable elsewhere
+# in this package; the values below are ISO's own tabulated mechanical
+# properties and ISO-mandated design-stress knockdown factors, used only by
+# the iso_* traceability modules for cross-checking. See
+# constant/standards/iso12215.json for full citation.
+ISO_AL_6061_ULTIMATE_MPA = 245       # sigma_u, unwelded ultimate tensile strength
+ISO_AL_6061_ULTIMATE_WELDED_MPA = 165  # sigma_uw, welded ultimate tensile strength
+ISO_AL_6061_YIELD_MPA = 205          # sigma_y, unwelded yield strength
+ISO_AL_6061_YIELD_WELDED_MPA = 115   # sigma_yw, welded yield strength (HAZ-reduced)
+
+# Table 17 / Annex B design stress for stiffeners, heat-treatable alloys:
+# sigma_d = 0.7 * sigma_yw (welded), or min(0.6*sigma_u, 0.9*sigma_y) if unwelded
+ISO_AL_DESIGN_STRESS_WELDED_MPA = 0.7 * ISO_AL_6061_YIELD_WELDED_MPA
+ISO_AL_DESIGN_STRESS_UNWELDED_MPA = min(
+    0.6 * ISO_AL_6061_ULTIMATE_MPA, 0.9 * ISO_AL_6061_YIELD_MPA
+)
+# tau_d = 0.58 * sigma_d (both Part 5 Table 17 and Part 7 Table 12 use this ratio)
+ISO_AL_SHEAR_DESIGN_STRESS_WELDED_MPA = 0.58 * ISO_AL_DESIGN_STRESS_WELDED_MPA
+
+# ISO 12215-5 8.2 / Part 7 Table 13 design category factor k_DC. RP2's design
+# category has not been formally declared yet; Category B (coastal,
+# day-tourism in Singapore/Indonesia waters) is assumed as a placeholder and
+# MUST be confirmed by the designer per ISO 12217 before this number is used
+# for certification. Shared by iso_global_loads.py and iso_design_pressure.py
+# so a future update to the confirmed category can't update one and miss the
+# other.
+ASSUMED_DESIGN_CATEGORY = 'B'
+K_DC_BY_CATEGORY = {'A': 1.0, 'B': 0.8, 'C': 0.6, 'D': 0.4}
+
+
+def count_akas(params):
+    """
+    Number of akas (crossbeams) in the design.
+
+    Convention shared by aka_analysis.py, iso_global_loads.py, and
+    iso_joint_check.py: panels_longitudinal counts panels along the full
+    length of the boat (both halves), so panels_per_half akas run down each
+    side, times akas_per_panel per panel, times 2 sides.
+    """
+    panels_per_half = params['panels_longitudinal'] // 2
+    akas_per_panel = params.get('akas_per_panel', 1)
+    return 2 * panels_per_half * akas_per_panel
+
 
 def calculate_rhs_section_properties(width_mm, height_mm, thickness_mm):
     """

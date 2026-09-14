@@ -70,6 +70,7 @@ The vessel's stability has been analyzed using automated buoyancy equilibrium an
 The vessel's structural integrity has been validated under multiple load scenarios including static loads, wave impacts, wind forces, and crane operations. All tests pass with safety factors exceeding the required minimum of 2.0.
 
 **[View Full Structural Safety Report →]({{ '/validation_rp2.html' | relative_url }})**
+**[View ISO 12215 Traceability →]({{ '/iso_traceability.html' | relative_url }})**
 
 | Test | Safety Factor | Result |
 |------|---------------|--------|

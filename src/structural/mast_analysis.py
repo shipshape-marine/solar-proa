@@ -35,7 +35,12 @@ def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
     """
     Calculate wind force on sail (Per mast)
     
-    F = 0.72 * V^2 * A (ISO12215-10 Clause 7.2 Table 5)
+    F = 0.72 * V^2 * A (ISO12215-10:2020 Clause 7.2, Table 5, Note 3)
+
+    Note 3 derives 0.72 as F = N * 0.5 * rho * A * V^2 with N=1.2 (side force
+    coefficient) and rho=1.2 kg/m3 (air density): 1.2 * 0.5 * 1.2 = 0.72. The
+    0.5 dynamic-pressure factor is already folded into 0.72 - do not divide by
+    2 again.
 
     Args:
         wind_speed_knots: Wind speed in knots
@@ -45,7 +50,7 @@ def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
         Force in Newtons
     """
     V = knots_to_ms(wind_speed_knots)
-    return 0.72  * V**2 * sail_area_m2 / 2
+    return 0.72 * V**2 * sail_area_m2
 
 def calculate_mast_geometry(params: Dict[str, Any]) -> Dict[str, float]:
     """

@@ -15,8 +15,31 @@ def rig(the_rig, params, sail_angle=0, sail_camber=10000, reefing_percentage=0,
     x_offset, y_offset: absolute position of the mast base
     z_rotation: rotation around Z axis in degrees
     """
+    if sail_camber <= 0:
+        raise ValueError("Value of sail_camber parameter must be greater than 0")
 
-    effective_sail_height = params['sail_height'] * (100 - reefing_percentage) / 100
+    if not 0 <= reefing_percentage < 100:
+        # if reefing % = 100, freecad will try to make box of height=0 and throws height too small error
+        raise ValueError("Value of reefing_percentage parameter must be at least 0 and less than 100")
+    
+    # Height of stretched-out sail after reefing
+    reefed_sail_height = params['sail_height'] * (100 - reefing_percentage) / 100
+    central_angle = reefed_sail_height / sail_camber
+
+    # The sail arc cannot exceed a semicircle
+    if central_angle >= math.pi:
+        minimum_camber = reefed_sail_height / math.pi
+        minimum_reefing = 100 * (
+            1 - math.pi * sail_camber / params['sail_height']
+        )
+
+        raise ValueError(
+            "The reefed sail arc must be less than a semicircle. "
+            f"Increase sail_camber above {minimum_camber:.1f} mm "
+            f"or reefing_percentage above {minimum_reefing:.1f}%."
+        )
+
+    yard_boom_distance = 2 * sail_camber * math.sin(central_angle / 2)
 
     # Base position for this rig
     base_x = x_offset
@@ -117,16 +140,16 @@ def rig(the_rig, params, sail_angle=0, sail_camber=10000, reefing_percentage=0,
     yard.Placement = place(pivot_local_x, pivot_local_y + yard_offset_y, pivot_local_z + yard_offset_z,
         FreeCAD.Rotation(Base.Vector(1, 0, 0), 90 + sail_angle))
 
-    # Boom - parallel to yard, offset by effective_sail_height VERTICALLY from the pivot
+    # Boom - parallel to yard, offset by yard_boom_distance VERTICALLY from the pivot
     boom = the_rig.newObject("Part::Feature", "Boom (aluminum)")
     boom.Shape = pipe(params['boom_diameter'],
                       params['boom_thickness'],
                       params['boom_length'])
 
     # Boom rotates around the SAME pivot point as yard
-    # But its unrotated position is effective_sail_height below the pivot
+    # But its unrotated position is yard_boom_distance below the pivot
     boom_local_y = params['boom_length'] / 2
-    boom_local_z = - effective_sail_height
+    boom_local_z = - yard_boom_distance
 
     # Rotate this point around X axis (pivot is origin)
     boom_offset_y = boom_local_y * math.cos(angle_rad) - boom_local_z * math.sin(angle_rad)
@@ -137,8 +160,8 @@ def rig(the_rig, params, sail_angle=0, sail_camber=10000, reefing_percentage=0,
     
     # Sail surface - hollow cylinder (thin membrane)
 
-    cylinder_center_z = - effective_sail_height / 2
-    vertical_offset = effective_sail_height / 2
+    cylinder_center_z = - yard_boom_distance / 2
+    vertical_offset = yard_boom_distance / 2
     cylinder_center_x = -math.sqrt(sail_camber**2 - vertical_offset**2)
 
     # hollow cylinder
@@ -157,10 +180,10 @@ def rig(the_rig, params, sail_angle=0, sail_camber=10000, reefing_percentage=0,
     cylinder = outer_cylinder.cut(inner_cylinder)
 
     box_width = sail_camber * 2
-    sail_box = Part.makeBox(box_width, params['yard_length'], effective_sail_height,
+    sail_box = Part.makeBox(box_width, params['yard_length'], yard_boom_distance,
                             Base.Vector(0,
                                         - params['yard_length'] / 2,
-                                        - effective_sail_height))
+                                        - yard_boom_distance))
 
     sail_section = cylinder.common(sail_box)
 

@@ -310,7 +310,7 @@ print(f"Saved FreeCAD model: {fcstd_output_path}")
 
 from geometry import extract_display_geometry, extract_shadow_casters, extract_panel_boundaries
 from numpy import savez_compressed
-extracted_display_mesh = extract_display_geometry(doc, 25)
+extracted_display_mesh = extract_display_geometry(doc, 100)
 extracted_shadow_casters = extract_shadow_casters(doc, 25)
 panel_boundaries = extract_panel_boundaries(doc)
 savez_compressed(

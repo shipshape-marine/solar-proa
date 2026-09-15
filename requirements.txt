@@ -1,3 +1,4 @@
 shipshape==0.10.0
 numpy
 matplotlib
+trimesh==5.0.0

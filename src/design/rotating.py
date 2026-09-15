@@ -15,10 +15,26 @@ def rig(the_rig, params, sail_angle=0, sail_camber=10000, reefing_percentage=0,
     x_offset, y_offset: absolute position of the mast base
     z_rotation: rotation around Z axis in degrees
     """
+    # check camber value
+    if sail_camber <= 0:
+        raise ValueError("Value of sail_camber parameter must be greater than 0")
 
     # height of stretched out sail after reefing
     reefed_sail_height = params['sail_height'] * (100 - reefing_percentage) / 100
     yard_boom_distance = 2 * sail_camber * math.sin(reefed_sail_height / (2 * sail_camber))
+
+    # angle formed by the sail arc cannot be more than pi (arc cannot exceed a semicircle)
+    if (reefed_sail_height / sail_camber) >= math.pi:
+        minimum_camber = reefed_sail_height / math.pi
+        minimum_reefing = 100 * (
+            1 - math.pi * sail_camber / params['sail_height']
+        )
+
+        raise ValueError(
+            "The reefed sail arc must be less than a semicircle. "
+            f"Increase sail_camber above {minimum_camber:.1f} mm "
+            f"or reefing_percentage above {minimum_reefing:.1f}%."
+        )
 
     # Base position for this rig
     base_x = x_offset

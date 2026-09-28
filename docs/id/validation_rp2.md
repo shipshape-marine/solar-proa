@@ -30,14 +30,14 @@ Laporan ini mendokumentasikan analisis validasi struktural untuk Roti Proa II (R
 9. [Hantaman Gelombang Samping](#8-hantaman-gelombang-samping)
 10. [Sling Pengangkat (Operasi Crane)](#9-sling-pengangkat-operasi-crane)
 11. [Distribusi Beban Gunwale](#10-distribusi-beban-gunwale)
-12. [Kecepatan Angin Angkat Ama](#11-kecepatan-angin-angkat-ama-informasional)
+12. [Margin Angkat Ama / Terbalik](#11-margin-angkat-ama--terbalik)
 13. [Ringkasan Penilaian Keselamatan](#ringkasan-penilaian-keselamatan)
 
 ---
 
 ## Ringkasan Eksekutif
 
-Rangkaian validasi struktural RP2 menganalisis kapal di bawah sebelas skenario beban yang mencakup beban statis, dampak gelombang dinamis, gaya angin, dan kondisi operasional. Semua tes struktural lulus dengan faktor keamanan melebihi minimum yang diperlukan yaitu 2,0.
+Rangkaian validasi struktural RP2 menganalisis kapal di bawah sebelas skenario beban yang mencakup beban statis, dampak gelombang dinamis, gaya angin, dan kondisi operasional. Angka-angka di bawah ini untuk layar penuh (0% di-reef) pada kecepatan angin desain; pemeriksaan margin angkat ama/terbalik adalah lulus/gagal tegas seperti tes lainnya dan mungkin memerlukan reefing untuk lolos pada kecepatan angin lebih tinggi - lihat [Margin Angkat Ama / Terbalik](#11-margin-angkat-ama--terbalik).
 
 | Tes | Deskripsi | Faktor Keamanan | Hasil |
 |-----|-----------|-----------------|-------|
@@ -51,7 +51,7 @@ Rangkaian validasi struktural RP2 menganalisis kapal di bawah sebelas skenario b
 | Hantaman Gelombang Samping | Dampak lateral | {{ site.data.rp2_beaching_validate_structure.tests[7].summary.min_safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[7].summary.result }} |
 | Sling Pengangkat | Angkat crane V-sling | {{ site.data.rp2_beaching_validate_structure.tests[8].summary.min_safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[8].summary.result }} |
 | Beban Gunwale | Distribusi beban ke lambung | {{ site.data.rp2_beaching_validate_structure.tests[9].summary.min_safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[9].summary.result }} |
-| Kecepatan Angin Angkat Ama | Batas stabilitas | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knot | INFO |
+| Angkat Ama / Terbalik | Batas stabilitas ({{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knot pada 0% reef) | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.result }} |
 
 ---
 
@@ -469,11 +469,11 @@ Pemeriksaan meliputi:
 
 ---
 
-## 11. Kecepatan Angin Angkat Ama (Informasional)
+## 11. Margin Angkat Ama / Terbalik
 
 ### Skenario
 
-Perhitungan informasional ini menentukan kecepatan angin di mana momen kemiringan (angin dari sisi ama) sama dengan momen penegak maksimum, menyebabkan ama terangkat sepenuhnya dari air.
+Pemeriksaan ini menentukan kecepatan angin di mana momen kemiringan (angin dari sisi ama, arah yang kurang stabil untuk proa) sama dengan momen penegak maksimum, menyebabkan ama terangkat sepenuhnya dari air. Berbeda dari versi laporan sebelumnya, ini kini lulus/gagal tegas: safety_factor = momen_penegak_maksimum / momen_kemiringan_pada_kecepatan_angin harus memenuhi minimum yang sama (2,0) seperti tes lainnya.
 
 <div style="max-width: 800px; margin: 2em auto;">
   <img src="{{ '/diagrams/ama_lift_wind.png' | relative_url }}" alt="kecepatan angin angkat ama" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
@@ -492,11 +492,14 @@ di mana *h_CE* adalah tinggi pusat usaha layar di atas sumbu kemiringan. Ini dib
 | Parameter | Nilai |
 |-----------|-------|
 | Total luas layar | {{ site.data.rp2_beaching_validate_structure.tests[10].sail_geometry.total_sail_area_m2 }} m² |
+| Reefing diterapkan | {{ site.data.rp2_beaching_validate_structure.tests[10].sail_geometry.reefing_percentage }}% |
 | Tinggi CE | {{ site.data.rp2_beaching_validate_structure.tests[10].sail_geometry.ce_height_m }} m |
 | Momen penegak maksimum | {{ site.data.rp2_beaching_validate_structure.tests[10].stability.max_righting_moment_nm | round: 0 }} N·m |
-| **Kecepatan angin angkat ama** | **{{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knot** |
+| Kecepatan angin angkat ama (safety_factor = 1) | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knot |
+| Batas kecepatan angin aman (safety_factor = 2,0) | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.safe_windspeed_limit_knots }} knot |
+| **Faktor keamanan pada kecepatan angin tes** | **{{ site.data.rp2_beaching_validate_structure.tests[10].summary.safety_factor }} ({{ site.data.rp2_beaching_validate_structure.tests[10].summary.result }})** |
 
-*Catatan: Ini adalah kecepatan angin teoretis dengan layar penuh dan tanpa penyesuaian berat kru. Dalam praktiknya, kru dapat bergerak ke sisi angin dan layar dapat di-reef.*
+*Catatan: Reefing (pengurangan luas layar) sudah diperhitungkan di atas - jika tes ini gagal pada layar penuh, reefing ke persentase yang direkomendasikan dapat meloloskannya (lihat `python -m src.structural.operating_envelope`, yang menghitung persentase reefing minimum yang diperlukan pada kecepatan angin tertentu). Perpindahan berat kru (bersandar ke sisi angin) belum dimodelkan dan akan menambah margin momen penegak di luar yang ditampilkan di sini.*
 
 ---
 
@@ -504,7 +507,7 @@ di mana *h_CE* adalah tinggi pusat usaha layar di atas sumbu kemiringan. Ini dib
 
 ### Integritas Struktural Keseluruhan
 
-Desain struktural Roti Proa II **lulus semua tes validasi** dengan faktor keamanan melebihi minimum yang diperlukan yaitu 2,0. Struktur mendemonstrasikan kekuatan dan kekakuan yang memadai untuk:
+Desain struktural Roti Proa II **lulus semua tes validasi pada layar penuh** dengan faktor keamanan melebihi minimum yang diperlukan yaitu 2,0, dengan satu pengecualian: pemeriksaan margin angkat ama/terbalik ([§11](#11-margin-angkat-ama--terbalik)) memerlukan reefing di atas kecepatan angin tertentu agar faktor keamanannya tetap di atas 2,0 - ini tidak lagi diperlakukan sebagai informasional saja. Struktur ini tetap mendemonstrasikan kekuatan dan kekakuan yang memadai untuk:
 
 - **Operasi normal**: Berlayar, bermotor, berlabuh, beaching
 - **Kejadian dinamis**: Dampak hantaman gelombang dari berbagai arah
@@ -522,7 +525,7 @@ Desain struktural Roti Proa II **lulus semua tes validasi** dengan faktor keaman
 1. **Titik Inspeksi**: Inspeksi berkala sambungan aka-gunwale, las penopang diagonal, dan ikatan fiberglass
 2. **Operasi Pengangkatan**: Gunakan konfigurasi V-sling dengan 4 kait ke aka bersebelahan
 3. **Batas Hantaman Gelombang**: Kecepatan dampak 3 m/s mewakili kondisi moderat; hindari kondisi gelombang ekstrem
-4. **Batas Angin**: Tiang divalidasi untuk 25 knot; reef layar dalam kondisi lebih kencang
+4. **Batas Angin**: Tiang divalidasi untuk 25 knot pada layar penuh; pemeriksaan angkat ama/terbalik memerlukan reefing di atas kira-kira 15 knot (angin dari sisi ama) agar faktor keamanan tetap 2,0 - jalankan `python -m src.structural.operating_envelope --condition constant/conditions/<file>.json` untuk persentase reefing yang tepat pada kecepatan angin tertentu
 
 ### Perangkat Lunak Validasi
 

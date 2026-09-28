@@ -21,7 +21,8 @@ def run_validation(params: Dict[str, Any],
                    mass_data: Dict[str, Any],
                    gz_data: Dict[str, Any] = None,
                    min_safety_factor: float = 2.0,
-                   wind_speed_knots: float = 25.0) -> Dict[str, Any]:
+                   wind_speed_knots: float = 25.0,
+                   reefing_percentage: float = 0.0) -> Dict[str, Any]:
     """
     Run all static validation tests.
 
@@ -30,7 +31,10 @@ def run_validation(params: Dict[str, Any],
         mass_data: Mass calculation results
         gz_data: GZ curve data (optional, needed for capsize check)
         min_safety_factor: Minimum required safety factor
-        wind_speed_knots: Design wind speed for mast test
+        wind_speed_knots: Design/operating wind speed for the mast test and
+            the capsize (ama-lift) hard cutoff
+        reefing_percentage: Sail reduction (0-100) applied to both the mast
+            test and the capsize check
 
     Returns:
         Combined validation results
@@ -51,7 +55,8 @@ def run_validation(params: Dict[str, Any],
     tests.append(spine_result)
 
     # Test 4: Mast wind loading
-    mast_result = validate_mast(params, mass_data, wind_speed_knots, min_safety_factor)
+    mast_result = validate_mast(params, mass_data, wind_speed_knots, min_safety_factor,
+                                 reefing_percentage)
     tests.append(mast_result)
 
     # Test 5: Diagonal braces under lateral loading
@@ -84,9 +89,10 @@ def run_validation(params: Dict[str, Any],
     gunwale_result = validate_gunwale_loads(params, mass_data, min_safety_factor)
     tests.append(gunwale_result)
 
-    # Test 11: Ama lift wind speed (requires GZ data) - informational only
+    # Test 11: Ama lift wind speed / capsize margin (requires GZ data) - hard cutoff
     if gz_data is not None:
-        ama_lift_result = calculate_ama_lift_windspeed(params, gz_data)
+        ama_lift_result = calculate_ama_lift_windspeed(params, gz_data, wind_speed_knots,
+                                                         min_safety_factor, reefing_percentage)
         tests.append(ama_lift_result)
 
     # Test 12: ISO 12215-3 aluminium alloy family + documentation traceability

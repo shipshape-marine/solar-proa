@@ -47,8 +47,8 @@ def export_renders(fcstd_path, output_render, background='#C6D2FF'):
     from PySide import QtGui
     import platform
     
-    # Initialize headless GUI (only on Linux)
-    if platform.system() == 'Linux':
+    # Initialize headless GUI (Linux/Windows, where freecadcmd has no Qt event loop)
+    if platform.system() in ('Linux', 'Windows'):
         try:
             QtGui.QApplication()
         except RuntimeError:

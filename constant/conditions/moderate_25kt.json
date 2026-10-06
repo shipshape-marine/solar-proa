@@ -1,0 +1,13 @@
+{
+  "condition_name": "moderate_25kt",
+  "condition_description": "25 knot wind with moderate wave impact - example/default condition",
+
+  "wind_speed_kt": 25,
+
+  "impact_velocity_ms": 3.0,
+  "dynamic_factor": 2.5,
+
+  "min_safety_factor": 2.0,
+
+  "notes": "impact_velocity_ms/dynamic_factor are engineering-judgment inputs, not derived from a wave-height formula - there is no reviewed conversion from a wave-height guess to these yet (see .claude/skills/verify-structure/SKILL.md step 2). Set them by hand for a specific sea state rather than guessing from wave height."
+}

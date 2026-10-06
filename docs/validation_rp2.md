@@ -22,14 +22,14 @@ title: Roti Proa II - Structural Safety Report
 9. [Sideways Wave Slam](#8-sideways-wave-slam)
 10. [Lifting Sling (Crane Operations)](#9-lifting-sling-crane-operations)
 11. [Gunwale Load Distribution](#10-gunwale-load-distribution)
-12. [Ama Lift Wind Speed](#11-ama-lift-wind-speed-informational)
+12. [Ama Lift / Capsize Margin](#11-ama-lift--capsize-margin)
 13. [Summary Safety Assessment](#summary-safety-assessment)
 
 ---
 
 ## Executive Summary
 
-The RP2 structural validation suite analyzes the vessel under eleven load scenarios encompassing static loads, dynamic wave impacts, wind forces, and operational conditions. All structural tests pass with safety factors exceeding the required minimum of 2.0.
+The RP2 structural validation suite analyzes the vessel under eleven load scenarios encompassing static loads, dynamic wave impacts, wind forces, and operational conditions. The figures below are for full sail (0% reefed) at the design wind speed; the ama-lift/capsize check is a hard pass/fail like the rest and may require reefing to clear at higher wind speeds - see [Ama Lift / Capsize Margin](#11-ama-lift--capsize-margin).
 
 | Test | Description | Safety Factor | Result |
 |------|-------------|---------------|--------|
@@ -43,7 +43,7 @@ The RP2 structural validation suite analyzes the vessel under eleven load scenar
 | Sideways Wave Slam | Lateral impact | {{ site.data.rp2_beaching_validate_structure.tests[7].summary.min_safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[7].summary.result }} |
 | Lifting Sling | V-sling crane lift | {{ site.data.rp2_beaching_validate_structure.tests[8].summary.min_safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[8].summary.result }} |
 | Gunwale Loads | Load distribution to hull | {{ site.data.rp2_beaching_validate_structure.tests[9].summary.min_safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[9].summary.result }} |
-| Ama Lift Wind Speed | Stability limit | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knots | INFO |
+| Ama Lift / Capsize | Stability limit ({{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} kt at 0% reef) | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.safety_factor }} | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.result }} |
 
 ---
 
@@ -472,11 +472,11 @@ Checks include:
 
 ---
 
-## 11. Ama Lift Wind Speed (Informational)
+## 11. Ama Lift / Capsize Margin
 
 ### Scenario
 
-This informational calculation determines the wind speed at which the heeling moment (wind from the ama side) equals the maximum righting moment, causing the ama to lift clear of the water.
+This check determines the wind speed at which the heeling moment (wind from the ama side, the proa's less stable direction) equals the maximum righting moment, causing the ama to lift clear of the water. Unlike earlier versions of this report, this is now a hard pass/fail: safety_factor = max_righting_moment / heeling_moment_at_wind_speed must meet the same minimum (2.0) as every other test.
 
 <div style="max-width: 800px; margin: 2em auto;">
   <img src="{{ '/diagrams/ama_lift_wind.png' | relative_url }}" alt="ama lift wind speed" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
@@ -495,11 +495,14 @@ where *h_CE* is the height of the sail's center of effort above the heeling axis
 | Parameter | Value |
 |-----------|-------|
 | Total sail area | {{ site.data.rp2_beaching_validate_structure.tests[10].sail_geometry.total_sail_area_m2 }} m² |
+| Reefing applied | {{ site.data.rp2_beaching_validate_structure.tests[10].sail_geometry.reefing_percentage }}% |
 | CE height | {{ site.data.rp2_beaching_validate_structure.tests[10].sail_geometry.ce_height_m }} m |
 | Max righting moment | {{ site.data.rp2_beaching_validate_structure.tests[10].stability.max_righting_moment_nm | round: 0 }} N·m |
-| **Ama lift wind speed** | **{{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knots** |
+| Ama lift wind speed (safety_factor = 1) | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knots |
+| Safe wind speed limit (safety_factor = 2.0) | {{ site.data.rp2_beaching_validate_structure.tests[10].summary.safe_windspeed_limit_knots }} knots |
+| **Safety factor at test wind speed** | **{{ site.data.rp2_beaching_validate_structure.tests[10].summary.safety_factor }} ({{ site.data.rp2_beaching_validate_structure.tests[10].summary.result }})** |
 
-*Note: This is the theoretical wind speed with full sail and no crew weight adjustment. In practice, crew can move to windward and sails can be reefed.*
+*Note: Reefing (sail area reduction) is accounted for above - if this check fails at full sail, reefing to the recommended percentage may clear it (see `python -m src.structural.operating_envelope`, which solves for the minimum reefing needed at a given wind speed). Crew weight-shift (hiking out to windward) is not yet modeled and would add additional righting-moment margin beyond what's shown here.*
 
 ---
 
@@ -507,7 +510,7 @@ where *h_CE* is the height of the sail's center of effort above the heeling axis
 
 ### Overall Structural Integrity
 
-The Roti Proa II structural design **passes all validation tests** with safety factors exceeding the required minimum of 2.0. The structure demonstrates adequate strength and stiffness for:
+The Roti Proa II structural design **passes all validation tests at full sail** with safety factors exceeding the required minimum of 2.0, with one exception: the ama-lift/capsize check ([§11](#11-ama-lift--capsize-margin)) requires reefing above a certain wind speed to keep its safety factor above 2.0 - it is no longer treated as informational. The structure otherwise demonstrates adequate strength and stiffness for:
 
 - **Normal operations**: Sailing, motoring, anchoring, beaching
 - **Dynamic events**: Wave slam impacts from multiple directions
@@ -525,7 +528,7 @@ The Roti Proa II structural design **passes all validation tests** with safety f
 1. **Inspection Points**: Regularly inspect aka-gunwale connections, diagonal brace welds, and fiberglass bonds
 2. **Lifting Operations**: Use the V-sling configuration with 4 hooks to neighboring akas
 3. **Wave Slam Limits**: The 3 m/s impact velocity represents moderate conditions; avoid extreme wave encounters
-4. **Wind Limits**: The mast is validated for 25 knots; reef sails in stronger conditions
+4. **Wind Limits**: The mast is validated for 25 knots at full sail; the ama-lift/capsize check requires reefing above roughly 15 knots (wind from the ama side) to keep a 2.0 safety factor - run `python -m src.structural.operating_envelope --condition constant/conditions/<file>.json` for the exact reefing percentage at a given wind speed
 
 ### Validation Software
 

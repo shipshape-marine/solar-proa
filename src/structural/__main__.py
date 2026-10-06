@@ -382,36 +382,40 @@ def print_gunwale_report(result: Dict[str, Any]) -> None:
 
 
 def print_ama_lift_report(result: Dict[str, Any]) -> None:
-    """Print report for ama lift wind speed calculation."""
+    """Print report for ama lift / capsize margin check."""
     summary = result['summary']
     sail = result['sail_geometry']
     stab = result['stability']
-    ref = result['reference_25_knots']
+    at_wind = result['at_wind_speed']
 
     print()
     print("-" * 60)
-    print(f"INFO: {result['description']}")
+    print(f"TEST: {result['description']}")
     print("-" * 60)
 
     print(f"\nSail geometry:")
-    print(f"  Sail area: {sail['sail_area_m2']:.1f} m² x {sail['num_sails']} sails = {sail['total_sail_area_m2']:.1f} m² total")
+    print(f"  Sail area: {sail['sail_area_m2']:.1f} m² x {sail['num_sails']} sails = {sail['total_sail_area_m2']:.1f} m² total"
+          f" ({sail['reefing_percentage']:.0f}% reefed from {sail['sail_area_m2_before_reefing']:.1f} m²/sail)")
     print(f"  CE height: {sail['ce_height_m']:.2f} m above heeling axis")
 
     print(f"\nStability (from GZ curve, negative heel):")
-    print(f"  Max righting moment: {stab['max_righting_moment_nm']:.0f} N·m")
+    print(f"  Max righting moment: {stab['max_righting_moment_nm']:.0f} N·m"
+          f" (includes {stab['crew_righting_moment_bonus_nm']:.0f} N·m crew-shift bonus)")
     if stab['max_righting_angle_deg']:
         print(f"  At heel angle: {stab['max_righting_angle_deg']:.1f}°")
     if stab['capsize_angle_deg']:
         print(f"  Capsize angle: {stab['capsize_angle_deg']:.1f}°")
 
-    print(f"\nReference (25 knots from ama side):")
-    print(f"  Wind force: {ref['wind_force_n']:.0f} N")
-    print(f"  Heeling moment: {ref['heeling_moment_nm']:.0f} N·m")
-    if ref['moment_ratio']:
-        print(f"  Heeling/Righting ratio: {ref['moment_ratio']:.2f}")
+    print(f"\nAt {at_wind['wind_speed_knots']:.0f} knots (wind from ama side):")
+    print(f"  Wind force: {at_wind['wind_force_n']:.0f} N")
+    print(f"  Heeling moment: {at_wind['heeling_moment_nm']:.0f} N·m")
+    if at_wind['moment_ratio']:
+        print(f"  Heeling/Righting ratio: {at_wind['moment_ratio']:.2f}")
 
-    print(f"\nAma lift wind speed: {summary['ama_lift_windspeed_knots']:.0f} knots")
-    print(f"  (wind from ama side, full sail, no crew movement)")
+    print(f"\nAma lift wind speed: {summary['ama_lift_windspeed_knots']:.0f} knots"
+          f" (safety_factor=1 point; safe limit at required SF: {summary['safe_windspeed_limit_knots']:.0f} knots)")
+    print(f"  (wind from ama side, no crew weight-shift modeled)")
+    print(f"\nOverall: SF={summary['safety_factor']:.2f} {summary['result']}")
 
 
 def print_iso_report(result: Dict[str, Any]) -> None:
@@ -509,8 +513,9 @@ def print_validation_report(results: Dict[str, Any]) -> None:
             status = "✓ PASS" if passed else "✗ FAIL"
             print(f"  {name}: SF={sf:.2f} {status}")
         elif name == 'ama_lift_windspeed':
-            wind_speed = test['summary']['ama_lift_windspeed_knots']
-            print(f"  {name}: {wind_speed:.0f} knots (INFO)")
+            sf = test['summary']['safety_factor']
+            status = "✓ PASS" if passed else "✗ FAIL"
+            print(f"  {name}: SF={sf:.2f} {status}")
         elif name in ('iso_material_traceability', 'iso_aka_joint_traceability',
                       'iso_global_loads', 'iso_design_pressure_cross_check'):
             result_str = test.get('summary', {}).get('result', 'INFO')
@@ -539,6 +544,8 @@ def main():
                         help='Minimum required safety factor (default: 2.0)')
     parser.add_argument('--wind-speed', type=float, default=25.0,
                         help='Design wind speed in knots for mast test (default: 25)')
+    parser.add_argument('--reefing-percentage', type=float, default=0.0,
+                        help='Sail reduction 0-100 for mast/capsize tests (default: 0, full sail)')
     parser.add_argument('--quiet', action='store_true',
                         help='Suppress human-readable output')
 
@@ -558,7 +565,8 @@ def main():
             gz_data = json.load(f)
 
     # Run validation
-    results = run_validation(params, mass_data, gz_data, args.min_safety_factor, args.wind_speed)
+    results = run_validation(params, mass_data, gz_data, args.min_safety_factor, args.wind_speed,
+                              args.reefing_percentage)
 
     # Write output
     with open(args.output, 'w') as f:

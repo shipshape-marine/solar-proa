@@ -413,6 +413,24 @@ def validate_wave_slam(params: Dict[str, Any],
     return {
         'test_name': 'wave_slam',
         'description': f'Wave slam on ama (impact {impact_velocity_ms} m/s, dynamic factor {dynamic_factor}x)',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019',
+            'clause': '8.1 / 8.3 / 9.1 / 11.7',
+            'description': (
+                'Design loads — dynamic amplification factor (Clause 8.1). '
+                'Slamming loads on multihull craft (Clause 8.3): P = 0.5*rho*V^2*Cp. '
+                'Structural members — bending (Clause 9.1). '
+                'Member buckling (Clause 11.7): sigma_cr = pi^2*E/(L/r)^2. '
+                'Load path: wave -> ama/spine -> pillars -> diagonal braces -> akas -> vaka.'
+            ),
+        },
+        'assumptions': [
+            f'Impact velocity {impact_velocity_ms} m/s; dynamic factor {dynamic_factor}x (Clause 8.1)',
+            'Slam coefficient Cp = 1.5 (cylindrical ama); effective area = 50% projected area',
+            'Aka modelled as propped cantilever; brace axial stiffness k = E*A/L provides elastic support',
+            'Spine: continuous beam on aka supports; interior support moment = wL^2/12',
+            'Material: 6061-T6 aluminium, yield strength 240 MPa (ISO 12215-5:2019 Table C.6)',
+        ],
         'passed': all_passed,
         'min_safety_factor_required': min_safety_factor,
         'wave_slam': slam_data,
@@ -783,6 +801,22 @@ def validate_sideways_wave_slam(params: Dict[str, Any],
     return {
         'test_name': 'sideways_wave_slam',
         'description': f'Sideways wave slam (impact {impact_velocity_ms} m/s, dynamic factor {dynamic_factor}x)',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019',
+            'clause': '8.1 / 8.3 / 11.7',
+            'description': (
+                'Design loads — dynamic amplification factor (Clause 8.1). '
+                'Slamming loads (Clause 8.3): P = 0.5*rho*V^2*Cp. '
+                'Member buckling (Clause 11.7): sigma_cr = pi^2*E/(L/r)^2. '
+                'Diagonal pillar braces resist lateral slam; compression/buckling governs.'
+            ),
+        },
+        'assumptions': [
+            f'Impact velocity {impact_velocity_ms} m/s; dynamic factor {dynamic_factor}x (Clause 8.1)',
+            'Cp = 1.5; effective side area = 50% of (ama_length x ama_diameter)',
+            'Pin-ended connections assumed for brace buckling (K = 1)',
+            'Material: 6061-T6 aluminium, yield strength 240 MPa (ISO 12215-5:2019 Table C.6)',
+        ],
         'passed': all_passed,
         'min_safety_factor_required': min_safety_factor,
         'sideways_slam': slam_data,
@@ -832,6 +866,23 @@ def validate_frontal_wave_slam(params: Dict[str, Any],
     return {
         'test_name': 'frontal_wave_slam',
         'description': f'Frontal wave slam (impact {impact_velocity_ms} m/s, dynamic factor {dynamic_factor}x)',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019',
+            'clause': '8.1 / 8.3 / 11.7',
+            'description': (
+                'Design loads — dynamic amplification factor (Clause 8.1). '
+                'Slamming loads (Clause 8.3): P = 0.5*rho*V^2*Cp, Cp = 2.0 for blunt body. '
+                'Member buckling (Clause 11.7): slenderness > 100 => compression diagonal buckles; '
+                'tension diagonal carries full load (tension-only X-brace behaviour).'
+            ),
+        },
+        'assumptions': [
+            f'Impact velocity {impact_velocity_ms} m/s; dynamic factor {dynamic_factor}x (Clause 8.1)',
+            'Cp = 2.0 for blunt/circular ama cross-section (Clause 8.3)',
+            'Frontal area = pi*(d/2)^2 (ama circular cross-section only)',
+            'Slenderness > 100 => compression diagonal buckles; tension-only behaviour per Clause 11.7',
+            'Material: 6061-T6 aluminium, yield strength 240 MPa (ISO 12215-5:2019 Table C.6)',
+        ],
         'passed': all_passed,
         'min_safety_factor_required': min_safety_factor,
         'frontal_slam': slam_data,

@@ -320,6 +320,25 @@ def validate_one_end_supported(params: Dict[str, Any],
     return {
         'test_name': 'one_end_supported',
         'description': 'Spine bending: one end of ama supported, other end hanging',
+        'standards_reference': {
+            'standard': 'ISO 12215-5:2019',
+            'clause': '9.1 / 9.1.1 / 9.1.3',
+            'description': (
+                'Structural members — beams and stiffeners (Clause 9.1); '
+                'bending moment and required section modulus (Clause 9.1.1). '
+                'Beam on elastic supports (Clause 9.1.3): '
+                'aka spring stiffness k = 3*E_alu*I_aka / L_cantilever^3. '
+                'Flexibility matrix method solves spring reactions. '
+                'Safety factor = sigma_yield / sigma_actual >= 2.0.'
+            ),
+        },
+        'assumptions': [
+            'One end of ama fixed (beach/dock contact), other end free',
+            'Each aka modelled as elastic spring: k = 3*E_alu*I_aka / L_cantilever^3',
+            'Ama beam stiffness uses PVC pipe E = 3000 MPa (conservative)',
+            'Spine bending analysed separately under aka reaction forces',
+            'Material (spine/akas): 6061-T6 aluminium, yield strength 240 MPa (ISO 12215-5:2019 Table C.6)',
+        ],
         'passed': passed,
         'min_safety_factor_required': min_safety_factor,
         'geometry': {

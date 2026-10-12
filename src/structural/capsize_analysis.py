@@ -198,6 +198,25 @@ def calculate_ama_lift_windspeed(params: Dict[str, Any],
     return {
         'test_name': 'ama_lift_windspeed',
         'description': 'Wind speed at which ama lifts (wind from ama side, full sail)',
+        'informational': True,
+        'standards_reference': {
+            'standard': 'ISO 12215-10:2022 / ISO 12217-2:2015',
+            'clause': 'ISO 12215-10 Clause 7.2 / ISO 12217-2 Clause 6.2',
+            'description': (
+                'Wind force formula (ISO 12215-10:2022 Clause 7.2): F = 0.5*rho*V^2*Cd*A. '
+                'Stability of multihull craft — righting moment and GZ curve '
+                '(ISO 12217-2:2015 Clause 6.2). '
+                'Ama lifts when heeling moment = max righting moment from GZ curve. '
+                'Informational only — no pass/fail threshold.'
+            ),
+        },
+        'assumptions': [
+            'Full sail area, no reefing — gives the lowest (most conservative) wind limit',
+            'No crew weight correction (crew on windward side raises the actual limit)',
+            'Heeling axis taken at waterline (conservative)',
+            'CE height = mast partner level + 40% of sail height',
+            'Max righting moment taken from GZ curve at most negative heel angle',
+        ],
         'passed': True,  # Always passes - this is informational
         'sail_geometry': {
             'sail_area_m2': round(sail_area_m2, 2),

@@ -1,6 +1,6 @@
 """Run all structural validation tests."""
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from .aka_analysis import validate_suspended_ama
 from .aka_point_load import validate_aka_point_load
@@ -16,12 +16,18 @@ from .iso_joint_check import validate_aka_joint
 from .iso_global_loads import validate_global_loads
 from .iso_design_pressure import compare_to_wave_slam_model
 
+# Used only when neither the caller nor the configuration gives a wind speed
+# (e.g. the beaching configuration has no wind_speed_kt). A project design
+# case, not a value ISO 12215 prescribes - the standard supplies the force
+# formula (see mast_analysis.calculate_wind_force), not the wind speed.
+DEFAULT_WIND_SPEED_KNOTS = 25.0
+
 
 def run_validation(params: Dict[str, Any],
                    mass_data: Dict[str, Any],
                    gz_data: Dict[str, Any] = None,
                    min_safety_factor: float = 2.0,
-                   wind_speed_knots: float = 25.0,
+                   wind_speed_knots: Optional[float] = None,
                    reefing_percentage: float = 0.0) -> Dict[str, Any]:
     """
     Run all static validation tests.
@@ -32,13 +38,24 @@ def run_validation(params: Dict[str, Any],
         gz_data: GZ curve data (optional, needed for capsize check)
         min_safety_factor: Minimum required safety factor
         wind_speed_knots: Design/operating wind speed for the mast test and
-            the capsize (ama-lift) hard cutoff
+            the capsize (ama-lift) hard cutoff. None (default) uses the
+            configuration's own wind_speed_kt from params, falling back to
+            DEFAULT_WIND_SPEED_KNOTS if the configuration doesn't set one.
         reefing_percentage: Sail reduction (0-100) applied to both the mast
             test and the capsize check
 
     Returns:
         Combined validation results
     """
+    if wind_speed_knots is not None:
+        wind_speed_source = 'override'
+    elif params.get('wind_speed_kt') is not None:
+        wind_speed_knots = float(params['wind_speed_kt'])
+        wind_speed_source = 'configuration'
+    else:
+        wind_speed_knots = DEFAULT_WIND_SPEED_KNOTS
+        wind_speed_source = 'default'
+
     tests = []
 
     # Test 1: Suspended ama (aka bending)
@@ -120,5 +137,6 @@ def run_validation(params: Dict[str, Any],
         'passed': overall_passed,
         'min_safety_factor_required': min_safety_factor,
         'wind_speed_knots': wind_speed_knots,
+        'wind_speed_source': wind_speed_source,
         'tests': tests,
     }

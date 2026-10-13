@@ -14,6 +14,7 @@ depend on sail trim at all and are reported unchanged for context.
 
 import argparse
 import json
+import math
 import sys
 from typing import Any, Dict, Optional
 
@@ -96,20 +97,24 @@ def find_minimum_reefing(params: Dict[str, Any],
         }
 
     lo, hi = 0.0, 100.0
-    mast_hi, capsize_hi = mast100, capsize100
     while hi - lo > tolerance:
         mid = (lo + hi) / 2
         mast_mid, capsize_mid = check(mid)
         if mast_mid['passed'] and capsize_mid['passed']:
             hi = mid
-            mast_hi, capsize_hi = mast_mid, capsize_mid
         else:
             lo = mid
 
+    # Only hi is proven to pass, so round toward more reefing (never onto the
+    # failing side of the boundary) and re-run the checks at the reported
+    # value, so the returned results describe exactly what's recommended.
+    needed = min(100.0, math.ceil(hi * 10) / 10)
+    mast_needed, capsize_needed = check(needed)
+
     return {
-        'reefing_percentage_needed': round(hi, 1),
-        'mast_result': mast_hi,
-        'capsize_result': capsize_hi,
+        'reefing_percentage_needed': needed,
+        'mast_result': mast_needed,
+        'capsize_result': capsize_needed,
         'convergent': True,
     }
 
@@ -198,7 +203,7 @@ def print_recommendation_report(result: Dict[str, Any], condition_path: str) -> 
     elif reefing['reefing_percentage_needed'] == 0.0:
         print("✓ Full sail is safe - no reefing required.")
     else:
-        print(f"✓ Reef to {reefing['reefing_percentage_needed']:.0f}% to stay within safety limits.")
+        print(f"✓ Reef to {math.ceil(reefing['reefing_percentage_needed']):.0f}% to stay within safety limits.")
 
     mast_sf = reefing['mast_result']['summary']['safety_factor']
     capsize_sf = reefing['capsize_result']['summary']['safety_factor']

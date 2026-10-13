@@ -525,7 +525,7 @@ Desain struktural Roti Proa II **lulus semua tes validasi pada layar penuh** den
 1. **Titik Inspeksi**: Inspeksi berkala sambungan aka-gunwale, las penopang diagonal, dan ikatan fiberglass
 2. **Operasi Pengangkatan**: Gunakan konfigurasi V-sling dengan 4 kait ke aka bersebelahan
 3. **Batas Hantaman Gelombang**: Kecepatan dampak 3 m/s mewakili kondisi moderat; hindari kondisi gelombang ekstrem
-4. **Batas Angin**: Tiang divalidasi untuk 25 knot pada layar penuh; pemeriksaan angkat ama/terbalik memerlukan reefing di atas kira-kira 15 knot (angin dari sisi ama) agar faktor keamanan tetap 2,0 - jalankan `python -m src.structural.operating_envelope --condition constant/conditions/<file>.json` untuk persentase reefing yang tepat pada kecepatan angin tertentu
+4. **Batas Angin**: Tiang diperiksa pada kasus desain 25 knot dengan layar penuh (pilihan proyek, bukan persyaratan ISO 12215 - standar tersebut memberikan rumus gaya angin, bukan kecepatan angin; konfigurasi berlayar diperiksa pada `wind_speed_kt` masing-masing); pemeriksaan angkat ama/terbalik memerlukan reefing di atas kira-kira 13 knot (angin dari sisi ama) agar faktor keamanan tetap 2,0 - jalankan `python -m src.structural.operating_envelope --condition constant/conditions/<file>.json` untuk persentase reefing yang tepat pada kecepatan angin tertentu
 
 ### Perangkat Lunak Validasi
 

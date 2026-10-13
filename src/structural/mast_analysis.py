@@ -51,6 +51,51 @@ def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
     V = knots_to_ms(wind_speed_knots)
     return 0.72 * V**2 * sail_area_m2
 
+
+def check_reefing_percentage(reefing_percentage: float) -> float:
+    """
+    Reject reefing outside 0-100. Above 100 the effective sail height goes
+    negative, which flips the wind force/heeling moment negative and every
+    downstream check reads that as an infinite safety factor - a false PASS.
+    """
+    if not 0.0 <= reefing_percentage <= 100.0:
+        raise ValueError(f"reefing_percentage must be within 0-100, got {reefing_percentage}")
+    return reefing_percentage
+
+
+def calculate_sail_levels(params: Dict[str, Any],
+                          reefing_percentage: float = 0.0) -> Dict[str, float]:
+    """
+    Absolute heights (mm) of the sail's yard pivot, boom and center of effort.
+
+    Matches the CAD rig in src/design/rotating.py: the sail's top edge hangs
+    from the yard pivot (yard spar + half its thickness), which stays fixed,
+    and the boom sits effective_sail_height below it - so reefing shortens
+    the sail from the bottom by raising the boom, and the CE climbs toward
+    the pivot rather than sinking toward the partner. CE is taken at 40% of
+    the (reefed) sail height above the boom.
+
+    Args:
+        params: Design parameters (needs yard_spar_height,
+            yard_spar_thickness, sail_height)
+        reefing_percentage: Sail reduction (0-100)
+
+    Returns:
+        Dictionary with 'pivot_level_mm', 'boom_level_mm', 'ce_level_mm',
+        'effective_sail_height_mm'
+    """
+    check_reefing_percentage(reefing_percentage)
+    pivot_level = params['yard_spar_height'] + params['yard_spar_thickness'] / 2
+    effective_sail_height = params['sail_height'] * (100 - reefing_percentage) / 100
+    boom_level = pivot_level - effective_sail_height
+    return {
+        'pivot_level_mm': pivot_level,
+        'boom_level_mm': boom_level,
+        'ce_level_mm': boom_level + effective_sail_height * 0.40,
+        'effective_sail_height_mm': effective_sail_height,
+    }
+
+
 def calculate_mast_geometry(params: Dict[str, Any],
                              reefing_percentage: float = 0.0) -> Dict[str, float]:
     """
@@ -58,9 +103,9 @@ def calculate_mast_geometry(params: Dict[str, Any],
 
     Args:
         params: Design parameters
-        reefing_percentage: Sail reduction (0-100). Reefing furls from the
-            boom upward, so it reduces sail_height only, matching the CAD
-            rig geometry in src/design/rotating.py's effective_sail_height.
+        reefing_percentage: Sail reduction (0-100). Reefing raises the boom
+            toward the fixed yard pivot, reducing sail_height only - see
+            calculate_sail_levels.
 
     Returns:
         Dictionary with geometry values in mm
@@ -80,13 +125,13 @@ def calculate_mast_geometry(params: Dict[str, Any],
     # Sail dimensions
     sail_height = params['sail_height']
     sail_width = params['sail_width']
-    effective_sail_height = sail_height * (100 - reefing_percentage) / 100
+    sail_levels = calculate_sail_levels(params, reefing_percentage)
+    effective_sail_height = sail_levels['effective_sail_height_mm']
     sail_area_m2_before_reefing = (sail_height * sail_width) / 1e6  # Convert mm² to m²
     sail_area_m2 = (effective_sail_height * sail_width) / 1e6
 
-    # Center of effort: assume boom is at partner level,
-    # and CE is at 40% of (reefed) sail height above boom
-    ce_above_partner = effective_sail_height * 0.40
+    # Center of effort, measured from the partner (the cantilever root)
+    ce_above_partner = sail_levels['ce_level_mm'] - mast_partner_level
 
     # Height from step to center of effort
     step_to_ce = step_to_partner + ce_above_partner
@@ -100,6 +145,8 @@ def calculate_mast_geometry(params: Dict[str, Any],
         'partner_to_top_mm': partner_to_top,
         'ce_above_partner_mm': ce_above_partner,
         'step_to_ce_mm': step_to_ce,
+        'boom_level_mm': sail_levels['boom_level_mm'],
+        'ce_level_mm': sail_levels['ce_level_mm'],
         'sail_height_mm': sail_height,
         'sail_width_mm': sail_width,
         'reefing_percentage': reefing_percentage,
@@ -376,6 +423,8 @@ def validate_mast(params: Dict[str, Any],
             'mast_height_mm': geometry['mast_height_mm'],
             'step_to_partner_mm': round(geometry['step_to_partner_mm'], 0),
             'ce_above_partner_mm': round(geometry['ce_above_partner_mm'], 0),
+            'boom_level_mm': round(geometry['boom_level_mm'], 0),
+            'ce_level_mm': round(geometry['ce_level_mm'], 0),
             'sail_area_m2': round(geometry['sail_area_m2'], 2),
             'sail_area_m2_before_reefing': round(geometry['sail_area_m2_before_reefing'], 2),
             'reefing_percentage': geometry['reefing_percentage'],

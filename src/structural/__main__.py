@@ -439,6 +439,12 @@ def print_validation_report(results: Dict[str, Any]) -> None:
     print("STRUCTURAL VALIDATION")
     print("=" * 60)
     print(f"Boat: {results['boat_name']}")
+    source_desc = {
+        'override': '--wind-speed',
+        'configuration': "configuration's wind_speed_kt",
+        'default': "default - configuration sets no wind_speed_kt",
+    }[results['wind_speed_source']]
+    print(f"Wind speed: {results['wind_speed_knots']:.0f} knots ({source_desc})")
 
     # Print individual test reports
     for test in results['tests']:
@@ -529,6 +535,14 @@ def print_validation_report(results: Dict[str, Any]) -> None:
     print()
 
 
+def reefing_percentage_arg(value: str) -> float:
+    """argparse type for --reefing-percentage: a float within 0-100."""
+    reef = float(value)
+    if not 0.0 <= reef <= 100.0:
+        raise argparse.ArgumentTypeError(f"must be within 0-100, got {value}")
+    return reef
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Validate structural integrity')
@@ -542,9 +556,10 @@ def main():
                         help='Path to output validation JSON file')
     parser.add_argument('--min-safety-factor', type=float, default=2.0,
                         help='Minimum required safety factor (default: 2.0)')
-    parser.add_argument('--wind-speed', type=float, default=25.0,
-                        help='Design wind speed in knots for mast test (default: 25)')
-    parser.add_argument('--reefing-percentage', type=float, default=0.0,
+    parser.add_argument('--wind-speed', type=float, default=None,
+                        help="Wind speed in knots for mast/capsize tests (default: the "
+                             "configuration's wind_speed_kt, else 25)")
+    parser.add_argument('--reefing-percentage', type=reefing_percentage_arg, default=0.0,
                         help='Sail reduction 0-100 for mast/capsize tests (default: 0, full sail)')
     parser.add_argument('--quiet', action='store_true',
                         help='Suppress human-readable output')

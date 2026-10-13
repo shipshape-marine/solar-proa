@@ -528,7 +528,7 @@ The Roti Proa II structural design **passes all validation tests at full sail** 
 1. **Inspection Points**: Regularly inspect aka-gunwale connections, diagonal brace welds, and fiberglass bonds
 2. **Lifting Operations**: Use the V-sling configuration with 4 hooks to neighboring akas
 3. **Wave Slam Limits**: The 3 m/s impact velocity represents moderate conditions; avoid extreme wave encounters
-4. **Wind Limits**: The mast is validated for 25 knots at full sail; the ama-lift/capsize check requires reefing above roughly 15 knots (wind from the ama side) to keep a 2.0 safety factor - run `python -m src.structural.operating_envelope --condition constant/conditions/<file>.json` for the exact reefing percentage at a given wind speed
+4. **Wind Limits**: The mast is checked at a 25 knot design case at full sail (a project choice, not an ISO 12215 requirement - the standard supplies the wind-force formula, not the wind speed; sailing configurations are checked at their own `wind_speed_kt`); the ama-lift/capsize check requires reefing above roughly 13 knots (wind from the ama side) to keep a 2.0 safety factor - run `python -m src.structural.operating_envelope --condition constant/conditions/<file>.json` for the exact reefing percentage at a given wind speed
 
 ### Validation Software
 

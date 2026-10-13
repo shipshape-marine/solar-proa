@@ -30,6 +30,11 @@ configuration preset's own values (already merged into the parameter
 artifact) or today's code defaults:
 
 - **Wind speed**: knots, from the user's own words. Maps to `--wind-speed`.
+  If the user gives none, omit it: the CLI uses the configuration's own
+  `wind_speed_kt` (15 kt for most sailing presets, 25 kt for
+  `closehaulreefed`), else 25 kt for configurations that set none (e.g.
+  `beaching`). The 25 kt fallback is a project design case, not an ISO 12215
+  requirement - don't describe it as one.
 - **Wave/sea state**: this is a runtime-only input - `constant/configuration/*.json`
   deliberately has no wave-height field (there's no reviewed formula linking
   a wave-height guess to impact velocity/dynamic factor). If the user gives
@@ -100,7 +105,10 @@ PYTHONPATH=<repo root> python -m src.structural \
 ```
 
 `--wind-speed` only needs to be passed if overriding the configuration's own
-`wind_speed_kt` - it's picked up automatically otherwise.
+`wind_speed_kt` - it's picked up automatically otherwise, falling back to
+25 kt if the configuration has none. The output's `wind_speed_knots` /
+`wind_speed_source` (`override`, `configuration` or `default`) say which
+speed was actually used - report it.
 
 **Only `--parameters`, `--mass`, `--gz`, `--output`, `--wind-speed`,
 `--reefing-percentage`, `--min-safety-factor` and `--quiet` actually exist on

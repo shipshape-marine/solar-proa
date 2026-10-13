@@ -20,6 +20,7 @@ import math
 from typing import Dict, Any, Optional
 
 from .beam_mechanics import GRAVITY
+from .mast_analysis import calculate_sail_levels, check_reefing_percentage
 
 
 def knots_to_ms(knots: float) -> float:
@@ -130,14 +131,13 @@ def estimate_center_of_effort_height(params: Dict[str, Any],
     """
     Estimate the height of sail center of effort above the heeling axis.
 
-    The heeling axis is approximately at the waterline.
-    CE is roughly at 40% of (reefed) sail height above the boom, matching
-    mast_analysis.calculate_mast_geometry's ce_above_partner.
+    The heeling axis is approximately at the waterline. The CE level comes
+    from mast_analysis.calculate_sail_levels, shared with the mast test:
+    sail hung from the fixed yard pivot, reefing raises the boom.
 
     Args:
         params: Design parameters
-        reefing_percentage: Sail reduction (0-100), furled from the boom
-            upward (reduces sail_height only).
+        reefing_percentage: Sail reduction (0-100)
 
     Returns:
         CE height in meters
@@ -149,16 +149,13 @@ def estimate_center_of_effort_height(params: Dict[str, Any],
     # For simplicity, assume heeling axis is near waterline, about 500mm below partner
     heeling_axis_mm = mast_partner_level_mm - 500
 
-    # Boom is at partner level, CE is 40% of effective sail height above boom.
-    # sail_height is a required base parameter (see boat/*.json) - matching
-    # mast_analysis.calculate_mast_geometry, no silent fallback here either,
-    # so a malformed/incomplete params dict raises instead of using a made-up value.
-    sail_height_mm = params['sail_height']
-    effective_sail_height_mm = sail_height_mm * (100 - reefing_percentage) / 100
-    ce_above_boom_mm = effective_sail_height_mm * 0.40
+    # Sail geometry params are required base parameters (see boat/*.json) - no
+    # silent fallback, so a malformed/incomplete params dict raises instead of
+    # using a made-up value.
+    ce_level_mm = calculate_sail_levels(params, reefing_percentage)['ce_level_mm']
 
     # CE height above heeling axis
-    ce_height_mm = (mast_partner_level_mm - heeling_axis_mm) + ce_above_boom_mm
+    ce_height_mm = ce_level_mm - heeling_axis_mm
 
     return ce_height_mm / 1000  # Convert to meters
 
@@ -192,6 +189,8 @@ def calculate_ama_lift_windspeed(params: Dict[str, Any],
     Returns:
         Analysis results with the capsize safety factor and critical wind speeds
     """
+    check_reefing_percentage(reefing_percentage)
+
     # Sail area (reefed) - required base parameters, no silent fallback
     # (matches mast_analysis.calculate_mast_geometry)
     sail_height = params['sail_height']

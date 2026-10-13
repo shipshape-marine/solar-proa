@@ -1,0 +1,13 @@
+{
+  "condition_name": "heavy_35kt",
+  "condition_description": "Heavy wind, moderate wave impact - expect significant reefing",
+
+  "wind_speed_kt": 35,
+
+  "impact_velocity_ms": 3.0,
+  "dynamic_factor": 2.5,
+
+  "min_safety_factor": 2.0,
+
+  "notes": "impact_velocity_ms/dynamic_factor left at the code defaults - increase these by hand if the actual seaway is rougher than moderate chop."
+}

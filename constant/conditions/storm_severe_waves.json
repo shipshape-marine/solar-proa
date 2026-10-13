@@ -1,0 +1,13 @@
+{
+  "condition_name": "storm_severe_waves",
+  "condition_description": "Moderate wind but severe wave impact - illustrates a failure reefing cannot fix",
+
+  "wind_speed_kt": 15,
+
+  "impact_velocity_ms": 6.0,
+  "dynamic_factor": 2.5,
+
+  "min_safety_factor": 2.0,
+
+  "notes": "impact_velocity_ms raised well above the 3.0 m/s default to intentionally fail the wave-slam checks, which are independent of sail trim - reefing cannot fix this, only a design/structural change or avoiding the sea state can."
+}

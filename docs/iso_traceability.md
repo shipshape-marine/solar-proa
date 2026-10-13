@@ -52,12 +52,12 @@ forced onto the proa geometry.
 | 1 | Suspended ama (aka bending) | **3.27** | GLC5 (ISO 12215-7 §12.10) dynamic longitudinal-shock case on the same aka: **SF = 1.35** vs. ISO's own design stress | ⚠️ See below — different load case, much tighter margin |
 | 2 | Aka point load (crew standing) | 5.74 | Not separately re-derived (static, non-ISO-specific load case) | — |
 | 3 | One end supported (spine bending) | 16.50 | Not separately re-derived | — |
-| 4 | **Mast wind loading (25 kn)** | ~~6.18~~ **3.09 (corrected)** | ISO 12215-10:2020 Table 5 formula itself | ✅ Bug fixed — see below |
+| 4 | **Mast wind loading (25 kn)** | ~~6.18~~ ~~3.09~~ **2.06 (corrected)** | ISO 12215-10:2020 Table 5 formula itself; CE height re-derived from CAD rig geometry | ✅ Bugs fixed — see below |
 | 5 | Diagonal braces (lateral) | 33.60 | Reviewed against ISO 12215-7 Table 12 aluminium design stress convention | ✅ Confirmed genuine margin, not a modeling artifact — see below |
 | 6–8 | Wave slam (vertical/frontal/sideways) | 4.46 / 5.23 / 4.46 | ISO 12215-7 §9.4 float bottom pressure: **0.44×** the ad hoc model's dynamic pressure | ℹ️ Ad hoc model is more conservative — see below |
 | 9 | Lifting sling | 6.16 | Not an ISO-covered load case (crane/rigging, not a small-craft design load) | — |
 | 10 | Gunwale loads | 12.24 | Not separately re-derived | — |
-| 11 | Ama lift wind speed | 22 kn | Informational, unchanged | — |
+| 11 | Ama lift wind speed | ~~22 kn~~ 17.9 kn | CE height re-derived from CAD rig geometry (see §1 follow-up) | — |
 | — | **Aka-to-vaka joint** | *(not previously checked at all)* | ISO 12215-6 good practice + first-pass weld sizing: passes a web-area rule of thumb | ⚠️ Real gap confirmed — see below |
 | — | **Aluminium alloy spec** | *(not finalized)* | ISO 12215-3 §4.7: extruded-profile family (6000-series) is the correct choice | ⚠️ Documentation gap confirmed — see below |
 
@@ -80,6 +80,18 @@ approximately doubled the reported safety factor. This has been corrected —
 **Result on the real design**: mast wind-loading safety factor moves from **6.18 →
 3.09**. The mast still comfortably passes the required minimum of 2.0 — this is a
 correction to the reported number, not a design deficiency.
+
+**Follow-up (2026-10): center-of-effort height.** The mast and capsize checks
+assumed the boom sits at the mast partner (`aka_base_level`, 1406 mm), putting the
+CE 2200 mm above the partner. The CAD rig (`src/design/rotating.py`) instead hangs
+the sail from the yard pivot (`yard_spar_height + yard_spar_thickness/2`, 8005 mm),
+which puts the boom at 2505 mm and the CE 3299 mm above the partner at full sail.
+Reefing also raises the boom toward the pivot rather than lowering the CE, so the
+lever arm grows as sail is reefed. Both checks now share
+`mast_analysis.calculate_sail_levels`. At 25 kn and full sail, the mast
+wind-loading safety factor moves from **3.09 → 2.06**, which still passes the 2.0
+minimum but only just. The capsize safety factor moves from 0.72 → 0.51, and the
+ama-lift wind speed from 22 kn → 17.9 kn.
 
 ---
 

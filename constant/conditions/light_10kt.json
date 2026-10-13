@@ -1,0 +1,13 @@
+{
+  "condition_name": "light_10kt",
+  "condition_description": "Light wind, calm seas - full sail expected",
+
+  "wind_speed_kt": 10,
+
+  "impact_velocity_ms": 3.0,
+  "dynamic_factor": 2.5,
+
+  "min_safety_factor": 2.0,
+
+  "notes": "impact_velocity_ms/dynamic_factor left at the code defaults for calm seas - see moderate_25kt.json for why these aren't derived from a wave-height figure."
+}

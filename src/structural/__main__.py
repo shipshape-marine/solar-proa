@@ -13,7 +13,7 @@ import argparse
 import sys
 from typing import Dict, Any
 
-from .validate import run_validation
+from .validate import run_validation, DESIGN_SAIL_ANGLE_DEG
 
 
 def print_aka_report(result: Dict[str, Any]) -> None:
@@ -382,36 +382,41 @@ def print_gunwale_report(result: Dict[str, Any]) -> None:
 
 
 def print_ama_lift_report(result: Dict[str, Any]) -> None:
-    """Print report for ama lift wind speed calculation."""
+    """Print report for ama lift / capsize margin check."""
     summary = result['summary']
     sail = result['sail_geometry']
     stab = result['stability']
-    ref = result['reference_25_knots']
+    at_wind = result['at_wind_speed']
 
     print()
     print("-" * 60)
-    print(f"INFO: {result['description']}")
+    print(f"TEST: {result['description']}")
     print("-" * 60)
 
     print(f"\nSail geometry:")
-    print(f"  Sail area: {sail['sail_area_m2']:.1f} m² x {sail['num_sails']} sails = {sail['total_sail_area_m2']:.1f} m² total")
-    print(f"  CE height: {sail['ce_height_m']:.2f} m above heeling axis")
+    print(f"  Sail area: {sail['sail_area_m2']:.1f} m² x {sail['num_sails']} sails = {sail['total_sail_area_m2']:.1f} m² total"
+          f" ({sail['reefing_percentage']:.0f}% reefed from {sail['sail_area_m2_before_reefing']:.1f} m²/sail)")
+    print(f"  CE height: {sail['ce_height_m']:.2f} m above heeling axis"
+          f" (sail angle {sail['sail_angle_deg']:.0f} deg)")
 
     print(f"\nStability (from GZ curve, negative heel):")
-    print(f"  Max righting moment: {stab['max_righting_moment_nm']:.0f} N·m")
+    print(f"  Max righting moment: {stab['max_righting_moment_nm']:.0f} N·m"
+          f" (includes {stab['crew_righting_moment_bonus_nm']:.0f} N·m crew-shift bonus)")
     if stab['max_righting_angle_deg']:
         print(f"  At heel angle: {stab['max_righting_angle_deg']:.1f}°")
     if stab['capsize_angle_deg']:
         print(f"  Capsize angle: {stab['capsize_angle_deg']:.1f}°")
 
-    print(f"\nReference (25 knots from ama side):")
-    print(f"  Wind force: {ref['wind_force_n']:.0f} N")
-    print(f"  Heeling moment: {ref['heeling_moment_nm']:.0f} N·m")
-    if ref['moment_ratio']:
-        print(f"  Heeling/Righting ratio: {ref['moment_ratio']:.2f}")
+    print(f"\nAt {at_wind['wind_speed_knots']:.0f} knots (wind from ama side):")
+    print(f"  Wind force: {at_wind['wind_force_n']:.0f} N")
+    print(f"  Heeling moment: {at_wind['heeling_moment_nm']:.0f} N·m")
+    if at_wind['moment_ratio']:
+        print(f"  Heeling/Righting ratio: {at_wind['moment_ratio']:.2f}")
 
-    print(f"\nAma lift wind speed: {summary['ama_lift_windspeed_knots']:.0f} knots")
-    print(f"  (wind from ama side, full sail, no crew movement)")
+    print(f"\nAma lift wind speed: {summary['ama_lift_windspeed_knots']:.0f} knots"
+          f" (safety_factor=1 point; safe limit at required SF: {summary['safe_windspeed_limit_knots']:.0f} knots)")
+    print(f"  (wind from ama side, no crew weight-shift modeled)")
+    print(f"\nOverall: SF={summary['safety_factor']:.2f} {summary['result']}")
 
 
 def print_iso_report(result: Dict[str, Any]) -> None:
@@ -435,6 +440,13 @@ def print_validation_report(results: Dict[str, Any]) -> None:
     print("STRUCTURAL VALIDATION")
     print("=" * 60)
     print(f"Boat: {results['boat_name']}")
+    source_desc = {
+        'override': '--wind-speed',
+        'configuration': "configuration's wind_speed_kt",
+        'default': "default - configuration sets no wind_speed_kt",
+    }[results['wind_speed_source']]
+    print(f"Wind speed: {results['wind_speed_knots']:.0f} knots ({source_desc})")
+    print(f"Sail angle: {results['sail_angle_deg']:.0f} deg (mast/capsize tests)")
 
     # Print individual test reports
     for test in results['tests']:
@@ -509,8 +521,9 @@ def print_validation_report(results: Dict[str, Any]) -> None:
             status = "✓ PASS" if passed else "✗ FAIL"
             print(f"  {name}: SF={sf:.2f} {status}")
         elif name == 'ama_lift_windspeed':
-            wind_speed = test['summary']['ama_lift_windspeed_knots']
-            print(f"  {name}: {wind_speed:.0f} knots (INFO)")
+            sf = test['summary']['safety_factor']
+            status = "✓ PASS" if passed else "✗ FAIL"
+            print(f"  {name}: SF={sf:.2f} {status}")
         elif name in ('iso_material_traceability', 'iso_aka_joint_traceability',
                       'iso_global_loads', 'iso_design_pressure_cross_check'):
             result_str = test.get('summary', {}).get('result', 'INFO')
@@ -522,6 +535,14 @@ def print_validation_report(results: Dict[str, Any]) -> None:
 
     print("=" * 60)
     print()
+
+
+def reefing_percentage_arg(value: str) -> float:
+    """argparse type for --reefing-percentage: a float within 0-100."""
+    reef = float(value)
+    if not 0.0 <= reef <= 100.0:
+        raise argparse.ArgumentTypeError(f"must be within 0-100, got {value}")
+    return reef
 
 
 def main():
@@ -537,8 +558,15 @@ def main():
                         help='Path to output validation JSON file')
     parser.add_argument('--min-safety-factor', type=float, default=2.0,
                         help='Minimum required safety factor (default: 2.0)')
-    parser.add_argument('--wind-speed', type=float, default=25.0,
-                        help='Design wind speed in knots for mast test (default: 25)')
+    parser.add_argument('--wind-speed', type=float, default=None,
+                        help="Wind speed in knots for mast/capsize tests (default: the "
+                             "configuration's wind_speed_kt, else 25)")
+    parser.add_argument('--reefing-percentage', type=reefing_percentage_arg, default=0.0,
+                        help='Sail reduction 0-100 for mast/capsize tests (default: 0, full sail)')
+    parser.add_argument('--sail-angle', type=float, default=DESIGN_SAIL_ANGLE_DEG,
+                        help='Sail tilt in degrees for mast/capsize tests, overriding the '
+                             f"configuration's sail_angle_* (default: {DESIGN_SAIL_ANGLE_DEG:.0f}, "
+                             'the most-tilted sailing preset; 0 = vertical)')
     parser.add_argument('--quiet', action='store_true',
                         help='Suppress human-readable output')
 
@@ -558,7 +586,8 @@ def main():
             gz_data = json.load(f)
 
     # Run validation
-    results = run_validation(params, mass_data, gz_data, args.min_safety_factor, args.wind_speed)
+    results = run_validation(params, mass_data, gz_data, args.min_safety_factor, args.wind_speed,
+                              args.reefing_percentage, args.sail_angle)
 
     # Write output
     with open(args.output, 'w') as f:

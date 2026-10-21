@@ -1,6 +1,6 @@
 """Run all structural validation tests."""
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from .aka_analysis import validate_suspended_ama
 from .aka_point_load import validate_aka_point_load
@@ -16,12 +16,33 @@ from .iso_joint_check import validate_aka_joint
 from .iso_global_loads import validate_global_loads
 from .iso_design_pressure import compare_to_wave_slam_model
 
+# Used only when neither the caller nor the configuration gives a wind speed
+# (e.g. the beaching configuration has no wind_speed_kt). A project design
+# case, not a value ISO 12215 prescribes - the standard supplies the force
+# formula (see mast_analysis.calculate_wind_force), not the wind speed.
+# Deliberately harsh at full sail: full sail overpowers RP2's maximum
+# righting moment at roughly 16-20 kt (see the ama-lift check), so the mast
+# can't actually see this load - the boat reefs, eases or capsizes first. Kept
+# as a simple, conservative strength case (and sits within ISO 12217-2
+# Category C's Beaufort 6 steady wind), not as a realistic sailing condition.
+DEFAULT_WIND_SPEED_KNOTS = 25.0
+
+# Sail tilt (in-plane rotation about the yard pivot, see
+# mast_analysis.calculate_sail_levels) for the mast and capsize design checks.
+# The most-tilted sailing preset (closehaul, closehaulreefed, goosewing), which
+# puts the CE highest of any configuration actually sailed. Fixed rather than
+# read from params, since the design check runs on whichever configuration's
+# artifacts it's given - for RP2 that's beaching, whose -90 deg is the stowed rig.
+DESIGN_SAIL_ANGLE_DEG = -45.0
+
 
 def run_validation(params: Dict[str, Any],
                    mass_data: Dict[str, Any],
                    gz_data: Dict[str, Any] = None,
                    min_safety_factor: float = 2.0,
-                   wind_speed_knots: float = 25.0) -> Dict[str, Any]:
+                   wind_speed_knots: Optional[float] = None,
+                   reefing_percentage: float = 0.0,
+                   sail_angle_deg: float = DESIGN_SAIL_ANGLE_DEG) -> Dict[str, Any]:
     """
     Run all static validation tests.
 
@@ -30,11 +51,30 @@ def run_validation(params: Dict[str, Any],
         mass_data: Mass calculation results
         gz_data: GZ curve data (optional, needed for capsize check)
         min_safety_factor: Minimum required safety factor
-        wind_speed_knots: Design wind speed for mast test
+        wind_speed_knots: Design/operating wind speed for the mast test and
+            the capsize (ama-lift) hard cutoff. None (default) uses the
+            configuration's own wind_speed_kt from params, falling back to
+            DEFAULT_WIND_SPEED_KNOTS if the configuration doesn't set one.
+        reefing_percentage: Sail reduction (0-100) applied to both the mast
+            test and the capsize check
+        sail_angle_deg: Sail tilt applied to both the mast test and the
+            capsize check, in place of the configuration's own sail_angle_*
 
     Returns:
         Combined validation results
     """
+    # Both rigs at the design tilt, for the sail-load checks only
+    sail_params = dict(params, sail_angle_biru=sail_angle_deg, sail_angle_kuning=sail_angle_deg)
+
+    if wind_speed_knots is not None:
+        wind_speed_source = 'override'
+    elif params.get('wind_speed_kt') is not None:
+        wind_speed_knots = float(params['wind_speed_kt'])
+        wind_speed_source = 'configuration'
+    else:
+        wind_speed_knots = DEFAULT_WIND_SPEED_KNOTS
+        wind_speed_source = 'default'
+
     tests = []
 
     # Test 1: Suspended ama (aka bending)
@@ -51,7 +91,8 @@ def run_validation(params: Dict[str, Any],
     tests.append(spine_result)
 
     # Test 4: Mast wind loading
-    mast_result = validate_mast(params, mass_data, wind_speed_knots, min_safety_factor)
+    mast_result = validate_mast(sail_params, mass_data, wind_speed_knots, min_safety_factor,
+                                 reefing_percentage)
     tests.append(mast_result)
 
     # Test 5: Diagonal braces under lateral loading
@@ -84,9 +125,10 @@ def run_validation(params: Dict[str, Any],
     gunwale_result = validate_gunwale_loads(params, mass_data, min_safety_factor)
     tests.append(gunwale_result)
 
-    # Test 11: Ama lift wind speed (requires GZ data) - informational only
+    # Test 11: Ama lift wind speed / capsize margin (requires GZ data) - hard cutoff
     if gz_data is not None:
-        ama_lift_result = calculate_ama_lift_windspeed(params, gz_data)
+        ama_lift_result = calculate_ama_lift_windspeed(sail_params, gz_data, wind_speed_knots,
+                                                         min_safety_factor, reefing_percentage)
         tests.append(ama_lift_result)
 
     # Test 12: ISO 12215-3 aluminium alloy family + documentation traceability
@@ -114,5 +156,7 @@ def run_validation(params: Dict[str, Any],
         'passed': overall_passed,
         'min_safety_factor_required': min_safety_factor,
         'wind_speed_knots': wind_speed_knots,
+        'wind_speed_source': wind_speed_source,
+        'sail_angle_deg': sail_angle_deg,
         'tests': tests,
     }

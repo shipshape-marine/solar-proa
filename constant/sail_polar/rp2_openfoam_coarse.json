@@ -1,0 +1,127 @@
+{
+  "source": "openfoam",
+  "description": "OpenFOAM simpleFoam k-omega SST sweep, coarse mesh (sail level 6), single sail only, camber 5000 mm, sail_angle -45 deg, from artifact/rp2.closehaul.parameter.json",
+  "min_sheeting_angle_deg": 10.0,
+  "min_sheeting_angle_note": "Closest the sail chord can be sheeted to the hull centerline. Not an output of the CFD - set by hand.",
+  "run_dir": "\\\\wsl.localhost\\Ubuntu\\home\\jjtan\\cfd_runs\\rp2_coarse_r0",
+  "convergence_warnings": [
+    "reef_00/aoa_60: force fluctuates 4.1% over the averaging window"
+  ],
+  "polars": [
+    {
+      "reefing_percentage": 0.0,
+      "reference_area_m2": 30.25,
+      "geometric_ce_height_m": 4.765347622084393,
+      "points": [
+        {
+          "angle_of_attack_deg": 0,
+          "cl": 0.2725,
+          "cd": 0.1091,
+          "center_of_pressure_height_m": 7.063,
+          "iterations": 1500,
+          "averaged_iterations": 300,
+          "force_relative_std": 0.0038
+        },
+        {
+          "angle_of_attack_deg": 5,
+          "cl": 0.5318,
+          "cd": 0.1255,
+          "center_of_pressure_height_m": 6.136,
+          "iterations": 1500,
+          "averaged_iterations": 300,
+          "force_relative_std": 0.0
+        },
+        {
+          "angle_of_attack_deg": 10,
+          "cl": 0.7784,
+          "cd": 0.1854,
+          "center_of_pressure_height_m": 5.789,
+          "iterations": 324,
+          "averaged_iterations": 64,
+          "force_relative_std": 0.0003
+        },
+        {
+          "angle_of_attack_deg": 15,
+          "cl": 1.0045,
+          "cd": 0.2882,
+          "center_of_pressure_height_m": 5.599,
+          "iterations": 327,
+          "averaged_iterations": 65,
+          "force_relative_std": 0.0008
+        },
+        {
+          "angle_of_attack_deg": 20,
+          "cl": 1.209,
+          "cd": 0.4256,
+          "center_of_pressure_height_m": 5.446,
+          "iterations": 688,
+          "averaged_iterations": 137,
+          "force_relative_std": 0.0004
+        },
+        {
+          "angle_of_attack_deg": 25,
+          "cl": 1.3974,
+          "cd": 0.5989,
+          "center_of_pressure_height_m": 5.318,
+          "iterations": 594,
+          "averaged_iterations": 118,
+          "force_relative_std": 0.0007
+        },
+        {
+          "angle_of_attack_deg": 30,
+          "cl": 1.4919,
+          "cd": 0.7693,
+          "center_of_pressure_height_m": 5.198,
+          "iterations": 1108,
+          "averaged_iterations": 221,
+          "force_relative_std": 0.001
+        },
+        {
+          "angle_of_attack_deg": 35,
+          "cl": 1.3475,
+          "cd": 0.8333,
+          "center_of_pressure_height_m": 5.098,
+          "iterations": 1500,
+          "averaged_iterations": 300,
+          "force_relative_std": 0.0029
+        },
+        {
+          "angle_of_attack_deg": 45,
+          "cl": 1.0782,
+          "cd": 1.0209,
+          "center_of_pressure_height_m": 5.226,
+          "iterations": 1500,
+          "averaged_iterations": 300,
+          "force_relative_std": 0.0015
+        },
+        {
+          "angle_of_attack_deg": 60,
+          "cl": 0.7504,
+          "cd": 1.2467,
+          "center_of_pressure_height_m": 5.215,
+          "iterations": 1500,
+          "averaged_iterations": 300,
+          "force_relative_std": 0.0412
+        },
+        {
+          "angle_of_attack_deg": 75,
+          "cl": 0.3732,
+          "cd": 1.3235,
+          "center_of_pressure_height_m": 5.172,
+          "iterations": 1500,
+          "averaged_iterations": 300,
+          "force_relative_std": 0.0018
+        },
+        {
+          "angle_of_attack_deg": 90,
+          "cl": 0.0023,
+          "cd": 1.3727,
+          "center_of_pressure_height_m": 5.121,
+          "iterations": 1175,
+          "averaged_iterations": 235,
+          "force_relative_std": 0.0
+        }
+      ]
+    }
+  ]
+}

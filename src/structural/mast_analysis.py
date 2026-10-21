@@ -14,27 +14,33 @@ Checks:
 """
 
 import math
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from .beam_mechanics import (
     ALUMINUM_YIELD_STRENGTH_MPA, ALUMINUM_E_MPA, GRAVITY,
     calculate_pipe_section_properties
 )
 
-# Air properties
-AIR_DENSITY_KG_M3 = 1.225
-SAIL_DRAG_COEFFICIENT = 1.15  # Flat plate perpendicular to wind
-#Using formula from ISO12215-10 Clause 7.2 Table 5 case b (multihull, SC1), rho and cd not required
+# Wind force uses the ISO12215-10 Clause 7.2 Table 5 case b (multihull, SC1)
+# formula directly (see calculate_wind_force) - rho and Cd are already
+# folded into its 0.72 coefficient, not separate constants here.
+
+# ISO12215-10 Table 5 Note 3's side force coefficient N, folded into 0.72.
+# A caller with a measured/simulated sail force coefficient (see
+# sail_aero.py) passes it as force_coefficient and the 0.72 is rescaled.
+ISO_SIDE_FORCE_COEFFICIENT = 1.2
+
 
 def knots_to_ms(knots: float) -> float:
     """Convert wind speed from knots to m/s."""
     return knots * 0.514444
 
 
-def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
+def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float,
+                          force_coefficient: float = ISO_SIDE_FORCE_COEFFICIENT) -> float:
     """
     Calculate wind force on sail (Per mast)
-    
+
     F = 0.72 * V^2 * A (ISO12215-10:2020 Clause 7.2, Table 5, Note 3)
 
     Note 3 derives 0.72 as F = N * 0.5 * rho * A * V^2 with N=1.2 (side force
@@ -45,16 +51,102 @@ def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
     Args:
         wind_speed_knots: Wind speed in knots
         sail_area_m2: Sail area in square meters
+        force_coefficient: Force coefficient in place of ISO's N=1.2 (default
+            N=1.2, the ISO design load). Not from the standard when
+            overridden - operating_envelope passes the sail-polar total force
+            coefficient for a specific apparent wind angle here.
 
     Returns:
         Force in Newtons
     """
     V = knots_to_ms(wind_speed_knots)
-    return 0.72 * V**2 * sail_area_m2
+    return 0.72 * V**2 * sail_area_m2 * (force_coefficient / ISO_SIDE_FORCE_COEFFICIENT)
 
-def calculate_mast_geometry(params: Dict[str, Any]) -> Dict[str, float]:
+
+def check_reefing_percentage(reefing_percentage: float) -> float:
+    """
+    Reject reefing outside 0-100. Above 100 the effective sail height goes
+    negative, which flips the wind force/heeling moment negative and every
+    downstream check reads that as an infinite safety factor - a false PASS.
+    """
+    if not 0.0 <= reefing_percentage <= 100.0:
+        raise ValueError(f"reefing_percentage must be within 0-100, got {reefing_percentage}")
+    return reefing_percentage
+
+
+def configured_sail_angle_deg(params: Dict[str, Any]) -> float:
+    """
+    The configuration's sail_angle (degrees) that puts the CE highest.
+
+    A parameter artifact carries one sail_angle per rig (sail_angle_biru,
+    sail_angle_kuning); the checks use a single CE for both sails, so take
+    the rig whose tilt lifts its CE most (smallest cos) - the conservative
+    choice. Raises if neither is set rather than assuming a vertical sail,
+    which is the lowest CE and so the unconservative guess.
+    """
+    angles = [params[k] for k in ('sail_angle_biru', 'sail_angle_kuning') if k in params]
+    if not angles:
+        raise ValueError("params has no sail_angle_biru/sail_angle_kuning - pass a "
+                         "configuration parameter artifact, or sail_angle_deg explicitly")
+    return min(angles, key=lambda a: math.cos(math.radians(a)))
+
+
+def calculate_sail_levels(params: Dict[str, Any],
+                          reefing_percentage: float = 0.0,
+                          sail_angle_deg: Optional[float] = None) -> Dict[str, float]:
+    """
+    Absolute heights (mm) of the sail's yard pivot, boom and center of effort.
+
+    Matches the CAD rig in src/design/rotating.py: the sail's top edge hangs
+    from the yard pivot (yard spar + half its thickness), which stays fixed,
+    and the boom sits effective_sail_height below it - so reefing shortens
+    the sail from the bottom by raising the boom, and the CE climbs toward
+    the pivot rather than sinking toward the partner. CE is taken at 40% of
+    the (reefed) sail height above the boom, at mid-chord.
+
+    The sail is then rotated in its own plane by sail_angle about the yard
+    pivot (rotating.py turns it about the yard-spar axis, which is normal to
+    the sail). Area is unchanged, but every point below the pivot rises: the
+    CE sits 0.6 * effective_sail_height * cos(sail_angle) below the pivot,
+    and boom_level is the boom's mid-chord height on the same rule.
+
+    Args:
+        params: Design parameters (needs yard_spar_height,
+            yard_spar_thickness, sail_height, and sail_angle_biru/kuning
+            unless sail_angle_deg is given)
+        reefing_percentage: Sail reduction (0-100)
+        sail_angle_deg: In-plane sail rotation (degrees). None (default)
+            uses configured_sail_angle_deg(params); 0 is a vertical sail.
+
+    Returns:
+        Dictionary with 'pivot_level_mm', 'boom_level_mm', 'ce_level_mm',
+        'effective_sail_height_mm', 'sail_angle_deg'
+    """
+    check_reefing_percentage(reefing_percentage)
+    if sail_angle_deg is None:
+        sail_angle_deg = configured_sail_angle_deg(params)
+    cos_angle = math.cos(math.radians(sail_angle_deg))
+    pivot_level = params['yard_spar_height'] + params['yard_spar_thickness'] / 2
+    effective_sail_height = params['sail_height'] * (100 - reefing_percentage) / 100
+    return {
+        'pivot_level_mm': pivot_level,
+        'boom_level_mm': pivot_level - effective_sail_height * cos_angle,
+        'ce_level_mm': pivot_level - effective_sail_height * 0.60 * cos_angle,
+        'effective_sail_height_mm': effective_sail_height,
+        'sail_angle_deg': sail_angle_deg,
+    }
+
+
+def calculate_mast_geometry(params: Dict[str, Any],
+                             reefing_percentage: float = 0.0) -> Dict[str, float]:
     """
     Calculate mast support positions and sail center of effort.
+
+    Args:
+        params: Design parameters
+        reefing_percentage: Sail reduction (0-100). Reefing raises the boom
+            toward the fixed yard pivot, reducing sail_height only - see
+            calculate_sail_levels.
 
     Returns:
         Dictionary with geometry values in mm
@@ -74,11 +166,13 @@ def calculate_mast_geometry(params: Dict[str, Any]) -> Dict[str, float]:
     # Sail dimensions
     sail_height = params['sail_height']
     sail_width = params['sail_width']
-    sail_area_m2 = (sail_height * sail_width) / 1e6  # Convert mm² to m²
+    sail_levels = calculate_sail_levels(params, reefing_percentage)
+    effective_sail_height = sail_levels['effective_sail_height_mm']
+    sail_area_m2_before_reefing = (sail_height * sail_width) / 1e6  # Convert mm² to m²
+    sail_area_m2 = (effective_sail_height * sail_width) / 1e6
 
-    # Center of effort: assume boom is at partner level,
-    # and CE is at 40% of sail height above boom
-    ce_above_partner = sail_height * 0.40
+    # Center of effort, measured from the partner (the cantilever root)
+    ce_above_partner = sail_levels['ce_level_mm'] - mast_partner_level
 
     # Height from step to center of effort
     step_to_ce = step_to_partner + ce_above_partner
@@ -92,15 +186,21 @@ def calculate_mast_geometry(params: Dict[str, Any]) -> Dict[str, float]:
         'partner_to_top_mm': partner_to_top,
         'ce_above_partner_mm': ce_above_partner,
         'step_to_ce_mm': step_to_ce,
+        'boom_level_mm': sail_levels['boom_level_mm'],
+        'ce_level_mm': sail_levels['ce_level_mm'],
         'sail_height_mm': sail_height,
         'sail_width_mm': sail_width,
+        'reefing_percentage': reefing_percentage,
+        'sail_angle_deg': sail_levels['sail_angle_deg'],
         'sail_area_m2': sail_area_m2,
+        'sail_area_m2_before_reefing': sail_area_m2_before_reefing,
     }
 
 
 def check_bending_at_partner(wind_force_n: float,
                               ce_above_partner_mm: float,
-                              section_props: Dict[str, float]) -> Dict[str, Any]:
+                              section_props: Dict[str, float],
+                              min_safety_factor: float = 2.0) -> Dict[str, Any]:
     """
     Check bending stress at mast partner level.
 
@@ -111,6 +211,7 @@ def check_bending_at_partner(wind_force_n: float,
         wind_force_n: Wind force on sail (N)
         ce_above_partner_mm: Distance from partner to center of effort (mm)
         section_props: Mast section properties
+        min_safety_factor: Minimum required safety factor
 
     Returns:
         Analysis results
@@ -126,12 +227,13 @@ def check_bending_at_partner(wind_force_n: float,
         'moment_nm': M / 1000,
         'stress_mpa': sigma,
         'safety_factor': safety_factor,
-        'passed': safety_factor >= 2.0
+        'passed': safety_factor >= min_safety_factor
     }
 
 
 def check_shear_at_partner(wind_force_n: float,
-                            section_props: Dict[str, float]) -> Dict[str, Any]:
+                            section_props: Dict[str, float],
+                            min_safety_factor: float = 2.0) -> Dict[str, Any]:
     """
     Check shear stress at mast partner.
 
@@ -141,6 +243,7 @@ def check_shear_at_partner(wind_force_n: float,
     Args:
         wind_force_n: Wind force (N)
         section_props: Mast section properties
+        min_safety_factor: Minimum required safety factor
 
     Returns:
         Analysis results
@@ -160,7 +263,7 @@ def check_shear_at_partner(wind_force_n: float,
         'shear_stress_mpa': tau_max,
         'shear_yield_mpa': shear_yield,
         'safety_factor': safety_factor,
-        'passed': safety_factor >= 2.0
+        'passed': safety_factor >= min_safety_factor
     }
 
 
@@ -168,7 +271,8 @@ def check_column_below_partner(wind_force_n: float,
                                 step_to_partner_mm: float,
                                 ce_above_partner_mm: float,
                                 mast_mass_kg: float,
-                                section_props: Dict[str, float]) -> Dict[str, Any]:
+                                section_props: Dict[str, float],
+                                min_safety_factor: float = 2.0) -> Dict[str, Any]:
     """
     Check combined compression and bending in mast section below partner.
 
@@ -184,6 +288,7 @@ def check_column_below_partner(wind_force_n: float,
         ce_above_partner_mm: Distance from partner to CE (mm)
         mast_mass_kg: Total mast mass (kg)
         section_props: Mast section properties
+        min_safety_factor: Minimum required safety factor
 
     Returns:
         Analysis results
@@ -226,11 +331,12 @@ def check_column_below_partner(wind_force_n: float,
         'euler_buckling_stress_mpa': sigma_euler,
         'interaction_ratio': interaction,
         'safety_factor': safety_factor,
-        'passed': safety_factor >= 2.0
+        'passed': safety_factor >= min_safety_factor
     }
 
 
-def check_local_buckling(section_props: Dict[str, float]) -> Dict[str, Any]:
+def check_local_buckling(section_props: Dict[str, float],
+                          min_safety_factor: float = 2.0) -> Dict[str, Any]:
     """
     Check for local wall buckling (crinkling) of thin-walled tube.
 
@@ -239,6 +345,7 @@ def check_local_buckling(section_props: Dict[str, float]) -> Dict[str, Any]:
 
     Args:
         section_props: Mast section properties
+        min_safety_factor: Minimum required safety factor
 
     Returns:
         Analysis results
@@ -255,7 +362,7 @@ def check_local_buckling(section_props: Dict[str, float]) -> Dict[str, Any]:
     # Compare to yield - local buckling shouldn't govern if D/t < 50
     ratio_to_yield = sigma_local_crit / ALUMINUM_YIELD_STRENGTH_MPA
 
-    passed = d_over_t < 50 and ratio_to_yield > 2.0
+    passed = d_over_t < 50 and ratio_to_yield > min_safety_factor
 
     return {
         'd_over_t': d_over_t,
@@ -269,7 +376,9 @@ def check_local_buckling(section_props: Dict[str, float]) -> Dict[str, Any]:
 def validate_mast(params: Dict[str, Any],
                   mass_data: Dict[str, Any],
                   wind_speed_knots: float = 25.0,
-                  min_safety_factor: float = 2.0) -> Dict[str, Any]:
+                  min_safety_factor: float = 2.0,
+                  reefing_percentage: float = 0.0,
+                  force_coefficient: float = ISO_SIDE_FORCE_COEFFICIENT) -> Dict[str, Any]:
     """
     Validate mast structural integrity under wind loading.
     Validation is in line with ISO 12215-10 Clause 5.3, any relevant enginnering method can be used to estimate stress evaluation
@@ -279,6 +388,12 @@ def validate_mast(params: Dict[str, Any],
         mass_data: Mass calculation results
         wind_speed_knots: Design wind speed (default 25 knots)
         min_safety_factor: Minimum required safety factor
+        reefing_percentage: Sail reduction (0-100) applied before computing
+            wind force. Defaults to 0 (full sail), preserving prior behavior.
+        force_coefficient: Sail force coefficient (default ISO's N=1.2). The
+            mast is an unstayed round tube, so it's the TOTAL aerodynamic
+            force (lift and drag combined) that bends it, whichever way it
+            points - see calculate_wind_force.
 
     Returns:
         Validation results
@@ -289,10 +404,10 @@ def validate_mast(params: Dict[str, Any],
     section_props = calculate_pipe_section_properties(mast_diameter, mast_thickness)
 
     # Geometry
-    geometry = calculate_mast_geometry(params)
+    geometry = calculate_mast_geometry(params, reefing_percentage)
 
     # Wind force
-    wind_force = calculate_wind_force(wind_speed_knots, geometry['sail_area_m2'])
+    wind_force = calculate_wind_force(wind_speed_knots, geometry['sail_area_m2'], force_coefficient)
 
     # Get mast mass from mass data
     mast_mass = 0.0
@@ -306,12 +421,14 @@ def validate_mast(params: Dict[str, Any],
     bending_result = check_bending_at_partner(
         wind_force,
         geometry['ce_above_partner_mm'],
-        section_props
+        section_props,
+        min_safety_factor
     )
 
     shear_result = check_shear_at_partner(
         wind_force,
-        section_props
+        section_props,
+        min_safety_factor
     )
 
     column_result = check_column_below_partner(
@@ -319,10 +436,11 @@ def validate_mast(params: Dict[str, Any],
         geometry['step_to_partner_mm'],
         geometry['ce_above_partner_mm'],
         mast_mass,
-        section_props
+        section_props,
+        min_safety_factor
     )
 
-    local_buckling_result = check_local_buckling(section_props)
+    local_buckling_result = check_local_buckling(section_props, min_safety_factor)
 
     # Overall pass requires all checks to pass
     all_passed = all([
@@ -341,10 +459,14 @@ def validate_mast(params: Dict[str, Any],
 
     return {
         'test_name': 'mast_wind_loading',
-        'description': f'Mast under {wind_speed_knots:.0f} knot wind (sail perpendicular)',
+        'description': (f'Mast under {wind_speed_knots:.0f} knot wind (sail perpendicular)'
+                        if force_coefficient == ISO_SIDE_FORCE_COEFFICIENT else
+                        f'Mast under {wind_speed_knots:.0f} knot wind (force coefficient '
+                        f'{force_coefficient:.2f})'),
         'passed': all_passed,
         'min_safety_factor_required': min_safety_factor,
         'wind_speed_knots': wind_speed_knots,
+        'force_coefficient': force_coefficient,
         'wind_force_n': round(wind_force, 1),
         'geometry': {
             'mast_diameter_mm': mast_diameter,
@@ -352,7 +474,12 @@ def validate_mast(params: Dict[str, Any],
             'mast_height_mm': geometry['mast_height_mm'],
             'step_to_partner_mm': round(geometry['step_to_partner_mm'], 0),
             'ce_above_partner_mm': round(geometry['ce_above_partner_mm'], 0),
+            'boom_level_mm': round(geometry['boom_level_mm'], 0),
+            'ce_level_mm': round(geometry['ce_level_mm'], 0),
             'sail_area_m2': round(geometry['sail_area_m2'], 2),
+            'sail_area_m2_before_reefing': round(geometry['sail_area_m2_before_reefing'], 2),
+            'reefing_percentage': geometry['reefing_percentage'],
+            'sail_angle_deg': geometry['sail_angle_deg'],
             'd_over_t': round(section_props['outer_diameter_mm'] / section_props['thickness_mm'], 1),
         },
         'section_properties': {

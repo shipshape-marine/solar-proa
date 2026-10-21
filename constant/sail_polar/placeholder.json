@@ -1,0 +1,25 @@
+{
+  "source": "placeholder",
+  "description": "Generic soft-sail-shaped lift/drag polar, deliberately on the high side (peak C_L 1.45, broadside C_D 1.4). NOT measured or simulated for the RP2 rig - replace with an OpenFOAM-generated polar (src/sail_cfd/) before relying on any reefing recommendation.",
+  "min_sheeting_angle_deg": 10,
+  "min_sheeting_angle_note": "Closest the sail chord can be sheeted to the hull centerline. Estimated, not measured on the RP2 rig.",
+  "polars": [
+    {
+      "reefing_percentage": 0,
+      "points": [
+        {"angle_of_attack_deg": 0,  "cl": 0.00, "cd": 0.05},
+        {"angle_of_attack_deg": 5,  "cl": 0.45, "cd": 0.06},
+        {"angle_of_attack_deg": 10, "cl": 0.85, "cd": 0.10},
+        {"angle_of_attack_deg": 15, "cl": 1.15, "cd": 0.18},
+        {"angle_of_attack_deg": 20, "cl": 1.35, "cd": 0.30},
+        {"angle_of_attack_deg": 25, "cl": 1.45, "cd": 0.45},
+        {"angle_of_attack_deg": 30, "cl": 1.40, "cd": 0.62},
+        {"angle_of_attack_deg": 35, "cl": 1.25, "cd": 0.80},
+        {"angle_of_attack_deg": 45, "cl": 1.00, "cd": 1.00},
+        {"angle_of_attack_deg": 60, "cl": 0.70, "cd": 1.21},
+        {"angle_of_attack_deg": 75, "cl": 0.36, "cd": 1.35},
+        {"angle_of_attack_deg": 90, "cl": 0.00, "cd": 1.40}
+      ]
+    }
+  ]
+}

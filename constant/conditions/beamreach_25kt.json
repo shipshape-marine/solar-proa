@@ -1,0 +1,15 @@
+{
+  "condition_name": "beamreach_25kt",
+  "condition_description": "25 knot apparent wind on the beam (90 deg off the bow), wind from the ama side",
+
+  "apparent_wind_speed_kt": 25,
+  "apparent_wind_angle_deg": 90,
+  "trim": "worst_case",
+
+  "impact_velocity_ms": 3.0,
+  "dynamic_factor": 2.5,
+
+  "min_safety_factor": 2.0,
+
+  "notes": "Apparent wind is what the boat feels (masthead anemometer), measured off the bow: 0=head-to-wind, 90=beam, 180=dead downwind. trim is 'worst_case' (any sheeting the rig allows, e.g. over-sheeted in a gust) or 'max_drive' (sail set for maximum driving force). Sail force coefficients come from the sail polar passed to operating_envelope (--sail-polar, default constant/sail_polar/placeholder.json) - see src/structural/sail_aero.py."
+}

@@ -69,6 +69,22 @@ artifact) or today's code defaults:
   (see its `--help`, or `constant/conditions/` for example condition files) -
   it solves for the minimum reefing percentage directly rather than requiring
   you to guess-and-check a value.
+- **Wind angle / point of sail**: the ISO check (`python -m src.structural`)
+  has no heading input - it always applies ISO 12215-10's N=1.2 side force
+  coefficient, its design load. For a specific wind, use
+  `operating_envelope`: its condition file takes `apparent_wind_speed_kt`
+  and `apparent_wind_angle_deg` (wind as felt aboard, off the bow:
+  0=head-to-wind, 90=beam, 180=dead downwind) plus `trim` (`worst_case`
+  default, or `max_drive`), and resolves a sail lift/drag polar
+  (`--sail-polar`, see `src/structural/sail_aero.py`) into a total force
+  coefficient for the mast and a heeling coefficient for capsize. The
+  default polar `constant/sail_polar/placeholder.json` is generic data, not
+  this rig - say so whenever you report a recommendation made with it; a
+  real one comes from the OpenFOAM pipeline in `src/sail_cfd/`. Don't scale
+  ISO loads by sin(heading): the mast is unstayed, so drag loads it fully
+  downwind, and heeling force peaks close-hauled, not beam-on. The 6 named
+  point-of-sail presets' `sail_angle`/`rig_rotation` are hand-picked for the
+  CAD render - don't reverse-engineer a wind angle from a preset name.
 - **Vessel loading condition** (more/less crew and gear aboard generally,
   not just standing on the aka): `constant/boat/*.json` has
   `deck_load_in_kg`, `sole_load_in_kg`, `ama_load_in_kg` fields that likely
@@ -147,6 +163,9 @@ in the default console codepage otherwise.
 - If reefing was applied, mention the resulting sail area reduction (mast
   test's `geometry.reefing_percentage` / `sail_area_m2` vs.
   `sail_area_m2_before_reefing`).
+- For an `operating_envelope` recommendation, report the apparent wind
+  angle, trim assumption, the sail force coefficients it used, and the
+  polar's `source` - flag `placeholder` prominently.
 
 ## 6. Present suggestions on failure
 
@@ -181,6 +200,7 @@ directly (edit `constant/boat/*.json`, or - for wind/wave conditions -
 |---|---|---|
 | `--wind-speed` | mast bending/shear/buckling test, and now the ama-lift/capsize hard cutoff too | `mast_analysis.py`, `capsize_analysis.py` |
 | `--reefing-percentage` | mast test's effective sail area AND the capsize check's sail area/CE height - a single scalar applied uniformly to both masts, distinct from the per-mast `reefing_percentage_biru`/`_kuning` fields in the configuration file (which still only drive the FreeCAD render geometry, not this CLI) | `mast_analysis.py`, `capsize_analysis.py` |
+| `apparent_wind_angle_deg`, `trim` (condition file, `operating_envelope` only) | mast and capsize sail force coefficients via the sail polar, in place of ISO's N=1.2 | `sail_aero.py`, `operating_envelope.py` |
 | `--impact-velocity`, `--dynamic-factor` **(not implemented)** | would affect all 3 wave-slam tests + ISO pressure cross-check | `wave_slam.py`, `iso_design_pressure.py` |
 | `--design-category` **(not implemented)** | would affect ISO global-loads (GLC1) + ISO pressure cross-check | `iso_global_loads.py`, `iso_design_pressure.py` |
 | `--crew-mass` **(not implemented)** | would affect the aka point-load (crew standing) test | `aka_point_load.py` |

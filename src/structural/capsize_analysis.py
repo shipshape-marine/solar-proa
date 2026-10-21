@@ -20,7 +20,9 @@ import math
 from typing import Dict, Any, Optional
 
 from .beam_mechanics import GRAVITY
-from .mast_analysis import calculate_sail_levels, check_reefing_percentage
+from .mast_analysis import (
+    ISO_SIDE_FORCE_COEFFICIENT, calculate_sail_levels, check_reefing_percentage
+)
 
 
 def knots_to_ms(knots: float) -> float:
@@ -34,7 +36,8 @@ def ms_to_knots(ms: float) -> float:
 
 
 def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float,
-                         num_sails: int = 2) -> float:
+                         num_sails: int = 2,
+                         heeling_force_coefficient: float = ISO_SIDE_FORCE_COEFFICIENT) -> float:
     """
     Calculate total wind force on sails.
 
@@ -48,12 +51,17 @@ def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float,
         wind_speed_knots: Wind speed in knots
         sail_area_m2: Area of one sail in m²
         num_sails: Number of sails (default 2 for proa)
+        heeling_force_coefficient: Athwartships (heeling) force coefficient
+            in place of ISO's N=1.2 (default N=1.2, the ISO design load).
+            operating_envelope passes the sail-polar heeling coefficient for
+            a specific apparent wind angle here - see sail_aero.py.
 
     Returns:
         Total force in Newtons
     """
     V = knots_to_ms(wind_speed_knots)
-    force_per_sail = 0.72 * V**2 * sail_area_m2
+    force_per_sail = (0.72 * V**2 * sail_area_m2
+                      * (heeling_force_coefficient / ISO_SIDE_FORCE_COEFFICIENT))
     return force_per_sail * num_sails
 
 
@@ -126,6 +134,19 @@ def find_capsize_angle(gz_data: Dict[str, Any]) -> Optional[float]:
     return gz_data.get('summary', {}).get('capsize_angle_deg')
 
 
+def heeling_axis_level_mm(params: Dict[str, Any]) -> float:
+    """
+    Absolute height (mm) of the heeling axis, taken as the waterline.
+
+    Mast partner is roughly at deck level (matches
+    mast_analysis.calculate_mast_geometry's fallback); for simplicity the
+    waterline/heeling axis is assumed about 500mm below the partner. Also
+    used by src/sail_cfd as the sea-surface height under the sail.
+    """
+    mast_partner_level_mm = params.get('aka_base_level', 1406)
+    return mast_partner_level_mm - 500
+
+
 def estimate_center_of_effort_height(params: Dict[str, Any],
                                       reefing_percentage: float = 0.0) -> float:
     """
@@ -143,12 +164,7 @@ def estimate_center_of_effort_height(params: Dict[str, Any],
     Returns:
         CE height in meters
     """
-    # Mast partner is roughly at deck level (matches mast_analysis.calculate_mast_geometry's fallback)
-    mast_partner_level_mm = params.get('aka_base_level', 1406)
-
-    # Waterline is roughly at bottom_height + some immersion
-    # For simplicity, assume heeling axis is near waterline, about 500mm below partner
-    heeling_axis_mm = mast_partner_level_mm - 500
+    heeling_axis_mm = heeling_axis_level_mm(params)
 
     # Sail geometry params are required base parameters (see boat/*.json) - no
     # silent fallback, so a malformed/incomplete params dict raises instead of
@@ -166,7 +182,9 @@ def calculate_ama_lift_windspeed(params: Dict[str, Any],
                                   wind_speed_knots: float = 25.0,
                                   min_safety_factor: float = 2.0,
                                   reefing_percentage: float = 0.0,
-                                  crew_righting_moment_bonus_nm: float = 0.0) -> Dict[str, Any]:
+                                  crew_righting_moment_bonus_nm: float = 0.0,
+                                  heeling_force_coefficient: float = ISO_SIDE_FORCE_COEFFICIENT
+                                  ) -> Dict[str, Any]:
     """
     Check ama-lift (capsize) margin at the given wind speed, wind from the
     ama side (the proa's less stable direction).
@@ -186,6 +204,9 @@ def calculate_ama_lift_windspeed(params: Dict[str, Any],
             shift model (hiking out to windward adds righting moment beyond
             the static GZ curve). Defaults to 0 - not yet estimated from any
             parameter here.
+        heeling_force_coefficient: Athwartships force coefficient (default
+            ISO's N=1.2, preserving prior behavior exactly). See
+            calculate_wind_force.
 
     Returns:
         Analysis results with the capsize safety factor and critical wind speeds
@@ -213,8 +234,10 @@ def calculate_ama_lift_windspeed(params: Dict[str, Any],
     capsize_angle = find_capsize_angle(gz_data)
 
     # Critical wind speed: heeling moment = max righting moment (safety_factor = 1)
-    # Heeling moment = 0.72 * V² * A * num_sails * ce_height (ISO12215-10 coefficient)
-    coefficient = 0.72 * sail_area_m2 * num_sails * ce_height_m
+    # Heeling moment = 0.72 * V² * A * num_sails * ce_height (ISO12215-10 coefficient,
+    # rescaled if a sail-polar heeling coefficient was passed in)
+    coefficient = (0.72 * sail_area_m2 * num_sails * ce_height_m
+                   * (heeling_force_coefficient / ISO_SIDE_FORCE_COEFFICIENT))
 
     if coefficient > 0 and max_righting_moment > 0:
         V_squared = max_righting_moment / coefficient
@@ -222,12 +245,21 @@ def calculate_ama_lift_windspeed(params: Dict[str, Any],
         critical_windspeed_knots = ms_to_knots(V_ms)
         # Wind speed at which safety_factor drops to exactly min_safety_factor
         safe_windspeed_limit_knots = critical_windspeed_knots / math.sqrt(min_safety_factor)
-    else:
+    elif max_righting_moment <= 0:
+        # No stability margin at all - unsafe at any wind speed, "critical
+        # wind speed" is effectively 0, not infinite.
         critical_windspeed_knots = 0
         safe_windspeed_limit_knots = 0
+    else:
+        # coefficient <= 0: zero heeling force coefficient (e.g. sail luffing
+        # head-to-wind, or fully reefed) - no wind-driven capsize risk at ANY
+        # wind speed, not "capsizes at 0 knots".
+        critical_windspeed_knots = float('inf')
+        safe_windspeed_limit_knots = float('inf')
 
     # Heeling moment and safety factor at the actual/operating wind speed
-    wind_force = calculate_wind_force(wind_speed_knots, sail_area_m2, num_sails)
+    wind_force = calculate_wind_force(wind_speed_knots, sail_area_m2, num_sails,
+                                      heeling_force_coefficient)
     heeling_moment = calculate_heeling_moment(wind_force, ce_height_m)
 
     if max_righting_moment <= 0:
@@ -266,6 +298,7 @@ def calculate_ama_lift_windspeed(params: Dict[str, Any],
         },
         'at_wind_speed': {
             'wind_speed_knots': wind_speed_knots,
+            'heeling_force_coefficient': heeling_force_coefficient,
             'wind_force_n': round(wind_force, 1),
             'heeling_moment_nm': round(heeling_moment, 1),
             'moment_ratio': round(heeling_moment / max_righting_moment, 2) if max_righting_moment > 0 else None,

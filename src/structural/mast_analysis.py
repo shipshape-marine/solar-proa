@@ -25,12 +25,19 @@ from .beam_mechanics import (
 # formula directly (see calculate_wind_force) - rho and Cd are already
 # folded into its 0.72 coefficient, not separate constants here.
 
+# ISO12215-10 Table 5 Note 3's side force coefficient N, folded into 0.72.
+# A caller with a measured/simulated sail force coefficient (see
+# sail_aero.py) passes it as force_coefficient and the 0.72 is rescaled.
+ISO_SIDE_FORCE_COEFFICIENT = 1.2
+
+
 def knots_to_ms(knots: float) -> float:
     """Convert wind speed from knots to m/s."""
     return knots * 0.514444
 
 
-def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
+def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float,
+                          force_coefficient: float = ISO_SIDE_FORCE_COEFFICIENT) -> float:
     """
     Calculate wind force on sail (Per mast)
 
@@ -44,12 +51,16 @@ def calculate_wind_force(wind_speed_knots: float, sail_area_m2: float) -> float:
     Args:
         wind_speed_knots: Wind speed in knots
         sail_area_m2: Sail area in square meters
+        force_coefficient: Force coefficient in place of ISO's N=1.2 (default
+            N=1.2, the ISO design load). Not from the standard when
+            overridden - operating_envelope passes the sail-polar total force
+            coefficient for a specific apparent wind angle here.
 
     Returns:
         Force in Newtons
     """
     V = knots_to_ms(wind_speed_knots)
-    return 0.72 * V**2 * sail_area_m2
+    return 0.72 * V**2 * sail_area_m2 * (force_coefficient / ISO_SIDE_FORCE_COEFFICIENT)
 
 
 def check_reefing_percentage(reefing_percentage: float) -> float:
@@ -366,7 +377,8 @@ def validate_mast(params: Dict[str, Any],
                   mass_data: Dict[str, Any],
                   wind_speed_knots: float = 25.0,
                   min_safety_factor: float = 2.0,
-                  reefing_percentage: float = 0.0) -> Dict[str, Any]:
+                  reefing_percentage: float = 0.0,
+                  force_coefficient: float = ISO_SIDE_FORCE_COEFFICIENT) -> Dict[str, Any]:
     """
     Validate mast structural integrity under wind loading.
     Validation is in line with ISO 12215-10 Clause 5.3, any relevant enginnering method can be used to estimate stress evaluation
@@ -378,6 +390,10 @@ def validate_mast(params: Dict[str, Any],
         min_safety_factor: Minimum required safety factor
         reefing_percentage: Sail reduction (0-100) applied before computing
             wind force. Defaults to 0 (full sail), preserving prior behavior.
+        force_coefficient: Sail force coefficient (default ISO's N=1.2). The
+            mast is an unstayed round tube, so it's the TOTAL aerodynamic
+            force (lift and drag combined) that bends it, whichever way it
+            points - see calculate_wind_force.
 
     Returns:
         Validation results
@@ -391,7 +407,7 @@ def validate_mast(params: Dict[str, Any],
     geometry = calculate_mast_geometry(params, reefing_percentage)
 
     # Wind force
-    wind_force = calculate_wind_force(wind_speed_knots, geometry['sail_area_m2'])
+    wind_force = calculate_wind_force(wind_speed_knots, geometry['sail_area_m2'], force_coefficient)
 
     # Get mast mass from mass data
     mast_mass = 0.0
@@ -443,10 +459,14 @@ def validate_mast(params: Dict[str, Any],
 
     return {
         'test_name': 'mast_wind_loading',
-        'description': f'Mast under {wind_speed_knots:.0f} knot wind (sail perpendicular)',
+        'description': (f'Mast under {wind_speed_knots:.0f} knot wind (sail perpendicular)'
+                        if force_coefficient == ISO_SIDE_FORCE_COEFFICIENT else
+                        f'Mast under {wind_speed_knots:.0f} knot wind (force coefficient '
+                        f'{force_coefficient:.2f})'),
         'passed': all_passed,
         'min_safety_factor_required': min_safety_factor,
         'wind_speed_knots': wind_speed_knots,
+        'force_coefficient': force_coefficient,
         'wind_force_n': round(wind_force, 1),
         'geometry': {
             'mast_diameter_mm': mast_diameter,

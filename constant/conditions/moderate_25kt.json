@@ -2,7 +2,8 @@
   "condition_name": "moderate_25kt",
   "condition_description": "25 knot wind with moderate wave impact - example/default condition",
 
-  "wind_speed_kt": 25,
+  "apparent_wind_speed_kt": 25,
+  "apparent_wind_angle_deg": 90,
 
   "impact_velocity_ms": 3.0,
   "dynamic_factor": 2.5,

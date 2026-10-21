@@ -206,11 +206,14 @@ di mana *ρ* adalah kerapatan udara, *V* adalah kecepatan angin, *C_d* adalah ko
 
 ### Asumsi
 
-- Kecepatan angin: {{ site.data.rp2_beaching_validate_structure.tests[3].wind_speed_knots }} knot
+- Kecepatan angin: {{ site.data.rp2_beaching_validate_structure.tests[3].wind_speed_knots }} knot, layar penuh
+- Sudut layar: {{ site.data.rp2_beaching_validate_structure.tests[3].geometry.sail_angle_deg }}° (preset berlayar paling miring, yang menempatkan pusat gaya layar paling tinggi)
 - Layar tegak lurus terhadap angin (gaya maksimum)
 - Penampang tiang: diameter {{ site.data.rp2_beaching_validate_structure.tests[3].geometry.mast_diameter_mm }} mm × dinding {{ site.data.rp2_beaching_validate_structure.tests[3].geometry.mast_thickness_mm }} mm
 - Material: Aluminium 6061-T6
 - Tiang tanpa stay (tanpa shroud atau stay)
+
+> **Catatan: ini adalah kasus yang sengaja dibuat berat.** RP2 sebenarnya tidak dapat membawa layar penuh pada {{ site.data.rp2_beaching_validate_structure.tests[3].wind_speed_knots }} knot. Layar penuh melampaui momen pengembali maksimum kapal pada sekitar {{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knot dengan angin dari sisi ama (sedikit lebih tinggi dari sisi vaka), sehingga dalam praktiknya layar sudah dikurangi, dikendurkan, atau kapal terbalik sebelum tiang menerima beban ini. Lentur tiang secara efektif dibatasi oleh momen pengembali. Kasus ini dipertahankan sebagai pemeriksaan kekuatan yang sederhana dan konservatif, bukan kondisi berlayar yang realistis. ISO 12217-2 Klausul 7.5 b) memperlakukan kekuatan tiang layar sebagai salah satu batas kecepatan angin aman untuk layar penuh, di samping stabilitas.
 
 ### Hasil
 
@@ -507,7 +510,7 @@ di mana *h_CE* adalah tinggi pusat usaha layar di atas sumbu kemiringan. Ini dib
 
 ### Integritas Struktural Keseluruhan
 
-Desain struktural Roti Proa II **lulus semua tes validasi pada layar penuh** dengan faktor keamanan melebihi minimum yang diperlukan yaitu 2,0, dengan satu pengecualian: pemeriksaan margin angkat ama/terbalik ([§11](#11-margin-angkat-ama--terbalik)) memerlukan reefing di atas kecepatan angin tertentu agar faktor keamanannya tetap di atas 2,0 - ini tidak lagi diperlakukan sebagai informasional saja. Struktur ini tetap mendemonstrasikan kekuatan dan kekakuan yang memadai untuk:
+Desain struktural Roti Proa II **lulus semua tes validasi pada layar penuh** dengan faktor keamanan melebihi minimum yang diperlukan yaitu 2,0, dengan dua pengecualian, keduanya kasus beban layar pada angin desain 25 knot dengan layar penuh: pemeriksaan margin angkat ama/terbalik ([§11](#11-margin-angkat-ama--terbalik)) memerlukan reefing di atas kecepatan angin tertentu agar faktor keamanannya tetap di atas 2,0 - ini tidak lagi diperlakukan sebagai informasional saja - dan beban angin tiang ([§4](#4-beban-angin-tiang)) berada di bawah 2,0 dengan layar pada sudut berlayar paling miring. Kasus tiang ini sengaja lebih berat daripada beban apa pun yang benar-benar dapat dibawa kapal (lihat catatan di §4): layar penuh sudah melampaui kemampuan kapal jauh di bawah 25 knot. Struktur ini tetap mendemonstrasikan kekuatan dan kekakuan yang memadai untuk:
 
 - **Operasi normal**: Berlayar, bermotor, berlabuh, beaching
 - **Kejadian dinamis**: Dampak hantaman gelombang dari berbagai arah

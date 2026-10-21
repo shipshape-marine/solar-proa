@@ -133,7 +133,8 @@ def estimate_center_of_effort_height(params: Dict[str, Any],
 
     The heeling axis is approximately at the waterline. The CE level comes
     from mast_analysis.calculate_sail_levels, shared with the mast test:
-    sail hung from the fixed yard pivot, reefing raises the boom.
+    sail hung from the fixed yard pivot, reefing raises the boom, and the
+    configuration's sail_angle swings the sail up about the pivot.
 
     Args:
         params: Design parameters
@@ -255,6 +256,7 @@ def calculate_ama_lift_windspeed(params: Dict[str, Any],
             'num_sails': num_sails,
             'total_sail_area_m2': round(sail_area_m2 * num_sails, 2),
             'ce_height_m': round(ce_height_m, 2),
+            'sail_angle_deg': calculate_sail_levels(params, reefing_percentage)['sail_angle_deg'],
         },
         'stability': {
             'max_righting_moment_nm': round(max_righting_moment, 1),

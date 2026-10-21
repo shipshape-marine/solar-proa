@@ -36,14 +36,17 @@ ISO_AL_DESIGN_STRESS_UNWELDED_MPA = min(
 # tau_d = 0.58 * sigma_d (both Part 5 Table 17 and Part 7 Table 12 use this ratio)
 ISO_AL_SHEAR_DESIGN_STRESS_WELDED_MPA = 0.58 * ISO_AL_DESIGN_STRESS_WELDED_MPA
 
-# ISO 12215-5 8.2 / Part 7 Table 13 design category factor k_DC. RP2's design
-# category has not been formally declared yet; Category B (coastal,
-# day-tourism in Singapore/Indonesia waters) is assumed as a placeholder and
-# MUST be confirmed by the designer per ISO 12217 before this number is used
-# for certification. Shared by iso_global_loads.py and iso_design_pressure.py
-# so a future update to the confirmed category can't update one and miss the
+# ISO 12215-5 8.2 / Part 7 Table 13 design category factor k_DC. Category C
+# (ISO 12217-2 9.2.3: steady winds up to Beaufort 6, significant waves up to
+# 2 m) is the design team's chosen target (2026-10-15), replacing an earlier
+# Category B placeholder: under ISO 12217-2 (proas are catamarans, 3.1.3)
+# Category B needs a fully enclosed boat (7.1.2) and a maximum righting lever
+# of at least 1.3 m / BPF (7.8, Table 8) against RP2's ~0.9 m. The Clause 7
+# category assessment itself has not been carried out yet - C is the target,
+# not a demonstrated result. Shared by iso_global_loads.py and
+# iso_design_pressure.py so a future update can't update one and miss the
 # other.
-ASSUMED_DESIGN_CATEGORY = 'B'
+ASSUMED_DESIGN_CATEGORY = 'C'
 K_DC_BY_CATEGORY = {'A': 1.0, 'B': 0.8, 'C': 0.6, 'D': 0.4}
 
 

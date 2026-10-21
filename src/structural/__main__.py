@@ -13,7 +13,7 @@ import argparse
 import sys
 from typing import Dict, Any
 
-from .validate import run_validation
+from .validate import run_validation, DESIGN_SAIL_ANGLE_DEG
 
 
 def print_aka_report(result: Dict[str, Any]) -> None:
@@ -396,7 +396,8 @@ def print_ama_lift_report(result: Dict[str, Any]) -> None:
     print(f"\nSail geometry:")
     print(f"  Sail area: {sail['sail_area_m2']:.1f} m² x {sail['num_sails']} sails = {sail['total_sail_area_m2']:.1f} m² total"
           f" ({sail['reefing_percentage']:.0f}% reefed from {sail['sail_area_m2_before_reefing']:.1f} m²/sail)")
-    print(f"  CE height: {sail['ce_height_m']:.2f} m above heeling axis")
+    print(f"  CE height: {sail['ce_height_m']:.2f} m above heeling axis"
+          f" (sail angle {sail['sail_angle_deg']:.0f} deg)")
 
     print(f"\nStability (from GZ curve, negative heel):")
     print(f"  Max righting moment: {stab['max_righting_moment_nm']:.0f} N·m"
@@ -445,6 +446,7 @@ def print_validation_report(results: Dict[str, Any]) -> None:
         'default': "default - configuration sets no wind_speed_kt",
     }[results['wind_speed_source']]
     print(f"Wind speed: {results['wind_speed_knots']:.0f} knots ({source_desc})")
+    print(f"Sail angle: {results['sail_angle_deg']:.0f} deg (mast/capsize tests)")
 
     # Print individual test reports
     for test in results['tests']:
@@ -561,6 +563,10 @@ def main():
                              "configuration's wind_speed_kt, else 25)")
     parser.add_argument('--reefing-percentage', type=reefing_percentage_arg, default=0.0,
                         help='Sail reduction 0-100 for mast/capsize tests (default: 0, full sail)')
+    parser.add_argument('--sail-angle', type=float, default=DESIGN_SAIL_ANGLE_DEG,
+                        help='Sail tilt in degrees for mast/capsize tests, overriding the '
+                             f"configuration's sail_angle_* (default: {DESIGN_SAIL_ANGLE_DEG:.0f}, "
+                             'the most-tilted sailing preset; 0 = vertical)')
     parser.add_argument('--quiet', action='store_true',
                         help='Suppress human-readable output')
 
@@ -581,7 +587,7 @@ def main():
 
     # Run validation
     results = run_validation(params, mass_data, gz_data, args.min_safety_factor, args.wind_speed,
-                              args.reefing_percentage)
+                              args.reefing_percentage, args.sail_angle)
 
     # Write output
     with open(args.output, 'w') as f:

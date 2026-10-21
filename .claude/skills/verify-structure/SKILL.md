@@ -43,10 +43,12 @@ artifact) or today's code defaults:
   inventing a conversion, or use the code defaults (3.0 m/s, 2.5x) if they
   have no strong opinion. Maps to `--impact-velocity` / `--dynamic-factor`.
 - **Design category** (A/B/C/D): if the user mentions offshore vs. coastal
-  vs. sheltered/inshore use. Maps to `--design-category`. Defaults to `B`,
-  itself an unconfirmed placeholder in this codebase
-  (`beam_mechanics.ASSUMED_DESIGN_CATEGORY`) - say so when it matters to the
-  result.
+  vs. sheltered/inshore use. Maps to `--design-category`. Defaults to `C`
+  (`beam_mechanics.ASSUMED_DESIGN_CATEGORY`), the design team's target - not
+  yet demonstrated by an ISO 12217-2 Clause 7 assessment, so say so when it
+  matters to the result. Category B is not realistic for RP2 (needs a fully
+  enclosed boat and more righting lever - see docs/iso_traceability.md §7), and
+  `iso_design_pressure.py` refuses A/B because k_SLS isn't implemented there.
 - **Crew mass on the aka**: if the user mentions crew standing/working on
   the aka specifically (boarding, sail handling). Maps to `--crew-mass`.
   Default 150 kg (2 people).
@@ -101,7 +103,7 @@ PYTHONPATH=<repo root> python -m src.structural \
   --mass artifact/<boat>.<config>.mass.json \
   --gz artifact/<boat>.<config>.gz.json \
   --output <scratch>.json \
-  [--wind-speed N] [--reefing-percentage N] [--min-safety-factor N]
+  [--wind-speed N] [--reefing-percentage N] [--sail-angle N] [--min-safety-factor N]
 ```
 
 `--wind-speed` only needs to be passed if overriding the configuration's own
@@ -110,9 +112,16 @@ PYTHONPATH=<repo root> python -m src.structural \
 `wind_speed_source` (`override`, `configuration` or `default`) say which
 speed was actually used - report it.
 
+`--sail-angle` is NOT taken from the configuration: the mast and capsize
+tests default to -45 deg (the most-tilted sailing preset, which lifts the CE
+highest), whatever config's artifacts you pass - beaching's -90 is the
+stowed rig. Pass the chosen config's own `sail_angle_*` only if the user
+asks about that specific trim (0 = vertical sail, the pre-2026-10 behaviour).
+Report the output's `sail_angle_deg`.
+
 **Only `--parameters`, `--mass`, `--gz`, `--output`, `--wind-speed`,
-`--reefing-percentage`, `--min-safety-factor` and `--quiet` actually exist on
-this CLI today.** `--suggest`, `--impact-velocity`, `--dynamic-factor`,
+`--reefing-percentage`, `--sail-angle`, `--min-safety-factor` and `--quiet`
+actually exist on this CLI today.** `--suggest`, `--impact-velocity`, `--dynamic-factor`,
 `--design-category`, `--crew-mass`, and `--wind-from-vaka-side` (referenced
 below and earlier in this file) were never implemented - they describe a
 planned CLI surface, not the current one. Don't pass them; argparse will

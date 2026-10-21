@@ -1,6 +1,6 @@
 {
   "_readme": [
-    "Bibliographic manifest for the BS EN ISO 12215 small-craft standard series as cited by src/structural/.",
+    "Bibliographic manifest for the BS EN ISO 12215 small-craft standard series, plus the related ISO 12217-2 stability standard, as cited by src/structural/ and docs/.",
     "This file records WHICH standard, edition and clause/table numbers a given calculation is traceable to.",
     "It intentionally contains no normative text, formulas, or reproduced tables from the standards themselves:",
     "ISO/BSI documents are copyrighted and this repository is public (shipshape-marine/solar-proa, published to",
@@ -47,11 +47,12 @@
         {"clause": "8.2", "summary": "Design category factor k_DC (A=1.0, B=0.8, C=0.6, D=0.4)."},
         {"clause": "8.3", "summary": "Dynamic load factor k_DYN (planing k_DYN1/k_DYN2; displacement/sailing craft use k_DYN=3 for k_L purposes only)."},
         {"clause": "8.5", "summary": "Area pressure reduction factor k_AR, function of design area A_D and k_R (differs for plating vs stiffeners)."},
+        {"clause": "8.7, Table 11", "summary": "Slamming correction factor k_SLS for light and stable sailing craft. Neutral (1) in design categories C and D; in A and B it is neutral only for craft heavier than a length-based threshold, otherwise it follows from the maximum righting lever up to 60 deg heel, L_WL and m_LDC (never below 1). RP2 is under the threshold, but at Category C k_SLS = 1."},
         {"clause": "9.2", "summary": "Table 13: design pressures for sailing craft bottom/deck/side (P_BS, P_DS, P_SS)."},
         {"clause": "10.3", "summary": "Table 17: design stresses by material/method, e.g. aluminium stiffeners sigma_d = 0.7*sigma_yw (welded), sigma_d = min(0.6 sigma_u, 0.9 sigma_y) if unwelded."},
         {"clause": "Annex B, Table B.1/B.2", "summary": "Mechanical properties and design stress of metal plating (B.1) and stiffeners (B.2) by alloy/temper, incl. EN AW-6061 closed profile T5/T6: sigma_u=245, sigma_uw=165, sigma_y=205, sigma_yw=115 N/mm2, design stress sigma_d=0.7*sigma_yw=81 N/mm2 (welded)."}
       ],
-      "cited_by": ["src/structural/iso_design_pressure.py", "src/structural/iso_materials.py"]
+      "cited_by": ["src/structural/iso_design_pressure.py", "src/structural/iso_materials.py", "src/structural/beam_mechanics.py"]
     },
     {
       "designation": "BS EN ISO 12215-6:2018",
@@ -63,9 +64,10 @@
         {"clause": "6.3.4", "summary": "Floating frame guidance (by analogy): weld or glue area at a stiffener-to-support connection should generally not be less than the stiffener web area."},
         {"clause": "8.1", "summary": "Metal construction: structural continuity, no abrupt section changes, taper >=33% where section changes."},
         {"clause": "8.2", "summary": "End connections: 'shall provide adequate end fixity and effective transmission of the bending moment and shear force into the supporting member' — qualitative requirement only, no formula given."},
-        {"clause": "8.7/8.8", "summary": "Good-practice welding (Annex C) and riveting: rivet diameter >= thickest plate thickness or 25% of total connected thickness; edge distance >=1.5x plate thickness; rivet spacing >=2.5x diameter."}
+        {"clause": "8.7/8.8", "summary": "Good-practice welding (Annex C) and riveting: rivet diameter >= thickest plate thickness or 25% of total connected thickness; edge distance >=1.5x plate thickness; rivet spacing >=2.5x diameter."},
+        {"clause": "10", "summary": "Other loads to be considered with local reinforcement: docking, lifting, grounding, towing, anchoring, berthing/mooring, road transport. Not explicitly quantified by ISO 12215. Only lifting is checked in this repository (lifting_sling.py) - listed as an open item."}
       ],
-      "cited_by": ["src/structural/iso_joint_check.py"]
+      "cited_by": ["src/structural/iso_joint_check.py", "docs/iso_traceability.md"]
     },
     {
       "designation": "ISO 12215-7:2020",
@@ -93,6 +95,24 @@
         {"clause": "5.3", "summary": "Any relevant engineering method may be used to estimate stress evaluation — matches existing mast_analysis.py citation."}
       ],
       "cited_by": ["src/structural/mast_analysis.py"]
+    },
+    {
+      "designation": "BS EN ISO 12217-2:2025",
+      "iso_text_identical_to": "ISO 12217-2:2022",
+      "title": "Small craft — Stability and buoyancy assessment and categorization — Part 2: Sailing boats of hull length greater than or equal to 6 m",
+      "role": "Assigns the design category (which sets k_DC and k_SLS in ISO 12215-5/-7) and defines the safe-wind-speed / reefing information for multihulls. Design Category C is the design team's target (2026-10-15); the Clause 7 assessment itself has not been carried out yet.",
+      "clauses_used": [
+        {"clause": "3.1.3", "summary": "Definition of catamaran; states that proas are asymmetric catamarans, so RP2 falls under Clause 7, not the monohull Clause 6."},
+        {"clause": "3.5.3", "summary": "Minimum operating condition (light craft plus crew allowance by hull length, plus normally carried stores). The condition that Clause 7 stability requirements and Annex G use; not computed in this repository yet."},
+        {"clause": "7.1.2", "summary": "Design categories A and B require a fully enclosed boat - one reason Category B is not RP2's target."},
+        {"clause": "7.5 b)", "summary": "Owner information must give the apparent wind speed at which sail should be reduced, by Annex G or sailing trials, and use the lower of the stability and rig-strength limits. Basis for treating the mast check as a strength limit alongside the reefing envelope."},
+        {"clause": "7.6, Figures 9 and 10", "summary": "Reefing safety sign at the main control position; capsize warning sign if the boat is susceptible to inversion."},
+        {"clause": "7.7, 7.8 Table 8", "summary": "Bare poles factor, and minimum maximum transverse righting lever by design category for catamarans. RP2's GZ curve does not meet the Category B value; Category C is marginal (vaka side only)."},
+        {"clause": "7.11.2 c)", "summary": "A catamaran is susceptible to inversion if its Annex G reefing wind speed falls below a category-dependent threshold; consequences in 7.12 (buoyancy when inverted) and 7.13 (escape) for habitable boats."},
+        {"clause": "9.2.3", "summary": "Meaning of design category C (Beaufort 6 or less, significant waves up to 2 m). Context for keeping the 25 kn mast design wind."},
+        {"clause": "Annex G", "summary": "Determination of safe wind speed information: wind speed limit from the limiting righting moment and the moment of sail and windage areas about the centre of the underwater profile. The standard's counterpart to capsize_analysis.py; not yet implemented."}
+      ],
+      "cited_by": ["src/structural/beam_mechanics.py", "src/structural/validate.py", "docs/iso_traceability.md", "docs/validation_rp2.md"]
     }
   ]
 }

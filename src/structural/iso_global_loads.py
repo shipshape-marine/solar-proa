@@ -93,7 +93,7 @@ def calculate_glc1_torsional_moment(params: Dict[str, Any],
         'torsional_moment_Nm': round(m_td_kNm * 1000, 0),
         'caveats': [
             'm_LDC uses this codebase\'s modeled structural mass, not full ISO loaded displacement (crew/payload/fuel not included) - likely understates the true design moment.',
-            'Design category B is an unconfirmed placeholder - must be set by the designer per ISO 12217.',
+            'Design category C is the design team\'s target; the ISO 12217-2 Clause 7 category assessment has not been carried out yet.',
             'k_DYNM is assumed equal to ISO 12215-5 k_DYN=3 (sailing/displacement) - the Part 7-specific k_DYNM definition table was not captured in this extraction pass; verify against source before relying on this number.',
             'This is an ORDER-OF-MAGNITUDE bound only. It is deliberately NOT distributed to individual akas via ISO 12215-7 Annex D, because that method assumes the torsional moment is reacted by crossbeams twisting between TWO hulls of the same type - RP2 has only one outrigger, so there is no second hull for the akas to react against in the way Annex D models. Per ISO 12215-7 12.3.3, a non-typical arrangement like this needs the "enhanced method" (FEM), not the simplified method used here.',
         ],

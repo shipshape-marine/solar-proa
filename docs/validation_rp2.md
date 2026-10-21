@@ -208,12 +208,15 @@ where *D* is the outer diameter and *d = D - 2t* is the inner diameter. These ar
 
 ### Assumptions
 
-- Wind speed: {{ site.data.rp2_beaching_validate_structure.tests[3].wind_speed_knots }} knots
+- Wind speed: {{ site.data.rp2_beaching_validate_structure.tests[3].wind_speed_knots }} knots, full sail
+- Sail angle: {{ site.data.rp2_beaching_validate_structure.tests[3].geometry.sail_angle_deg }}° (the most-tilted sailing preset, which lifts the center of effort highest)
 - Sail perpendicular to wind (maximum force)
 - Mast section: {{ site.data.rp2_beaching_validate_structure.tests[3].geometry.mast_diameter_mm }} mm diameter × {{ site.data.rp2_beaching_validate_structure.tests[3].geometry.mast_thickness_mm }} mm wall
 - Material: 6061-T6 aluminum
 - Unstayed mast (no shrouds or stays)
 - Wind force per ISO 12215-10 Clause 7.2 Table 5; stress evaluation per Clause 5.3
+
+> **Note: this is a deliberately harsh case.** RP2 cannot actually carry full sail in {{ site.data.rp2_beaching_validate_structure.tests[3].wind_speed_knots }} knots. Full sail overpowers the boat's maximum righting moment at about {{ site.data.rp2_beaching_validate_structure.tests[10].summary.ama_lift_windspeed_knots }} knots with the wind from the ama side (somewhat more from the vaka side, see [Ama Lift / Capsize](#11-ama-lift--capsize-margin)), so in practice the sails are reefed, eased or the boat capsizes before the mast sees this load. Mast bending is effectively capped by the righting moment. The case is kept as a simple, conservative strength check rather than a realistic sailing condition. ISO 12217-2 Clause 7.5 b) treats rig strength as one limit on the safe full-sail wind speed, alongside stability.
 
 ### Results
 
@@ -510,7 +513,7 @@ where *h_CE* is the height of the sail's center of effort above the heeling axis
 
 ### Overall Structural Integrity
 
-The Roti Proa II structural design **passes all validation tests at full sail** with safety factors exceeding the required minimum of 2.0, with one exception: the ama-lift/capsize check ([§11](#11-ama-lift--capsize-margin)) requires reefing above a certain wind speed to keep its safety factor above 2.0 - it is no longer treated as informational. The structure otherwise demonstrates adequate strength and stiffness for:
+The Roti Proa II structural design **passes all validation tests at full sail** with safety factors exceeding the required minimum of 2.0, with two exceptions, both sail-load cases at the 25-knot full-sail design wind: the ama-lift/capsize check ([§11](#11-ama-lift--capsize-margin)) requires reefing above a certain wind speed to keep its safety factor above 2.0 - it is no longer treated as informational - and mast wind loading ([§4](#4-mast-wind-loading)) falls below 2.0 with the sail at its most-tilted sailing angle. The mast case is deliberately harsher than any load the boat can actually carry (see the note in §4): full sail overpowers the boat well below 25 knots. The structure otherwise demonstrates adequate strength and stiffness for:
 
 - **Normal operations**: Sailing, motoring, anchoring, beaching
 - **Dynamic events**: Wave slam impacts from multiple directions

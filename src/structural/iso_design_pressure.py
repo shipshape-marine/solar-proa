@@ -86,9 +86,13 @@ def calculate_ama_bottom_pressure(params: Dict[str, Any],
     ISO 12215-7 9.4 + ISO 12215-5 9.2, Table 13: sailing-craft bottom design
     pressure, applied to the ama as a "trimaran float" analogue.
 
-    P_BS_BASE = (2*m_LDC^0.3 + 18) * k_SLS   [k_SLS=1, RP2 is not a "light
-    and stable" sailing craft per 8.7 - not modeled, assumed 1]
+    P_BS_BASE = (2*m_LDC^0.3 + 18) * k_SLS
     P_BS = max(P_BS_BASE * k_AR * k_DC * k_L, P_BS_MIN)
+
+    k_SLS (ISO 12215-5 8.7, Table 11) is 1 for design categories C and D,
+    which covers RP2's Category C. RP2 IS "light" by Table 11's test
+    (m_LDC < 5*LWL^3), so in Category A or B k_SLS would come from the GZ
+    formula instead (roughly 1.2-1.4) - revisit if the category changes.
     """
     mass_breakdown = get_total_boat_mass(mass_data)
     m_ldc_kg = mass_breakdown['total_mass_kg']  # whole-craft mass, per ISO - not just the ama
@@ -99,7 +103,10 @@ def calculate_ama_bottom_pressure(params: Dict[str, Any],
     k_dc = calculate_k_dc()
     k_l = calculate_k_l()
     k_ar = calculate_k_ar(m_ldc_kg, design_area_m2)
-    k_sls = 1.0  # ISO 12215-5 8.7 not evaluated - assumed neutral
+    if ASSUMED_DESIGN_CATEGORY not in ('C', 'D'):
+        raise NotImplementedError("k_SLS for design category A/B (ISO 12215-5 Table 11 GZ "
+                                  "formula) is not implemented - RP2 counts as light there")
+    k_sls = 1.0  # ISO 12215-5 8.7, Table 11: categories C and D
 
     p_bs_base_kpa = (2 * (m_ldc_kg ** 0.3) + 18) * k_sls
     p_bs_kpa = p_bs_base_kpa * k_ar * k_dc * k_l
@@ -119,13 +126,13 @@ def calculate_ama_bottom_pressure(params: Dict[str, Any],
             'k_dc': k_dc,
             'k_l': round(k_l, 3),
             'k_ar': round(k_ar, 3),
-            'k_sls_assumed': k_sls,
+            'k_sls': k_sls,
         },
         'p_bs_base_kpa': round(p_bs_base_kpa, 2),
         'p_bs_design_kpa': round(p_bs_kpa, 2),
         'caveats': [
             'm_LDC is this codebase\'s modeled structural mass, not the full ISO loaded displacement (crew/payload/fuel excluded) - likely understates the true design pressure.',
-            'Design category B is an unconfirmed placeholder.',
+            'Design category C is the design team\'s target; the ISO 12217-2 Clause 7 category assessment has not been carried out yet.',
             'k_AR uses k_R=1.0 (no stiffener-span reduction) because the ama has no documented internal frame/former spacing in the parametric model - a real k_R would likely reduce this pressure further.',
             'k_L assumes the slam patch is at mid-ama-length (x/L=0.5) - the true worst-case position is not modeled.',
             'ISO Table 13\'s MIN pressure floor is not evaluated here - only the base*k_AR*k_DC*k_L term.',

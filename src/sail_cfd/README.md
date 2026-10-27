@@ -49,6 +49,10 @@ python -m src.sail_cfd trim-setup --parameters artifact/rp2.closehaul.parameter.
     --run-dir cfd_runs/rp2_trim_c45 --awa 45 --chord-camber 10
 openfoam2412 -c "sh ./cfd_runs/rp2_trim_c45/Allrun"
 python -m src.sail_cfd trim --run-dir cfd_runs/rp2_trim_c45
+
+# Refine around the best rotation, reusing the mesh; runs only the new cases
+python -m src.sail_cfd trim-extend --run-dir cfd_runs/rp2_trim_c45 --rig-rotation 17.5 22.5
+openfoam2412 -c "sh ./cfd_runs/rp2_trim_c45/Allrun.extend"
 ```
 
 By default the yard and boom are horizontal (`--sail-angle 0`). At that

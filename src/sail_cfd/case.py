@@ -328,6 +328,13 @@ relaxationFactors { equations { U 0.7; ".*" 0.7; } }
 """)
 
 
+def aoa_case_name(alpha_deg: float) -> str:
+    """aoa_20, or aoa_12p5 / aoa_27p25 for fractional degrees."""
+    if float(alpha_deg).is_integer():
+        return f"aoa_{alpha_deg:02.0f}"
+    return f"aoa_{alpha_deg:05.2f}".rstrip('0').replace('.', 'p')
+
+
 def write_aoa_case(case_dir: str, alpha_deg: float, n_procs: int, end_time: int) -> None:
     """simpleFoam case for one angle of attack; mesh is copied in by Allrun."""
     dirs = flow_directions(alpha_deg)
@@ -473,9 +480,7 @@ def generate_sweep(run_dir: str, params: Dict[str, Any], parameters_path: str,
 
         cases = []
         for alpha in sorted(alphas):
-            # aoa_20, or aoa_12p5 for half degrees
-            case_name = (f"aoa_{alpha:02.0f}" if float(alpha).is_integer()
-                         else f"aoa_{alpha:04.1f}".replace('.', 'p'))
+            case_name = aoa_case_name(alpha)
             write_aoa_case(os.path.join(run_dir, reef_dir, case_name), alpha, n_procs,
                            preset['end_time'])
             run_lines.append(f'echo "== {reef_dir}/{case_name}"; sh ./{reef_dir}/{case_name}/Allrun')

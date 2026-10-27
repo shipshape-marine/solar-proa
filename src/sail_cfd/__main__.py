@@ -19,7 +19,7 @@ import sys
 
 from .case import MESH_PRESETS, generate_sweep
 from .postprocess import build_polar
-from .trim import build_trim_report, generate_trim_sweep
+from .trim import build_trim_report, extend_trim_sweep, generate_trim_sweep
 
 DEFAULT_REEFS = [0, 25, 50, 75]
 DEFAULT_ALPHAS = [0, 5, 10, 15, 20, 25, 30, 35, 45, 60, 75, 90]
@@ -76,6 +76,14 @@ def main():
     trim_setup.add_argument('--procs', type=int, default=12,
                             help='MPI processes per case (default: 12)')
 
+    trim_extend = sub.add_parser('trim-extend',
+                                 help='Add rig rotations to a trim sweep, reusing its mesh')
+    trim_extend.add_argument('--run-dir', required=True, help='Trim sweep directory (contains sweep.json)')
+    trim_extend.add_argument('--rig-rotation', type=float, nargs='+', required=True,
+                             help='Rig rotations to add, deg')
+    trim_extend.add_argument('--procs', type=int, default=12,
+                             help='MPI processes per case (default: 12)')
+
     trim = sub.add_parser('trim', help='Rank the rig rotations of a finished trim sweep by drive')
     trim.add_argument('--run-dir', required=True, help='Trim sweep directory (contains sweep.json)')
     trim.add_argument('--output', help='Also write the report as JSON here')
@@ -91,6 +99,10 @@ def main():
             mesh=args.mesh, n_procs=args.procs, chord_camber_pct=args.chord_camber)
         print(f"Wrote 1 mesh and {len(sweep['reefs'][0]['cases'])} cases to {args.run_dir}")
         print(f"Run {args.run_dir}/Allrun inside OpenFOAM v2412, then trim.")
+    elif args.command == 'trim-extend':
+        names = extend_trim_sweep(args.run_dir, args.rig_rotation, args.procs)
+        print(f"Added {len(names)} cases to {args.run_dir}: {', '.join(names)}")
+        print(f"Run {args.run_dir}/Allrun.extend inside OpenFOAM v2412, then trim.")
     elif args.command == 'trim':
         report = build_trim_report(args.run_dir)
         if args.output:

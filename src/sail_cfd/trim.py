@@ -20,8 +20,17 @@ import math
 import os
 from typing import Any, Dict, List, Optional
 
-from .case import generate_sweep
+from .case import _script, aoa_case_name, flow_directions, generate_sweep, write_aoa_case
 from .postprocess import CONVERGENCE_WARNING, case_coefficients
+
+
+def _check_rotations(awa_deg: float, rig_rotations: List[float]) -> None:
+    for rotation in rig_rotations:
+        if not awa_deg - 90 <= rotation <= awa_deg:
+            raise ValueError(f"rig rotation {rotation} deg gives angle of attack "
+                             f"{awa_deg - rotation} deg at AWA {awa_deg} - must be 0-90")
+    if len(set(rig_rotations)) != len(rig_rotations):
+        raise ValueError(f"duplicate rig rotations: {sorted(rig_rotations)}")
 
 
 def generate_trim_sweep(run_dir: str, params: Dict[str, Any], parameters_path: str,
@@ -30,13 +39,8 @@ def generate_trim_sweep(run_dir: str, params: Dict[str, Any], parameters_path: s
                         mesh: str, n_procs: int,
                         chord_camber_pct: Optional[float] = None) -> Dict[str, Any]:
     """Write one unreefed sail's cases, one per rig rotation, plus sweep.json and Allrun."""
-    for rotation in rig_rotations:
-        if not awa_deg - 90 <= rotation <= awa_deg:
-            raise ValueError(f"rig rotation {rotation} deg gives angle of attack "
-                             f"{awa_deg - rotation} deg at AWA {awa_deg} - must be 0-90")
+    _check_rotations(awa_deg, rig_rotations)
     alphas = [awa_deg - r for r in rig_rotations]
-    if len(set(alphas)) != len(alphas):
-        raise ValueError(f"duplicate rig rotations: {sorted(rig_rotations)}")
 
     sweep = generate_sweep(run_dir, params, parameters_path, [0], alphas,
                            sail_camber_mm, sail_angle_deg, mesh, n_procs, full_polar=False,
@@ -47,6 +51,42 @@ def generate_trim_sweep(run_dir: str, params: Dict[str, Any], parameters_path: s
     with open(os.path.join(run_dir, 'sweep.json'), 'w') as f:
         json.dump(sweep, f, indent=2)
     return sweep
+
+
+def extend_trim_sweep(run_dir: str, rig_rotations: List[float], n_procs: int) -> List[str]:
+    """
+    Add rig rotations to an existing trim sweep - e.g. to refine around the
+    best one - reusing its mesh. Writes the new cases, appends them to
+    sweep.json (so build_trim_report ranks old and new together) and writes
+    Allrun.extend, which runs only the new cases. Returns their case names.
+    """
+    with open(os.path.join(run_dir, 'sweep.json'), 'r') as f:
+        sweep = json.load(f)
+    if 'apparent_wind_angle_deg' not in sweep:
+        raise ValueError(f"{run_dir}/sweep.json is not a trim sweep (use trim-setup)")
+    awa = sweep['apparent_wind_angle_deg']
+    reef = sweep['reefs'][0]
+    existing = {c['rig_rotation_deg'] for c in reef['cases']}
+    clash = sorted(set(rig_rotations) & existing)
+    if clash:
+        raise ValueError(f"rig rotations {clash} are already in the sweep")
+    _check_rotations(awa, rig_rotations)
+
+    reef_dir = reef['cases'][0]['case'].split('/')[0]
+    names, run_lines = [], ['#!/bin/sh', 'cd "${0%/*}" || exit', 'set -e', '']
+    for rotation in sorted(rig_rotations):
+        alpha = awa - rotation
+        case = f"{reef_dir}/{aoa_case_name(alpha)}"
+        write_aoa_case(os.path.join(run_dir, case), alpha, n_procs, sweep['end_time'])
+        reef['cases'].append({'angle_of_attack_deg': alpha, 'case': case,
+                              **flow_directions(alpha), 'rig_rotation_deg': rotation})
+        run_lines.append(f'echo "== {case}"; sh ./{case}/Allrun')
+        names.append(case)
+
+    _script(os.path.join(run_dir, 'Allrun.extend'), '\n'.join(run_lines) + '\n')
+    with open(os.path.join(run_dir, 'sweep.json'), 'w') as f:
+        json.dump(sweep, f, indent=2)
+    return names
 
 
 def _parabola_peak(points: List[List[float]]) -> Optional[float]:

@@ -6,7 +6,8 @@ cylinder of radius sail_camber, yard_length long, hung below the yard pivot,
 then tilted by sail_angle about the yard-spar (x) axis - but in pure Python,
 so it doesn't need FreeCAD. The surface is written without thickness:
 snappyHexMesh turns it into a two-sided baffle (see case.py), which avoids
-having to resolve the real 2 mm cloth.
+having to resolve the real 2 mm cloth. Optionally (chord_camber_pct) the
+CAD strip is swapped for a sail with chordwise camber - see sail_surface.
 
 CFD frame (metres): z=0 is the sea surface (capsize_analysis.heeling_axis_level_mm),
 the yard pivot sits on the z axis, the chord (yard direction) runs along y,
@@ -15,7 +16,7 @@ Only the sail is modelled: no mast, spars, hull or the second rig.
 """
 
 import math
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.structural.capsize_analysis import heeling_axis_level_mm
 from src.structural.mast_analysis import calculate_sail_levels
@@ -25,9 +26,19 @@ Vec = Tuple[float, float, float]
 
 def sail_surface(params: Dict[str, Any], reefing_percentage: float,
                  sail_camber_mm: float, sail_angle_deg: float,
-                 n_arc: int = 48, n_span: int = 24) -> Dict[str, Any]:
+                 n_arc: int = 48, n_span: int = 24,
+                 chord_camber_pct: Optional[float] = None) -> Dict[str, Any]:
     """
     Triangulated sail surface in the CFD frame.
+
+    By default the sail is the CAD strip: a cylinder of radius
+    sail_camber_mm, curved only between yard and boom. Giving
+    chord_camber_pct replaces it (sail_camber_mm is then unused) with a
+    doubly curved sail that is flat along the yard, boom, luff and leech
+    and deepest at the centre, its mid-height section a parabola with depth
+    chord_camber_pct % of the chord - camber in the usual sailing sense.
+    The deepest point is at mid-chord, so the sail is the same from either
+    end, as a shunting proa's sail must be.
 
     Returns a dict with 'triangles' (list of 3-vertex tuples, metres) and
     the reference values post-processing needs: the area the structural
@@ -38,21 +49,33 @@ def sail_surface(params: Dict[str, Any], reefing_percentage: float,
     h = levels['effective_sail_height_mm']
     if h <= 0:
         raise ValueError("fully reefed sail has no surface to simulate")
-    if sail_camber_mm < h / 2:
+    if chord_camber_pct is None and sail_camber_mm < h / 2:
         raise ValueError(f"sail_camber {sail_camber_mm} mm is smaller than half the sail "
                          f"height ({h / 2:.0f} mm) - no such arc")
+    if chord_camber_pct is not None and not 0 <= chord_camber_pct <= 25:
+        raise ValueError(f"chord_camber_pct must be within 0-25, got {chord_camber_pct}")
 
     length = params['yard_length']
     waterline = heeling_axis_level_mm(params)
     pivot_z = levels['pivot_level_mm'] - waterline
 
-    # Arc in the x-z plane, as rotating.py: circle centred at (cx, -h/2),
-    # passing through (0, 0) and (0, -h), bulging toward +x
-    cx = -math.sqrt(sail_camber_mm**2 - (h / 2)**2)
     theta = math.radians(sail_angle_deg)
 
+    if chord_camber_pct is None:
+        # Arc in the x-z plane, as rotating.py: circle centred at (cx, -h/2),
+        # passing through (0, 0) and (0, -h), bulging toward +x
+        cx = -math.sqrt(sail_camber_mm**2 - (h / 2)**2)
+
+        def bulge(y: float, z: float) -> float:
+            return cx + math.sqrt(sail_camber_mm**2 - (z + h / 2)**2)
+    else:
+        depth = chord_camber_pct / 100 * length
+
+        def bulge(y: float, z: float) -> float:
+            return depth * (1 - (2 * y / length)**2) * (1 - (2 * z / h + 1)**2)
+
     def point(y: float, z: float) -> Vec:
-        x = cx + math.sqrt(sail_camber_mm**2 - (z + h / 2)**2)
+        x = bulge(y, z)
         # Tilt about the x axis by sail_angle, then lift to pivot height
         y_r = y * math.cos(theta) - z * math.sin(theta)
         z_r = y * math.sin(theta) + z * math.cos(theta)

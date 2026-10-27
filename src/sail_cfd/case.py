@@ -23,7 +23,7 @@ is a zero-thickness baffle; RANS k-omega SST with wall functions.
 import json
 import math
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .geometry import sail_surface, write_ascii_stl
 
@@ -426,12 +426,20 @@ runParallel simpleFoam
 def generate_sweep(run_dir: str, params: Dict[str, Any], parameters_path: str,
                    reef_levels: List[float], alphas: List[float],
                    sail_camber_mm: float, sail_angle_deg: float,
-                   mesh: str, n_procs: int) -> Dict[str, Any]:
-    """Write every mesh and angle-of-attack case plus sweep.json and a top-level Allrun."""
+                   mesh: str, n_procs: int, full_polar: bool = True,
+                   chord_camber_pct: Optional[float] = None) -> Dict[str, Any]:
+    """
+    Write every mesh and angle-of-attack case plus sweep.json and a top-level Allrun.
+    full_polar=False drops the 0-90 deg span check, for studies (trim.py)
+    whose results don't become a sail_aero polar. chord_camber_pct swaps the
+    CAD sail shape for a chordwise-cambered one (geometry.sail_surface).
+    """
     if mesh not in MESH_PRESETS:
         raise ValueError(f"mesh must be one of {list(MESH_PRESETS)}, got {mesh!r}")
-    if min(alphas) > 0 or max(alphas) < 90:
+    if full_polar and (min(alphas) > 0 or max(alphas) < 90):
         raise ValueError("alphas must span 0-90 deg - sail_aero requires the full range")
+    if min(alphas) < 0 or max(alphas) > 90:
+        raise ValueError(f"alphas must lie within 0-90 deg, got {sorted(alphas)}")
     preset = MESH_PRESETS[mesh]
 
     if os.path.exists(run_dir) and os.listdir(run_dir):
@@ -443,6 +451,7 @@ def generate_sweep(run_dir: str, params: Dict[str, Any], parameters_path: str,
         'parameters': parameters_path,
         'sail_camber_mm': sail_camber_mm,
         'sail_angle_deg': sail_angle_deg,
+        'chord_camber_pct': chord_camber_pct,
         'mesh': mesh,
         'sail_level': preset['sail_level'],
         'base_cell_m': BASE_CELL_M,
@@ -454,7 +463,8 @@ def generate_sweep(run_dir: str, params: Dict[str, Any], parameters_path: str,
 
     run_lines = ['#!/bin/sh', 'cd "${0%/*}" || exit', 'set -e', '']
     for reef in sorted(reef_levels):
-        surface = sail_surface(params, reef, sail_camber_mm, sail_angle_deg)
+        surface = sail_surface(params, reef, sail_camber_mm, sail_angle_deg,
+                               chord_camber_pct=chord_camber_pct)
         reef_dir = f"reef_{reef:02.0f}"
         write_mesh_case(os.path.join(run_dir, reef_dir, 'mesh'), surface,
                         preset['sail_level'], n_procs)
@@ -463,7 +473,9 @@ def generate_sweep(run_dir: str, params: Dict[str, Any], parameters_path: str,
 
         cases = []
         for alpha in sorted(alphas):
-            case_name = f"aoa_{alpha:02.0f}"
+            # aoa_20, or aoa_12p5 for half degrees
+            case_name = (f"aoa_{alpha:02.0f}" if float(alpha).is_integer()
+                         else f"aoa_{alpha:04.1f}".replace('.', 'p'))
             write_aoa_case(os.path.join(run_dir, reef_dir, case_name), alpha, n_procs,
                            preset['end_time'])
             run_lines.append(f'echo "== {reef_dir}/{case_name}"; sh ./{reef_dir}/{case_name}/Allrun')

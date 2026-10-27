@@ -35,6 +35,30 @@ python -m src.sail_cfd postprocess --run-dir cfd_runs/rp2_coarse_r0 \
 python -m src.structural.operating_envelope ... --sail-polar constant/sail_polar/rp2_openfoam.json
 ```
 
+### Trim study: best rig rotation for one sail
+
+`trim-setup` simulates one unreefed sail on its own (the other rig is not in
+the model) at a single apparent wind angle, one case per rig rotation
+(sail chord vs. hull centerline, so alpha = AWA - rotation). `trim` then
+ranks the rotations by driving coefficient C_L sin(AWA) - C_D cos(AWA),
+also listing the heeling coefficient and drive/heel ratio, and fits a
+parabola through the best three for an in-between optimum.
+
+```sh
+python -m src.sail_cfd trim-setup --parameters artifact/rp2.closehaul.parameter.json \
+    --run-dir cfd_runs/rp2_trim_c45 --awa 45 --chord-camber 10
+openfoam2412 -c "sh ./cfd_runs/rp2_trim_c45/Allrun"
+python -m src.sail_cfd trim --run-dir cfd_runs/rp2_trim_c45
+```
+
+By default the yard and boom are horizontal (`--sail-angle 0`). At that
+tilt the CAD sail has no chordwise camber at all, since its
+`sail_camber_*` curve (a cylinder radius) runs only from yard to boom. So
+`--chord-camber` swaps in a doubly curved sail: flat along the yard, boom,
+luff and leech, deepest at the centre, with mid-height camber of that % of
+chord. The deepest point is at mid-chord, so the sail is the same from
+either end, as a shunting proa's sail must be.
+
 Run directories are big, so `cfd_runs/` is gitignored. Commit only the
 polar JSON. Running WSL cases on `/mnt/c` is slow. For long sweeps, generate
 the cases into the WSL filesystem (e.g. `~/cfd_runs/...`) and copy
@@ -57,7 +81,8 @@ the cases into the WSL filesystem (e.g. `~/cfd_runs/...`) and copy
 - **The CAD sail shape is not a real sail shape.** It is curved vertically
   (between yard and boom) and flat along the chord. A real sail also has
   chordwise camber, which raises peak C_L. The CFD is only as good as this
-  geometry.
+  geometry. The trim study's `--chord-camber` shape is an idealised
+  parabola, not a measured flying shape either.
 - **Single sail only.** There is no mast, spars, hull or second rig, and
   no interaction between the two sails.
 - **Rigid sail.** A real sail changes shape under load (no

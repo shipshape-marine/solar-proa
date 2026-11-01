@@ -61,43 +61,54 @@ def read_vector_history(path: str) -> List[List[float]]:
     return rows
 
 
-def _find_dat(case_dir: str, name: str) -> str:
-    """postProcessing/forces/<startTime>/<name>.dat, taking the latest restart."""
-    base = os.path.join(case_dir, 'postProcessing', 'forces')
+def _find_dat(case_dir: str, name: str, function: str = 'forces') -> str:
+    """postProcessing/<function>/<startTime>/<name>.dat, taking the latest restart."""
+    base = os.path.join(case_dir, 'postProcessing', function)
     if not os.path.isdir(base):
         raise FileNotFoundError(f"{base} missing - did the case run?")
     starts = sorted(os.listdir(base), key=float)
     return os.path.join(base, starts[-1], f"{name}.dat")
 
 
-def case_coefficients(case_dir: str, lift_dir: List[float], drag_dir: List[float],
-                      q_area: float) -> Dict[str, Any]:
-    """Averaged C_L, C_D, centre of pressure height and convergence spread for one case."""
-    force = read_vector_history(_find_dat(case_dir, 'force'))
-    moment = read_vector_history(_find_dat(case_dir, 'moment'))
+def mean_force_moment(case_dir: str, function: str = 'forces') -> Dict[str, Any]:
+    """
+    One forces function object's force and moment, averaged over the last
+    AVERAGE_FRACTION of iterations, plus the centre of pressure height and
+    the convergence spread over that window.
+    """
+    force = read_vector_history(_find_dat(case_dir, 'force', function))
+    moment = read_vector_history(_find_dat(case_dir, 'moment', function))
     n = max(1, int(len(force) * AVERAGE_FRACTION))
     f_win, m_win = force[-n:], moment[-n:]
 
     def mean(rows, k):
         return statistics.fmean(r[k] for r in rows)
 
-    fx, fy, fz = mean(f_win, 1), mean(f_win, 2), mean(f_win, 3)
+    f = [mean(f_win, 1), mean(f_win, 2), mean(f_win, 3)]
     mx, my = mean(m_win, 1), mean(m_win, 2)
-    lift = fx * lift_dir[0] + fy * lift_dir[1] + fz * lift_dir[2]
-    drag = fx * drag_dir[0] + fy * drag_dir[1] + fz * drag_dir[2]
 
     magnitudes = [math.hypot(r[1], r[2]) for r in f_win]
     mean_mag = statistics.fmean(magnitudes)
-    spread = statistics.pstdev(magnitudes) / mean_mag if mean_mag > 0 else 0.0
-    f_h2 = fx * fx + fy * fy
+    f_h2 = f[0] * f[0] + f[1] * f[1]
 
     return {
-        'cl': round(lift / q_area, 4),
-        'cd': round(drag / q_area, 4),
-        'center_of_pressure_height_m': round((my * fx - mx * fy) / f_h2, 3) if f_h2 > 0 else None,
+        'force': f,
+        'center_of_pressure_height_m': round((my * f[0] - mx * f[1]) / f_h2, 3) if f_h2 > 0 else None,
         'iterations': int(force[-1][0]),
         'averaged_iterations': n,
-        'force_relative_std': round(spread, 4),
+        'force_relative_std': round(statistics.pstdev(magnitudes) / mean_mag if mean_mag > 0 else 0.0, 4),
+    }
+
+
+def case_coefficients(case_dir: str, lift_dir: List[float], drag_dir: List[float],
+                      q_area: float) -> Dict[str, Any]:
+    """Averaged C_L, C_D, centre of pressure height and convergence spread for one case."""
+    m = mean_force_moment(case_dir)
+    f = m.pop('force')
+    return {
+        'cl': round(sum(f[k] * lift_dir[k] for k in range(3)) / q_area, 4),
+        'cd': round(sum(f[k] * drag_dir[k] for k in range(3)) / q_area, 4),
+        **m,
     }
 
 

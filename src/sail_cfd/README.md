@@ -35,6 +35,63 @@ python -m src.sail_cfd postprocess --run-dir cfd_runs/rp2_coarse_r0 \
 python -m src.structural.operating_envelope ... --sail-polar constant/sail_polar/rp2_openfoam.json
 ```
 
+### Trim study: best rig rotation for one sail
+
+`trim-setup` simulates one unreefed sail on its own (the other rig is not in
+the model) at a single apparent wind angle, one case per rig rotation
+(sail chord vs. hull centerline, so alpha = AWA - rotation). `trim` then
+ranks the rotations by driving coefficient C_L sin(AWA) - C_D cos(AWA),
+also listing the heeling coefficient and drive/heel ratio, and fits a
+parabola through the best three for an in-between optimum.
+
+```sh
+python -m src.sail_cfd trim-setup --parameters artifact/rp2.closehaul.parameter.json \
+    --run-dir cfd_runs/rp2_trim_c45 --awa 45 --chord-camber 10
+openfoam2412 -c "sh ./cfd_runs/rp2_trim_c45/Allrun"
+python -m src.sail_cfd trim --run-dir cfd_runs/rp2_trim_c45
+
+# Refine around the best rotation, reusing the mesh; runs only the new cases
+python -m src.sail_cfd trim-extend --run-dir cfd_runs/rp2_trim_c45 --rig-rotation 17.5 22.5
+openfoam2412 -c "sh ./cfd_runs/rp2_trim_c45/Allrun.extend"
+```
+
+By default the yard and boom are horizontal (`--sail-angle 0`). At that
+tilt the CAD sail has no chordwise camber at all, since its
+`sail_camber_*` curve (a cylinder radius) runs only from yard to boom. So
+`--chord-camber` swaps in a doubly curved sail: flat along the yard, boom,
+luff and leech, deepest at the centre, with mid-height camber of that % of
+chord. The deepest point is at mid-chord, so the sail is the same from
+either end, as a shunting proa's sail must be.
+
+### Two-sail trim: aft sail behind a locked foresail
+
+`pair-setup` puts both sails on the boat (bow at +y, wind off the bow
+from the -x side, masts at +/- `mast_distance_from_center`), locks the
+foresail's rig rotation and sweeps the aft sail's. Each aft rotation is
+its own mesh and case, plus a `fore_alone` case in the same domain that
+should reproduce the trim sweep's foresail drive. `pair` reports each
+sail's drive and heel (boat frame, own sail area) and their total, and
+ranks the aft rotations by total drive. Rotations that bring the sails
+within 0.15 m of each other are refused. `Allrun` skips finished configs,
+so it can be rerun after an interruption or a `pair-extend`.
+
+The aft sail changes the flow the foresail sees, so the foresail's best
+rotation alone may not be its best in the pair. `pair-extend
+--fore-rotation` adds configs with the aft sail locked and the foresail
+moved, and `pair` then ranks every (fore, aft) combination in the sweep.
+
+```sh
+python -m src.sail_cfd pair-setup --parameters artifact/rp2.closehaul.parameter.json \
+    --run-dir cfd_runs/rp2_pair_c45 --awa 45 --fore-rotation 20 --chord-camber 10
+openfoam2412 -c "sh ./cfd_runs/rp2_pair_c45/Allrun"
+python -m src.sail_cfd pair --run-dir cfd_runs/rp2_pair_c45
+
+python -m src.sail_cfd pair-extend --run-dir cfd_runs/rp2_pair_c45 --aft-rotation 12.5 17.5
+python -m src.sail_cfd pair-extend --run-dir cfd_runs/rp2_pair_c45 --aft-rotation 15 \
+    --fore-rotation 15 17.5 22.5 25
+openfoam2412 -c "sh ./cfd_runs/rp2_pair_c45/Allrun"
+```
+
 Run directories are big, so `cfd_runs/` is gitignored. Commit only the
 polar JSON. Running WSL cases on `/mnt/c` is slow. For long sweeps, generate
 the cases into the WSL filesystem (e.g. `~/cfd_runs/...`) and copy
@@ -57,9 +114,10 @@ the cases into the WSL filesystem (e.g. `~/cfd_runs/...`) and copy
 - **The CAD sail shape is not a real sail shape.** It is curved vertically
   (between yard and boom) and flat along the chord. A real sail also has
   chordwise camber, which raises peak C_L. The CFD is only as good as this
-  geometry.
-- **Single sail only.** There is no mast, spars, hull or second rig, and
-  no interaction between the two sails.
+  geometry. The trim study's `--chord-camber` shape is an idealised
+  parabola, not a measured flying shape either.
+- **No mast, spars or hull.** The polar and trim sweeps model a single
+  sail. Only `pair-setup` puts both sails in the flow together.
 - **Rigid sail.** A real sail changes shape under load (no
   fluid-structure coupling), and there are no gusts and no boat motion.
 - **Steady RANS is weakest past stall (alpha ≳ 25°) and broadside.** Those

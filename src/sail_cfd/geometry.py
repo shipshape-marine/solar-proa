@@ -111,6 +111,65 @@ def sail_surface(params: Dict[str, Any], reefing_percentage: float,
     }
 
 
+def rig_surface(params: Dict[str, Any], reefing_percentage: float,
+                sail_camber_mm: float, sail_angle_deg: float,
+                rig_rotation_deg: float, mast_y_mm: float,
+                chord_camber_pct: Optional[float] = None) -> Dict[str, Any]:
+    """
+    One rig's sail placed on the boat, in the boat CFD frame used for
+    two-sail (slot) cases.
+
+    Boat frame (metres): the vaka centreline is the y axis with the biru end
+    at +y, the mast stands at (0, mast_y), z=0 is the sea surface. This is
+    src/design/main.py's frame shifted by vaka_x_offset. As in rotating.py,
+    the sail pivot sits yard_spar_length + mast_diameter/2 out along the rig's
+    local +x, and the whole rig turns by rig_rotation about the mast axis.
+    With rig_rotation 0 the chord runs along the vaka and the sail bulges
+    toward +x. chord_camber_pct is passed on to sail_surface.
+    """
+    surface = sail_surface(params, reefing_percentage, sail_camber_mm, sail_angle_deg,
+                           chord_camber_pct=chord_camber_pct)
+    pivot_x = (params['yard_spar_length'] + params['mast_diameter'] / 2) / 1000
+    c, s = math.cos(math.radians(rig_rotation_deg)), math.sin(math.radians(rig_rotation_deg))
+
+    def place(v: Vec) -> Vec:
+        x = v[0] + pivot_x
+        return (x * c - v[1] * s, x * s + v[1] * c + mast_y_mm / 1000, v[2])
+
+    triangles = [tuple(place(v) for v in tri) for tri in surface['triangles']]
+    xs = [v[0] for tri in triangles for v in tri]
+    ys = [v[1] for tri in triangles for v in tri]
+    zs = [v[2] for tri in triangles for v in tri]
+    # Vertices are shared by neighbouring triangles, so this is the grid's
+    # centroid - close enough to the area centroid for a moment reference
+    n = len(xs)
+    return {
+        **surface,
+        'triangles': triangles,
+        'centroid_m': [sum(xs) / n, sum(ys) / n, sum(zs) / n],
+        'bounds_m': {'min': [min(xs), min(ys), min(zs)], 'max': [max(xs), max(ys), max(zs)]},
+    }
+
+
+def min_gap_m(a: List[Tuple[Vec, Vec, Vec]], b: List[Tuple[Vec, Vec, Vec]]) -> float:
+    """
+    Smallest vertex-to-vertex distance between two triangulated surfaces.
+
+    Overestimates the true gap by up to half a grid cell (~0.1 m with the
+    default grid), and two surfaces that cross show up as a gap of about
+    one cell - callers should treat anything under a few cells as touching.
+    """
+    pa = sorted({v for tri in a for v in tri})
+    pb = sorted({v for tri in b for v in tri})
+    best = math.inf
+    for p in pa:
+        for q in pb:
+            d = (p[0] - q[0])**2 + (p[1] - q[1])**2 + (p[2] - q[2])**2
+            if d < best:
+                best = d
+    return math.sqrt(best)
+
+
 def write_ascii_stl(path: str, solid_name: str, triangles: List[Tuple[Vec, Vec, Vec]]) -> None:
     """Write triangles as an ASCII STL (normals left for the reader to recompute)."""
     with open(path, 'w', newline='\n') as f:

@@ -63,6 +63,35 @@ luff and leech, deepest at the centre, with mid-height camber of that % of
 chord. The deepest point is at mid-chord, so the sail is the same from
 either end, as a shunting proa's sail must be.
 
+### Two-sail trim: aft sail behind a locked foresail
+
+`pair-setup` puts both sails on the boat (bow at +y, wind off the bow
+from the -x side, masts at +/- `mast_distance_from_center`), locks the
+foresail's rig rotation and sweeps the aft sail's. Each aft rotation is
+its own mesh and case, plus a `fore_alone` case in the same domain that
+should reproduce the trim sweep's foresail drive. `pair` reports each
+sail's drive and heel (boat frame, own sail area) and their total, and
+ranks the aft rotations by total drive. Rotations that bring the sails
+within 0.15 m of each other are refused. `Allrun` skips finished configs,
+so it can be rerun after an interruption or a `pair-extend`.
+
+The aft sail changes the flow the foresail sees, so the foresail's best
+rotation alone may not be its best in the pair. `pair-extend
+--fore-rotation` adds configs with the aft sail locked and the foresail
+moved, and `pair` then ranks every (fore, aft) combination in the sweep.
+
+```sh
+python -m src.sail_cfd pair-setup --parameters artifact/rp2.closehaul.parameter.json \
+    --run-dir cfd_runs/rp2_pair_c45 --awa 45 --fore-rotation 20 --chord-camber 10
+openfoam2412 -c "sh ./cfd_runs/rp2_pair_c45/Allrun"
+python -m src.sail_cfd pair --run-dir cfd_runs/rp2_pair_c45
+
+python -m src.sail_cfd pair-extend --run-dir cfd_runs/rp2_pair_c45 --aft-rotation 12.5 17.5
+python -m src.sail_cfd pair-extend --run-dir cfd_runs/rp2_pair_c45 --aft-rotation 15 \
+    --fore-rotation 15 17.5 22.5 25
+openfoam2412 -c "sh ./cfd_runs/rp2_pair_c45/Allrun"
+```
+
 Run directories are big, so `cfd_runs/` is gitignored. Commit only the
 polar JSON. Running WSL cases on `/mnt/c` is slow. For long sweeps, generate
 the cases into the WSL filesystem (e.g. `~/cfd_runs/...`) and copy
@@ -87,8 +116,8 @@ the cases into the WSL filesystem (e.g. `~/cfd_runs/...`) and copy
   chordwise camber, which raises peak C_L. The CFD is only as good as this
   geometry. The trim study's `--chord-camber` shape is an idealised
   parabola, not a measured flying shape either.
-- **Single sail only.** There is no mast, spars, hull or second rig, and
-  no interaction between the two sails.
+- **No mast, spars or hull.** The polar and trim sweeps model a single
+  sail. Only `pair-setup` puts both sails in the flow together.
 - **Rigid sail.** A real sail changes shape under load (no
   fluid-structure coupling), and there are no gusts and no boat motion.
 - **Steady RANS is weakest past stall (alpha ≳ 25°) and broadside.** Those

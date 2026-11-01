@@ -23,7 +23,7 @@ is a zero-thickness baffle; RANS k-omega SST with wall functions.
 import json
 import math
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from .geometry import sail_surface, write_ascii_stl
 
@@ -97,13 +97,27 @@ def write_mesh_case(case_dir: str, surface: Dict[str, Any], sail_level: int,
                     n_procs: int) -> None:
     """blockMesh + snappyHexMesh case for one reef level."""
     chord = surface['chord_m']
-    top = surface['bounds_m']['max'][2]
-    dom = _domain(chord, top)
+    write_multi_mesh_case(case_dir, {'sail': surface}, sail_level, n_procs,
+                          _domain(chord, surface['bounds_m']['max'][2]),
+                          wake_center=(0.0, 0.0), wake_radius=2.0 * chord)
+
+
+def write_multi_mesh_case(case_dir: str, surfaces: Dict[str, Dict[str, Any]], sail_level: int,
+                          n_procs: int, dom: Dict[str, Any], wake_center: Tuple[float, float],
+                          wake_radius: float) -> None:
+    """
+    blockMesh + snappyHexMesh case for one or more sails. Each entry in
+    surfaces becomes its own baffle, giving patches <name> and <name>_slave,
+    so names should start with 'sail' to match the flow cases' "sail.*"
+    boundary conditions.
+    """
+    chord = max(s['chord_m'] for s in surfaces.values())
     lo, hi = dom['min'], dom['max']
 
     os.makedirs(os.path.join(case_dir, 'constant', 'triSurface'), exist_ok=True)
-    write_ascii_stl(os.path.join(case_dir, 'constant', 'triSurface', 'sail.stl'),
-                    'sail', surface['triangles'])
+    for name, surface in surfaces.items():
+        write_ascii_stl(os.path.join(case_dir, 'constant', 'triSurface', f'{name}.stl'),
+                        name, surface['triangles'])
 
     verts = [(lo[0], lo[1], lo[2]), (hi[0], lo[1], lo[2]), (hi[0], hi[1], lo[2]), (lo[0], hi[1], lo[2]),
              (lo[0], lo[1], hi[2]), (hi[0], lo[1], hi[2]), (hi[0], hi[1], hi[2]), (lo[0], hi[1], hi[2])]
@@ -128,13 +142,24 @@ boundary
 );
 """)
 
-    b = surface['bounds_m']
+    b_min = [min(s['bounds_m']['min'][k] for s in surfaces.values()) for k in range(3)]
+    b_max = [max(s['bounds_m']['max'][k] for s in surfaces.values()) for k in range(3)]
     pad = 0.3 * chord
-    near_min = [b['min'][0] - pad, b['min'][1] - pad, max(0.0, b['min'][2] - pad)]
-    near_max = [b['max'][0] + pad, b['max'][1] + pad, b['max'][2] + pad]
-    wake_radius = 2.0 * chord
+    near_min = [b_min[0] - pad, b_min[1] - pad, max(0.0, b_min[2] - pad)]
+    near_max = [b_max[0] + pad, b_max[1] + pad, b_max[2] + pad]
     # Any point in the fluid, clear of the sail and of cell faces
     inside = [0.37 * lo[0] + 0.011, 0.41 * lo[1] + 0.013, 0.53 * hi[2] + 0.017]
+
+    geometry_entries = '\n'.join(
+        f"    {name}.stl {{ type triSurfaceMesh; name {name}; }}" for name in surfaces)
+    # Zero-thickness sail -> baffle patches <name> + <name>_slave
+    refinement_entries = '\n'.join(f"""        {name}
+        {{
+            level       ({sail_level} {sail_level});
+            faceZone    {name};
+            faceType    baffle;
+            patchInfo   {{ type wall; }}
+        }}""" for name in surfaces)
 
     _foam_file(os.path.join(case_dir, 'system', 'snappyHexMeshDict'), 'dictionary', 'snappyHexMeshDict', f"""
 castellatedMesh true;
@@ -143,13 +168,13 @@ addLayers       false;   // wall functions on the sail - no prism layers
 
 geometry
 {{
-    sail.stl {{ type triSurfaceMesh; name sail; }}
+{geometry_entries}
     nearSail {{ type searchableBox; min {_vec(near_min)}; max {_vec(near_max)}; }}
     wake
     {{
         type    searchableCylinder;
-        point1  (0 0 0);
-        point2  (0 0 {near_max[2] + chord:.6g});
+        point1  ({wake_center[0]:.6g} {wake_center[1]:.6g} 0);
+        point2  ({wake_center[0]:.6g} {wake_center[1]:.6g} {near_max[2] + chord:.6g});
         radius  {wake_radius:.6g};
     }}
 }}
@@ -165,13 +190,7 @@ castellatedMeshControls
 
     refinementSurfaces
     {{
-        sail
-        {{
-            level       ({sail_level} {sail_level});
-            faceZone    sail;
-            faceType    baffle;     // zero-thickness sail -> patches sail + sail_slave
-            patchInfo   {{ type wall; }}
-        }}
+{refinement_entries}
     }}
 
     resolveFeatureAngle 30;
@@ -328,32 +347,49 @@ relaxationFactors { equations { U 0.7; ".*" 0.7; } }
 """)
 
 
+def angle_tag(deg: float) -> str:
+    """Angle for a directory name: 20 -> '20', 5 -> '05', 12.5 -> '12p5', 26.25 -> '26p25'."""
+    if float(deg).is_integer():
+        return f"{deg:02.0f}"
+    return f"{deg:05.2f}".rstrip('0').replace('.', 'p')
+
+
 def aoa_case_name(alpha_deg: float) -> str:
     """aoa_20, or aoa_12p5 / aoa_27p25 for fractional degrees."""
-    if float(alpha_deg).is_integer():
-        return f"aoa_{alpha_deg:02.0f}"
-    return f"aoa_{alpha_deg:05.2f}".rstrip('0').replace('.', 'p')
+    return f"aoa_{angle_tag(alpha_deg)}"
 
 
 def write_aoa_case(case_dir: str, alpha_deg: float, n_procs: int, end_time: int) -> None:
     """simpleFoam case for one angle of attack; mesh is copied in by Allrun."""
-    dirs = flow_directions(alpha_deg)
-    u = [REFERENCE_SPEED * c for c in dirs['drag_dir']]
+    # CofR: sea surface below the pivot - see postprocess.py
+    write_flow_case(case_dir, flow_directions(alpha_deg)['drag_dir'], n_procs, end_time,
+                    {'forces': ('sail.*', [0.0, 0.0, 0.0])})
+
+
+def write_flow_case(case_dir: str, flow_dir: List[float], n_procs: int, end_time: int,
+                    force_groups: Dict[str, Tuple[str, List[float]]]) -> None:
+    """
+    simpleFoam case with the wind blowing along flow_dir; mesh is copied in
+    by Allrun. force_groups maps each forces function object's name (and so
+    its postProcessing/<name>/ directory) to the patch regex it integrates
+    over and its moment reference point CofR.
+    """
+    u = [REFERENCE_SPEED * c for c in flow_dir]
     k = 1.5 * (0.01 * REFERENCE_SPEED)**2       # 1% turbulence intensity
     omega = k / (10 * AIR_VISCOSITY)             # eddy viscosity ratio 10
 
-    forces = f"""    forces
+    forces = '\n'.join(f"""    {name}
     {{
         type            forces;
         libs            (forces);
         writeControl    timeStep;
         writeInterval   1;
-        patches         ("sail.*");
+        patches         ("{patches}");
         rho             rhoInf;
         rhoInf          {AIR_DENSITY};
-        CofR            (0 0 0);    // sea surface below the pivot - see postprocess.py
+        CofR            {_vec(cofr)};
         log             false;
-    }}"""
+    }}""" for name, (patches, cofr) in force_groups.items())
     _write_common_system(case_dir, n_procs, end_time, functions=forces)
 
     _foam_file(os.path.join(case_dir, 'constant', 'transportProperties'), 'dictionary',
